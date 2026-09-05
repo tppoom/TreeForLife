@@ -46,8 +46,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" className={`${playfair.variable} ${jakarta.variable}`}>
-      <body className="min-h-screen flex flex-col bg-sand-50 text-stone-900 selection:bg-forest-800 selection:text-gold-200">
+    <html lang="th" suppressHydrationWarning className={`${playfair.variable} ${jakarta.variable}`}>
+      <body className="min-h-screen flex flex-col bg-sand-50 dark:bg-[#0b1a13] text-stone-900 dark:text-sand-100 selection:bg-forest-800 selection:text-gold-200 selection:dark:bg-gold-400 selection:dark:text-forest-950">
         <AppProvider>
           <Navbar />
           <main className="flex-1">{children}</main>

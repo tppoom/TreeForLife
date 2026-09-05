@@ -7,14 +7,12 @@ import Image from "next/image";
 import { useApp } from "@/lib/context/AppContext";
 import {
   Search,
-  Filter,
-  X,
   SlidersHorizontal,
   RotateCcw,
   Heart,
   MessageCircle,
   Check,
-  ChevronDown,
+  X,
 } from "lucide-react";
 
 interface SpeciesItem {
@@ -55,7 +53,7 @@ interface SearchClientProps {
 export function SearchClient({ initialSpecies, searchParams }: SearchClientProps) {
   const router = useRouter();
   const rawParams = useSearchParams();
-  const { isFavorite, toggleFavorite, openInquiryModal } = useApp();
+  const { isFavorite, toggleFavorite, openInquiryModal, t, locale } = useApp();
 
   const [searchQuery, setSearchQuery] = useState(searchParams.q || "");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -82,38 +80,30 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
   };
 
   const lightOptions = [
-    { value: "full_sun", label: "แดดจัด (Full Sun)" },
-    { value: "partial", label: "แดดรำไร (Partial)" },
-    { value: "shade", label: "ร่มเงา (Shade)" },
-    { value: "indoor_bright", label: "ในบ้านสว่าง (Bright Indirect)" },
-    { value: "low_light", label: "แสงน้อย (Low Light)" },
+    { value: "full_sun", label: locale === "th" ? "แดดจัด (Full Sun)" : "Full Sun" },
+    { value: "partial", label: locale === "th" ? "แดดรำไร (Partial)" : "Partial Sun" },
+    { value: "shade", label: locale === "th" ? "ร่มเงา (Shade)" : "Shade" },
+    { value: "indoor_bright", label: locale === "th" ? "ในบ้านสว่าง (Bright Indirect)" : "Bright Indirect" },
+    { value: "low_light", label: locale === "th" ? "แสงน้อย (Low Light)" : "Low Light" },
   ];
 
   const waterOptions = [
-    { value: "low", label: "น้อย (7+ วัน/ครั้ง)" },
-    { value: "medium", label: "ปานกลาง (3–7 วัน)" },
-    { value: "high", label: "บ่อย (1–3 วัน)" },
+    { value: "low", label: locale === "th" ? "น้อย (7+ วัน/ครั้ง)" : "Low (7+ days)" },
+    { value: "medium", label: locale === "th" ? "ปานกลาง (3–7 วัน)" : "Medium (3–7 days)" },
+    { value: "high", label: locale === "th" ? "บ่อย (1–3 วัน)" : "Frequent (1–3 days)" },
   ];
 
   const placementOptions = [
-    { value: "indoor", label: "ในบ้าน/คอนโด" },
-    { value: "outdoor", label: "กลางแจ้ง" },
-    { value: "balcony", label: "ระเบียง" },
-    { value: "bathroom", label: "ห้องน้ำ" },
+    { value: "indoor", label: locale === "th" ? "ในบ้าน/คอนโด" : "Indoor & Condo" },
+    { value: "outdoor", label: locale === "th" ? "กลางแจ้ง" : "Outdoor" },
+    { value: "balcony", label: locale === "th" ? "ระเบียง" : "Balcony" },
+    { value: "bathroom", label: locale === "th" ? "ห้องน้ำ" : "Bathroom" },
   ];
 
   const stockOptions = [
-    { value: "in_stock", label: "มีที่ร้านพร้อมส่ง" },
-    { value: "made_to_order", label: "สั่งได้ (~7-14 วัน)" },
-    { value: "seasonal", label: "ตามฤดูกาล" },
-  ];
-
-  const sizeOptions = [
-    { value: "xs", label: "เล็กมาก (< 30 ซม.)" },
-    { value: "sm", label: "เล็ก (30–60 ซม.)" },
-    { value: "md", label: "กลาง (60–120 ซม.)" },
-    { value: "lg", label: "ใหญ่ (120–200 ซม.)" },
-    { value: "xl", label: "ใหญ่พิเศษ (> 200 ซม.)" },
+    { value: "in_stock", label: locale === "th" ? "มีที่ร้านพร้อมส่ง" : "In Stock & Ready" },
+    { value: "made_to_order", label: locale === "th" ? "สั่งได้ (~7-14 วัน)" : "Pre-order (~7-14d)" },
+    { value: "seasonal", label: locale === "th" ? "ตามฤดูกาล" : "Seasonal" },
   ];
 
   const hasActiveFilters =
@@ -137,11 +127,11 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="font-serif text-3xl sm:text-4xl font-medium text-forest-950">
-              {searchParams.fav === "true" ? "ต้นไม้ที่คุณบันทึกไว้" : "คัดเลือกพันธุ์ไม้"}
+            <h1 className="font-serif text-3xl sm:text-4xl font-medium text-forest-950 dark:text-sand-50">
+              {searchParams.fav === "true" ? t.search.savedTitle : t.search.title}
             </h1>
-            <p className="text-xs sm:text-sm text-stone-600 mt-1">
-              {displayedSpecies.length} พันธุ์ที่ตรงตามเงื่อนไข · พร้อมข้อมูลการดูแลจริงจากร้าน
+            <p className="text-xs sm:text-sm text-stone-600 dark:text-sand-300 mt-1">
+              {displayedSpecies.length} {t.search.countSuffix}
             </p>
           </div>
 
@@ -151,81 +141,81 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="ค้นหาชื่อไทย, อังกฤษ, ชื่อวิทย์ หรือชื่อเล่น..."
-              className="w-full text-xs sm:text-sm pl-10 pr-20 py-2.5 bg-white border border-sand-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-700 text-stone-800 placeholder-stone-400"
+              placeholder={t.search.searchPlaceholder}
+              className="w-full text-xs sm:text-sm pl-10 pr-20 py-2.5 bg-white dark:bg-forest-950 border border-sand-300 dark:border-forest-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-700 dark:focus:ring-gold-500 text-stone-800 dark:text-sand-100 placeholder-stone-400 dark:placeholder-stone-500"
             />
-            <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+            <Search className="w-4 h-4 text-stone-400 dark:text-stone-500 absolute left-3.5 top-3" />
             <button
               type="submit"
-              className="absolute right-1.5 top-1.5 px-3 py-1.5 bg-forest-900 text-sand-50 rounded-lg text-xs font-medium hover:bg-forest-800 transition-colors cursor-pointer"
+              className="absolute right-1.5 top-1.5 px-3 py-1.5 bg-forest-900 dark:bg-gold-500 hover:bg-forest-800 dark:hover:bg-gold-400 text-sand-50 dark:text-forest-950 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
-              ค้นหา
+              {t.home.searchBtn}
             </button>
           </form>
         </div>
 
-        {/* Action Bar (Filter trigger, Sorting, Clear) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-sand-200">
+        {/* Action Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-sand-200 dark:border-forest-900">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setMobileFilterOpen(true)}
-              className="lg:hidden flex items-center gap-2 px-3.5 py-2 bg-white border border-sand-300 rounded-xl text-xs font-medium text-stone-700 hover:bg-sand-100 transition-colors"
+              className="lg:hidden flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-forest-950 border border-sand-300 dark:border-forest-800 rounded-xl text-xs font-medium text-stone-700 dark:text-sand-200 hover:bg-sand-100 dark:hover:bg-forest-900 transition-colors"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-forest-800" />
-              <span>ตัวกรองละเอียด</span>
-              {hasActiveFilters && (
-                <span className="w-2 h-2 rounded-full bg-emerald-600" />
-              )}
+              <SlidersHorizontal className="w-3.5 h-3.5 text-forest-800 dark:text-gold-400" />
+              <span>{t.search.filterBtn}</span>
+              {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-emerald-600" />}
             </button>
 
             {hasActiveFilters && (
               <button
                 onClick={clearAllFilters}
-                className="flex items-center gap-1.5 text-xs text-rose-700 hover:text-rose-900 font-medium px-2 py-1 transition-colors"
+                className="flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-400 hover:text-rose-900 font-medium px-2 py-1 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
-                <span>ล้างตัวกรอง</span>
+                <span>{t.search.clearFilter}</span>
               </button>
             )}
           </div>
 
           {/* Sorting Dropdown */}
-          <div className="flex items-center gap-2 text-xs text-stone-600">
-            <span>เรียงตาม:</span>
+          <div className="flex items-center gap-2 text-xs text-stone-600 dark:text-sand-400">
+            <span>{t.search.sortBy}</span>
             <select
               value={searchParams.sort || "relevance"}
               onChange={(e) => updateParam("sort", e.target.value)}
-              className="px-2.5 py-1.5 bg-white border border-sand-300 rounded-xl text-xs font-medium text-stone-800 focus:outline-none focus:ring-1 focus:ring-forest-700"
+              className="px-2.5 py-1.5 bg-white dark:bg-forest-950 border border-sand-300 dark:border-forest-800 rounded-xl text-xs font-medium text-stone-800 dark:text-sand-200 focus:outline-none"
             >
-              <option value="relevance">ตรงที่สุด</option>
-              <option value="in_stock_first">มีที่ร้านก่อน</option>
-              <option value="easiest_first">เลี้ยงง่ายที่สุด</option>
-              <option value="name">ชื่อ ก-ฮ</option>
+              <option value="relevance">{t.search.relevance}</option>
+              <option value="in_stock_first">{t.search.inStockFirst}</option>
+              <option value="easiest_first">{t.search.easiestFirst}</option>
+              <option value="name">{t.search.nameAsc}</option>
             </select>
           </div>
         </div>
       </div>
 
-      {/* Main Catalog Layout (Sidebar Filters + Cards Grid) */}
+      {/* Main Catalog Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Desktop Left Sidebar Filters */}
-        <aside className="hidden lg:block lg:col-span-1 space-y-6 bg-sand-100/50 p-6 rounded-2xl border border-sand-200/80 h-fit">
-          <div className="flex items-center justify-between pb-3 border-b border-sand-200">
-            <span className="font-serif text-base font-semibold text-forest-950">ตัวกรองละเอียด</span>
+        <aside className="hidden lg:block lg:col-span-1 space-y-6 bg-sand-100/50 dark:bg-forest-950/40 p-6 rounded-2xl border border-sand-200/80 dark:border-forest-900/60 h-fit">
+          <div className="flex items-center justify-between pb-3 border-b border-sand-200 dark:border-forest-900">
+            <span className="font-serif text-base font-semibold text-forest-950 dark:text-sand-50">
+              {t.search.filters}
+            </span>
             {hasActiveFilters && (
               <button
                 onClick={clearAllFilters}
-                className="text-[11px] text-rose-600 hover:text-rose-800 font-medium"
+                className="text-[11px] text-rose-600 dark:text-rose-400 hover:text-rose-800 font-medium cursor-pointer"
               >
-                ล้างทั้งหมด
+                {t.search.clearAll}
               </button>
             )}
           </div>
 
           {/* Stock Status Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-stone-600">
-              สถานะที่ร้าน
+            <label className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-400">
+              {t.search.stockStatus}
             </label>
             <div className="space-y-1">
               {stockOptions.map((opt) => (
@@ -234,10 +224,10 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                   onClick={() =>
                     updateParam("stock", searchParams.stock === opt.value ? null : opt.value)
                   }
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors cursor-pointer ${
                     searchParams.stock === opt.value
-                      ? "bg-forest-900 text-sand-50 font-medium"
-                      : "text-stone-700 hover:bg-sand-200/60"
+                      ? "bg-forest-900 dark:bg-forest-800 text-sand-50 font-medium"
+                      : "text-stone-700 dark:text-sand-300 hover:bg-sand-200/60 dark:hover:bg-forest-900/40"
                   }`}
                 >
                   <span>{opt.label}</span>
@@ -249,8 +239,8 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
 
           {/* Light Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-stone-600">
-              สภาพแสง
+            <label className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-400">
+              {t.search.lightCondition}
             </label>
             <div className="space-y-1">
               {lightOptions.map((opt) => (
@@ -259,10 +249,10 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                   onClick={() =>
                     updateParam("light", searchParams.light === opt.value ? null : opt.value)
                   }
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors cursor-pointer ${
                     searchParams.light === opt.value
-                      ? "bg-forest-900 text-sand-50 font-medium"
-                      : "text-stone-700 hover:bg-sand-200/60"
+                      ? "bg-forest-900 dark:bg-forest-800 text-sand-50 font-medium"
+                      : "text-stone-700 dark:text-sand-300 hover:bg-sand-200/60 dark:hover:bg-forest-900/40"
                   }`}
                 >
                   <span>{opt.label}</span>
@@ -274,8 +264,8 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
 
           {/* Water Need Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-stone-600">
-              ความถี่รดน้ำ
+            <label className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-400">
+              {t.search.waterFrequency}
             </label>
             <div className="space-y-1">
               {waterOptions.map((opt) => (
@@ -284,10 +274,10 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                   onClick={() =>
                     updateParam("water", searchParams.water === opt.value ? null : opt.value)
                   }
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors cursor-pointer ${
                     searchParams.water === opt.value
-                      ? "bg-forest-900 text-sand-50 font-medium"
-                      : "text-stone-700 hover:bg-sand-200/60"
+                      ? "bg-forest-900 dark:bg-forest-800 text-sand-50 font-medium"
+                      : "text-stone-700 dark:text-sand-300 hover:bg-sand-200/60 dark:hover:bg-forest-900/40"
                   }`}
                 >
                   <span>{opt.label}</span>
@@ -299,8 +289,8 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
 
           {/* Placement Filter */}
           <div className="space-y-2">
-            <label className="text-xs font-bold uppercase tracking-wider text-stone-600">
-              ตำแหน่งที่วาง
+            <label className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-400">
+              {t.search.placement}
             </label>
             <div className="space-y-1">
               {placementOptions.map((opt) => (
@@ -309,10 +299,10 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                   onClick={() =>
                     updateParam("placement", searchParams.placement === opt.value ? null : opt.value)
                   }
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors cursor-pointer ${
                     searchParams.placement === opt.value
-                      ? "bg-forest-900 text-sand-50 font-medium"
-                      : "text-stone-700 hover:bg-sand-200/60"
+                      ? "bg-forest-900 dark:bg-forest-800 text-sand-50 font-medium"
+                      : "text-stone-700 dark:text-sand-300 hover:bg-sand-200/60 dark:hover:bg-forest-900/40"
                   }`}
                 >
                   <span>{opt.label}</span>
@@ -323,19 +313,16 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
           </div>
 
           {/* Pet Friendly Filter */}
-          <div className="space-y-2 pt-2 border-t border-sand-200">
-            <label className="text-xs font-bold uppercase tracking-wider text-stone-600">
-              สัตว์เลี้ยง
-            </label>
+          <div className="space-y-2 pt-2 border-t border-sand-200 dark:border-forest-900">
             <button
               onClick={() => updateParam("pet", searchParams.pet === "safe" ? null : "safe")}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors ${
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs text-left transition-colors cursor-pointer ${
                 searchParams.pet === "safe"
                   ? "bg-emerald-800 text-white font-medium"
-                  : "bg-white border border-sand-300 text-stone-700 hover:bg-sand-200/60"
+                  : "bg-white dark:bg-forest-950 border border-sand-300 dark:border-forest-800 text-stone-700 dark:text-sand-300 hover:bg-sand-200/60 dark:hover:bg-forest-900"
               }`}
             >
-              <span>ปลอดภัยกับสัตว์เลี้ยงเท่านั้น</span>
+              <span>{t.search.petFriendlyOnly}</span>
               {searchParams.pet === "safe" && <Check className="w-3.5 h-3.5 text-emerald-200" />}
             </button>
           </div>
@@ -348,10 +335,10 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
               {displayedSpecies.map((plant) => (
                 <div
                   key={plant.id}
-                  className="group relative bg-white rounded-2xl overflow-hidden border border-sand-200 hover:border-forest-700/40 shadow-soft hover:shadow-card card-hover-effect flex flex-col justify-between"
+                  className="group relative bg-white dark:bg-[#0e2117] rounded-2xl overflow-hidden border border-sand-200 dark:border-forest-800/80 hover:border-forest-700/40 dark:hover:border-gold-500/40 shadow-soft hover:shadow-card card-hover-effect flex flex-col justify-between transition-colors"
                 >
                   {/* Image Container */}
-                  <Link href={`/plants/${plant.slug}`} className="block relative aspect-[4/3] bg-sand-100 overflow-hidden">
+                  <Link href={`/plants/${plant.slug}`} className="block relative aspect-[4/3] bg-sand-100 dark:bg-forest-950 overflow-hidden">
                     <Image
                       src={plant.primaryImage}
                       alt={plant.imageAlt}
@@ -361,24 +348,24 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                     />
                     <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
                       <span className="px-2 py-0.5 rounded-full bg-forest-950/80 backdrop-blur-md text-gold-300 text-[10px] font-medium border border-gold-400/30">
-                        ถ่ายที่ร้าน
+                        {t.home.shotInStore}
                       </span>
                     </div>
 
                     <div className="absolute top-2.5 right-2.5">
                       {plant.stockStatus === "in_stock" && (
                         <span className="px-2 py-0.5 rounded-full bg-emerald-700/90 backdrop-blur-md text-white text-[10px] font-medium">
-                          มีที่ร้าน
+                          {t.home.inStockBadge}
                         </span>
                       )}
                       {plant.stockStatus === "made_to_order" && (
                         <span className="px-2 py-0.5 rounded-full bg-amber-700/90 backdrop-blur-md text-white text-[10px] font-medium">
-                          สั่งได้
+                          {t.home.madeToOrderBadge}
                         </span>
                       )}
                       {plant.stockStatus === "seasonal" && (
                         <span className="px-2 py-0.5 rounded-full bg-stone-700/90 backdrop-blur-md text-white text-[10px] font-medium">
-                          ตามฤดูกาล
+                          {t.home.seasonalBadge}
                         </span>
                       )}
                     </div>
@@ -388,13 +375,13 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                   <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-forest-700">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-forest-700 dark:text-gold-400">
                           {plant.family.split(" ")[0]}
                         </span>
                         <button
                           onClick={() => toggleFavorite(plant.id)}
-                          className="p-1 text-stone-400 hover:text-rose-500 transition-colors"
-                          title="บันทึกไว้ดูภายหลัง"
+                          className="p-1 text-stone-400 dark:text-stone-500 hover:text-rose-500 transition-colors cursor-pointer"
+                          title="Save plant"
                         >
                           <Heart
                             className={`w-4 h-4 ${
@@ -405,41 +392,41 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                       </div>
 
                       <Link href={`/plants/${plant.slug}`}>
-                        <h3 className="font-serif text-lg font-semibold text-stone-900 group-hover:text-forest-800 transition-colors line-clamp-1 mt-0.5">
-                          {plant.nameTh}
+                        <h3 className="font-serif text-lg font-semibold text-stone-900 dark:text-sand-50 group-hover:text-forest-800 dark:group-hover:text-gold-300 transition-colors line-clamp-1 mt-0.5">
+                          {locale === "th" ? plant.nameTh : plant.nameEn}
                         </h3>
-                        <p className="text-xs text-stone-500 italic font-serif line-clamp-1">
+                        <p className="text-xs text-stone-500 dark:text-stone-400 italic font-serif line-clamp-1">
                           {plant.nameSci}
                         </p>
                       </Link>
 
-                      <p className="text-xs text-stone-600 line-clamp-2 mt-2 leading-relaxed">
+                      <p className="text-xs text-stone-600 dark:text-sand-300/80 line-clamp-2 mt-2 leading-relaxed">
                         {plant.summary}
                       </p>
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="pt-3 border-t border-sand-100 flex items-center justify-between gap-2">
+                    <div className="pt-3 border-t border-sand-100 dark:border-forest-800/80 flex items-center justify-between gap-2">
                       <button
                         onClick={() =>
                           openInquiryModal({
                             speciesId: plant.id,
-                            speciesNameTh: plant.nameTh,
+                            speciesNameTh: locale === "th" ? plant.nameTh : plant.nameEn,
                             speciesPhoto: plant.primaryImage,
                             defaultIntent: "price",
                           })
                         }
-                        className="px-3 py-1.5 rounded-xl bg-sand-100 hover:bg-forest-900 hover:text-sand-50 text-stone-700 text-xs font-medium transition-colors flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-xl bg-sand-100 dark:bg-forest-950 hover:bg-forest-900 dark:hover:bg-gold-500 hover:text-sand-50 dark:hover:text-forest-950 text-stone-700 dark:text-sand-200 text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
                         <MessageCircle className="w-3.5 h-3.5" />
-                        <span>ถามร้าน</span>
+                        <span>{t.search.askShopShort}</span>
                       </button>
 
                       <Link
                         href={`/plants/${plant.slug}`}
-                        className="text-xs font-semibold text-forest-900 hover:text-forest-700 flex items-center gap-1"
+                        className="text-xs font-semibold text-forest-900 dark:text-gold-400 hover:text-forest-700 dark:hover:text-gold-300 flex items-center gap-1"
                       >
-                        <span>สูตรดูแล</span>
+                        <span>{t.search.careFormulaShort}</span>
                         <span>→</span>
                       </Link>
                     </div>
@@ -448,21 +435,27 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
               ))}
             </div>
           ) : (
-            /* Zero Result State (SPEC §6.2) */
-            <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-sand-200 shadow-soft max-w-xl mx-auto space-y-5">
-              <div className="w-16 h-16 rounded-2xl bg-forest-900/5 text-forest-800 flex items-center justify-center mx-auto border border-sand-300">
-                <Search className="w-8 h-8 text-forest-800" />
+            /* Zero Result State */
+            <div className="bg-white dark:bg-[#0e2117] rounded-3xl p-10 sm:p-14 text-center border border-sand-200 dark:border-forest-800 shadow-soft max-w-xl mx-auto space-y-5">
+              <div className="w-16 h-16 rounded-2xl bg-forest-900/5 dark:bg-forest-900/40 text-forest-800 dark:text-gold-400 flex items-center justify-center mx-auto border border-sand-300 dark:border-forest-800">
+                <Search className="w-8 h-8 text-forest-800 dark:text-gold-400" />
               </div>
 
               <div className="space-y-2">
-                <h3 className="font-serif text-2xl font-medium text-stone-900">
-                  ยังไม่มีข้อมูลต้นนี้ในระบบ
+                <h3 className="font-serif text-2xl font-medium text-stone-900 dark:text-sand-50">
+                  {t.search.emptyTitle}
                 </h3>
-                <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-md mx-auto">
+                <p className="text-xs sm:text-sm text-stone-600 dark:text-sand-300 leading-relaxed max-w-md mx-auto">
                   {searchParams.q ? (
-                    <>คำค้นว่า <span className="font-semibold text-stone-800">"{searchParams.q}"</span> บันทึกเข้าคลังคำขอของร้านแล้ว ทางเรากำลังจัดเตรียมพันธุ์ไม้นี้</>
+                    <>
+                      {t.search.emptyDescPrefix}{" "}
+                      <span className="font-semibold text-stone-800 dark:text-gold-300">
+                        "{searchParams.q}"
+                      </span>{" "}
+                      {t.search.emptyDescSuffix}
+                    </>
                   ) : (
-                    "ไม่มีต้นไม้ที่ตรงกับตัวกรองที่คุณเลือก ลองปรับตัวกรองใหม่อีกครั้ง"
+                    t.search.emptyNoFilterDesc
                   )}
                 </p>
               </div>
@@ -472,20 +465,20 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
                   onClick={() =>
                     openInquiryModal({
                       defaultIntent: "availability",
-                      customNote: searchParams.q ? `ตามหาพันธุ์: ${searchParams.q}` : undefined,
+                      customNote: searchParams.q ? `Query: ${searchParams.q}` : undefined,
                     })
                   }
                   className="w-full sm:w-auto px-5 py-3 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-colors cursor-pointer"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  <span>ทักไปถามร้านใน LINE เลยไหม</span>
+                  <span>{t.search.askShopLine}</span>
                 </button>
                 {hasActiveFilters && (
                   <button
                     onClick={clearAllFilters}
-                    className="w-full sm:w-auto px-4 py-3 rounded-xl bg-sand-100 hover:bg-sand-200 text-stone-700 font-medium text-xs sm:text-sm transition-colors cursor-pointer"
+                    className="w-full sm:w-auto px-4 py-3 rounded-xl bg-sand-100 dark:bg-forest-950 hover:bg-sand-200 dark:hover:bg-forest-900 text-stone-700 dark:text-sand-200 font-medium text-xs sm:text-sm transition-colors cursor-pointer"
                   >
-                    ล้างตัวกรองทั้งหมด
+                    {t.search.clearAll}
                   </button>
                 )}
               </div>
@@ -496,12 +489,14 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
 
       {/* Mobile Filter Drawer */}
       {mobileFilterOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-sand-50 p-6 overflow-y-auto animate-in slide-in-from-bottom duration-200">
-          <div className="flex items-center justify-between pb-4 border-b border-sand-200">
-            <h3 className="font-serif text-lg font-semibold text-stone-900">ตัวกรองพันธุ์ไม้</h3>
+        <div className="fixed inset-0 z-50 flex flex-col bg-sand-50 dark:bg-[#0a1811] p-6 overflow-y-auto animate-in slide-in-from-bottom duration-200">
+          <div className="flex items-center justify-between pb-4 border-b border-sand-200 dark:border-forest-900">
+            <h3 className="font-serif text-lg font-semibold text-stone-900 dark:text-sand-50">
+              {t.search.filters}
+            </h3>
             <button
               onClick={() => setMobileFilterOpen(false)}
-              className="p-1 rounded-lg text-stone-500 hover:text-stone-800"
+              className="p-1 rounded-lg text-stone-500 hover:text-stone-800 dark:text-stone-400 dark:hover:text-sand-100"
             >
               <X className="w-5 h-5" />
             </button>
@@ -510,20 +505,18 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
           <div className="py-6 space-y-6 flex-1">
             {/* Stock */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-stone-600 block mb-2">
-                สถานะที่ร้าน
+              <label className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-400 block mb-2">
+                {t.search.stockStatus}
               </label>
               <div className="grid grid-cols-1 gap-1.5">
                 {stockOptions.map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => {
-                      updateParam("stock", searchParams.stock === opt.value ? null : opt.value);
-                    }}
-                    className={`px-3 py-2.5 rounded-xl text-xs text-left ${
+                    onClick={() => updateParam("stock", searchParams.stock === opt.value ? null : opt.value)}
+                    className={`px-3 py-2.5 rounded-xl text-xs text-left cursor-pointer ${
                       searchParams.stock === opt.value
-                        ? "bg-forest-900 text-sand-50 font-medium"
-                        : "bg-white border border-sand-200 text-stone-700"
+                        ? "bg-forest-900 dark:bg-forest-800 text-sand-50 font-medium"
+                        : "bg-white dark:bg-forest-950 border border-sand-200 dark:border-forest-900 text-stone-700 dark:text-sand-300"
                     }`}
                   >
                     {opt.label}
@@ -534,20 +527,18 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
 
             {/* Light */}
             <div>
-              <label className="text-xs font-bold uppercase tracking-wider text-stone-600 block mb-2">
-                สภาพแสง
+              <label className="text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-400 block mb-2">
+                {t.search.lightCondition}
               </label>
               <div className="grid grid-cols-1 gap-1.5">
                 {lightOptions.map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => {
-                      updateParam("light", searchParams.light === opt.value ? null : opt.value);
-                    }}
-                    className={`px-3 py-2.5 rounded-xl text-xs text-left ${
+                    onClick={() => updateParam("light", searchParams.light === opt.value ? null : opt.value)}
+                    className={`px-3 py-2.5 rounded-xl text-xs text-left cursor-pointer ${
                       searchParams.light === opt.value
-                        ? "bg-forest-900 text-sand-50 font-medium"
-                        : "bg-white border border-sand-200 text-stone-700"
+                        ? "bg-forest-900 dark:bg-forest-800 text-sand-50 font-medium"
+                        : "bg-white dark:bg-forest-950 border border-sand-200 dark:border-forest-900 text-stone-700 dark:text-sand-300"
                     }`}
                   >
                     {opt.label}
@@ -559,35 +550,33 @@ export function SearchClient({ initialSpecies, searchParams }: SearchClientProps
             {/* Pet Safe */}
             <div>
               <button
-                onClick={() => {
-                  updateParam("pet", searchParams.pet === "safe" ? null : "safe");
-                }}
-                className={`w-full py-3 px-4 rounded-xl text-xs font-medium text-center ${
+                onClick={() => updateParam("pet", searchParams.pet === "safe" ? null : "safe")}
+                className={`w-full py-3 px-4 rounded-xl text-xs font-medium text-center cursor-pointer ${
                   searchParams.pet === "safe"
                     ? "bg-emerald-800 text-white"
-                    : "bg-white border border-sand-300 text-stone-800"
+                    : "bg-white dark:bg-forest-950 border border-sand-300 dark:border-forest-900 text-stone-800 dark:text-sand-200"
                 }`}
               >
-                {searchParams.pet === "safe" ? "✓ ปลอดภัยกับสัตว์เลี้ยงเท่านั้น" : "ปลอดภัยกับสัตว์เลี้ยงเท่านั้น"}
+                {searchParams.pet === "safe" ? `✓ ${t.search.petFriendlyOnly}` : t.search.petFriendlyOnly}
               </button>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-sand-200 flex gap-3">
+          <div className="pt-4 border-t border-sand-200 dark:border-forest-900 flex gap-3">
             <button
               onClick={() => {
                 clearAllFilters();
                 setMobileFilterOpen(false);
               }}
-              className="flex-1 py-3 bg-sand-200 text-stone-800 rounded-xl text-xs font-medium"
+              className="flex-1 py-3 bg-sand-200 dark:bg-forest-900 text-stone-800 dark:text-sand-100 rounded-xl text-xs font-medium cursor-pointer"
             >
-              ล้างทั้งหมด
+              {t.search.clearAll}
             </button>
             <button
               onClick={() => setMobileFilterOpen(false)}
-              className="flex-1 py-3 bg-forest-900 text-sand-50 rounded-xl text-xs font-medium"
+              className="flex-1 py-3 bg-forest-900 dark:bg-gold-500 text-sand-50 dark:text-forest-950 rounded-xl text-xs font-medium cursor-pointer"
             >
-              ดู {displayedSpecies.length} รายการ
+              {t.search.viewItems} {displayedSpecies.length} {t.search.itemsSuffix}
             </button>
           </div>
         </div>

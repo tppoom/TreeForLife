@@ -8,12 +8,23 @@
     --foreground: 154 28% 9%;
   }
 
+  .dark {
+    --background: 154 45% 6%;
+    --foreground: 42 25% 95%;
+  }
+
   body {
     color: #1a2e22;
     background-color: #faf8f5;
     font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .dark body {
+    color: #f4efe6;
+    background-color: #0b1a13;
   }
 
   h1, h2, h3, h4 {
@@ -32,13 +43,25 @@
   background: #f4efe6;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #11261d;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #cbb799;
   border-radius: 9999px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: #345c47;
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: #9e8364;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4a7d62;
 }
 
 /* Luxury card hover glow */
@@ -49,4 +72,8 @@
 .card-hover-effect:hover {
   transform: translateY(-3px);
   box-shadow: 0 16px 32px -8px rgba(15, 41, 30, 0.08), 0 4px 12px -2px rgba(15, 41, 30, 0.04);
+}
+
+.dark .card-hover-effect:hover {
+  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.4), 0 4px 12px -2px rgba(212, 169, 44, 0.08);
 }

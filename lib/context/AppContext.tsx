@@ -1,6 +1,9 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { Locale, translations } from "@/lib/i18n/translations";
+
+export type ThemeMode = "light" | "dark";
 
 export interface UserSession {
   id: string;
@@ -40,6 +43,13 @@ interface AppContextType {
   toasts: Toast[];
   showToast: (message: string, type?: "success" | "info" | "warning") => void;
   removeToast: (id: string) => void;
+  // i18n & Theme
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  toggleLocale: () => void;
+  theme: ThemeMode;
+  toggleTheme: () => void;
+  t: typeof translations.th;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -49,12 +59,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [locale, setLocaleState] = useState<Locale>("th");
+  const [theme, setThemeState] = useState<ThemeMode>("light");
+
   const [inquiryModal, setInquiryModal] = useState<InquiryModalData>({
     isOpen: false,
     defaultIntent: "price",
   });
 
-  // Initialize guest token & favorites from localStorage
+  // Initialize guest token, favorites, theme, and locale from localStorage
   useEffect(() => {
     try {
       let token = localStorage.getItem("tfl_guest_token");
@@ -73,10 +86,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (savedUser) {
         setCurrentUser(JSON.parse(savedUser));
       }
+
+      const savedLocale = localStorage.getItem("tfl_locale") as Locale;
+      if (savedLocale === "en" || savedLocale === "th") {
+        setLocaleState(savedLocale);
+        document.documentElement.lang = savedLocale;
+      }
+
+      const savedTheme = localStorage.getItem("tfl_theme") as ThemeMode;
+      if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        setThemeState("dark");
+        document.documentElement.classList.add("dark");
+      } else {
+        setThemeState("light");
+        document.documentElement.classList.remove("dark");
+      }
     } catch (e) {
       console.error("Storage error:", e);
     }
   }, []);
+
+  const setLocale = (newLocale: Locale) => {
+    setLocaleState(newLocale);
+    try {
+      localStorage.setItem("tfl_locale", newLocale);
+      document.documentElement.lang = newLocale;
+    } catch (e) {}
+  };
+
+  const toggleLocale = () => {
+    setLocale(locale === "th" ? "en" : "th");
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setThemeState(nextTheme);
+    try {
+      localStorage.setItem("tfl_theme", nextTheme);
+      if (nextTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    } catch (e) {}
+  };
 
   const toggleFavorite = (speciesId: string) => {
     setFavorites((prev) => {
@@ -87,7 +140,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("tfl_favorites", JSON.stringify(next));
       } catch (e) {}
       showToast(
-        next.includes(speciesId) ? "บันทึกในรายการที่สนใจแล้ว" : "นำออกจากรายการที่สนใจแล้ว",
+        next.includes(speciesId)
+          ? (locale === "th" ? "บันทึกในรายการที่สนใจแล้ว" : "Added to saved list")
+          : (locale === "th" ? "นำออกจากรายการที่สนใจแล้ว" : "Removed from saved list"),
         "info"
       );
       return next;
@@ -118,7 +173,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
         const data = await res.json();
         if (data.plantCount > 0) {
-          showToast(`ย้ายต้นไม้ ${data.plantCount} ต้นที่บันทึกไว้เข้าบัญชีแล้ว 🌿`, "success");
+          showToast(
+            locale === "th"
+              ? `ย้ายต้นไม้ ${data.plantCount} ต้นที่บันทึกไว้เข้าบัญชีแล้ว 🌿`
+              : `Migrated ${data.plantCount} saved plants to your account! 🌿`,
+            "success"
+          );
         } else {
           showToast(`ยินดีต้อนรับ ${user.displayName}!`, "success");
         }
@@ -133,7 +193,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.removeItem("tfl_user");
     } catch (e) {}
-    showToast("ออกจากระบบแล้ว", "info");
+    showToast(locale === "th" ? "ออกจากระบบแล้ว" : "Signed out", "info");
   };
 
   const openInquiryModal = (data: Partial<InquiryModalData>) => {
@@ -164,6 +224,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const t = translations[locale];
+
   return (
     <AppContext.Provider
       value={{
@@ -180,6 +242,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toasts,
         showToast,
         removeToast,
+        locale,
+        setLocale,
+        toggleLocale,
+        theme,
+        toggleTheme,
+        t,
       }}
     >
       {children}

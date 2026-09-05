@@ -8,8 +8,6 @@ import {
   calculateWateringInterval,
   PotMaterial,
   Placement,
-  POT_MATERIAL_FACTORS,
-  PLACEMENT_FACTORS,
 } from "@/lib/care/scheduler";
 import {
   Search,
@@ -17,10 +15,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Sprout,
-  HelpCircle,
-  Calendar,
   Sparkles,
-  Info,
 } from "lucide-react";
 
 interface SpeciesOption {
@@ -44,7 +39,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
   const searchParams = useSearchParams();
   const initialSpeciesId = searchParams.get("speciesId");
 
-  const { guestToken, currentUser, showToast } = useApp();
+  const { guestToken, currentUser, showToast, t, locale } = useApp();
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -97,7 +92,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
 
   const handleSubmit = async () => {
     if (!nickname.trim()) {
-      showToast("กรุณาระบุชื่อเล่นของต้นไม้", "warning");
+      showToast(locale === "th" ? "กรุณาระบุชื่อเล่นของต้นไม้" : "Please specify a nickname for your plant", "warning");
       return;
     }
 
@@ -124,44 +119,67 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to add plant");
 
-      showToast(`เพิ่ม "${nickname}" เข้าสวนเรียบร้อยแล้ว! 🌿`, "success");
+      showToast(
+        locale === "th"
+          ? `เพิ่ม "${nickname}" เข้าสวนเรียบร้อยแล้ว! 🌿`
+          : `Added "${nickname}" to your garden! 🌿`,
+        "success"
+      );
       router.push(`/garden/${data.plant.id}`);
     } catch (err: any) {
-      showToast(err.message || "เกิดข้อผิดพลาดในการบันทึก", "warning");
+      showToast(err.message || (locale === "th" ? "เกิดข้อผิดพลาดในการบันทึก" : "Error saving plant"), "warning");
     } finally {
       setSubmitting(false);
     }
   };
 
-  const potMaterialCards: { key: PotMaterial; title: string; desc: string }[] = [
-    { key: "terracotta", title: "ดินเผา (ระบายน้ำเร็ว)", desc: "ระเหยผ่านผนังกระถาง ดินแห้งไว (×0.80)" },
-    { key: "plastic", title: "พลาสติก", desc: "มาตรฐาน กักเก็บความชื้นพอเหมาะ (×1.00)" },
-    { key: "ceramic_glazed", title: "เซรามิกเคลือบ", desc: "ไม่ระบายน้ำทางผนัง ดินชื้นนาน (×1.15)" },
-    { key: "cement", title: "ปูนเปลือย/คอนกรีต", desc: "ผนังหนา เก็บความชื้นสูง (×1.15)" },
-    { key: "hanging", title: "กระถางแขวน", desc: "ลมโกรกผ่านดี (×1.00)" },
-  ];
+  const potMaterialCards: { key: PotMaterial; title: string; desc: string }[] =
+    locale === "en"
+      ? [
+          { key: "terracotta", title: "Terracotta (Porous)", desc: "Evaporates via walls, dries faster (×0.80)" },
+          { key: "plastic", title: "Plastic", desc: "Standard, retains balanced moisture (×1.00)" },
+          { key: "ceramic_glazed", title: "Glazed Ceramic", desc: "Non-porous walls, stays moist longer (×1.15)" },
+          { key: "cement", title: "Concrete / Cement", desc: "Thick walls, high moisture retention (×1.15)" },
+          { key: "hanging", title: "Hanging Basket", desc: "High aeration, good airflow (×1.00)" },
+        ]
+      : [
+          { key: "terracotta", title: "ดินเผา (ระบายน้ำเร็ว)", desc: "ระเหยผ่านผนังกระถาง ดินแห้งไว (×0.80)" },
+          { key: "plastic", title: "พลาสติก", desc: "มาตรฐาน กักเก็บความชื้นพอเหมาะ (×1.00)" },
+          { key: "ceramic_glazed", title: "เซรามิกเคลือบ", desc: "ไม่ระบายน้ำทางผนัง ดินชื้นนาน (×1.15)" },
+          { key: "cement", title: "ปูนเปลือย/คอนกรีต", desc: "ผนังหนา เก็บความชื้นสูง (×1.15)" },
+          { key: "hanging", title: "กระถางแขวน", desc: "ลมโกรกผ่านดี (×1.00)" },
+        ];
 
-  const placementCards: { key: Placement; title: string; desc: string }[] = [
-    { key: "outdoor_sun", title: "กลางแจ้งแดดเต็มวัน", desc: "รับแดดและลมแรง ดินแห้งไวที่สุด (×0.70)" },
-    { key: "balcony_shade", title: "ระเบียง/มีร่มรำไร", desc: "มีลมระบาย แสงรำไรสว่าง (×0.90)" },
-    { key: "indoor_window", title: "ในบ้านใกล้หน้าต่าง", desc: "แสงสว่างทางอ้อม ลมปกติ (×1.00)" },
-    { key: "indoor_far", title: "ในบ้านห่างหน้าต่าง", desc: "แสงน้อย คายน้ำช้า ต้องการน้ำน้อยลง (×1.25)" },
-    { key: "air_con", title: "ห้องแอร์", desc: "ไม่มีแดด อุณหภูมิเย็น ดินชื้นนานกว่า (×1.20)" },
-  ];
+  const placementCards: { key: Placement; title: string; desc: string }[] =
+    locale === "en"
+      ? [
+          { key: "outdoor_sun", title: "Outdoor Full Sun", desc: "Intense sun & wind, dries fastest (×0.70)" },
+          { key: "balcony_shade", title: "Balcony / Filtered", desc: "Breezy with bright filtered light (×0.90)" },
+          { key: "indoor_window", title: "Indoor by Window", desc: "Bright indirect light, normal airflow (×1.00)" },
+          { key: "indoor_far", title: "Indoor away from Window", desc: "Low light, low transpiration (×1.25)" },
+          { key: "air_con", title: "Air-Conditioned Room", desc: "No direct sunlight, cooler temperature (×1.20)" },
+        ]
+      : [
+          { key: "outdoor_sun", title: "กลางแจ้งแดดเต็มวัน", desc: "รับแดดและลมแรง ดินแห้งไวที่สุด (×0.70)" },
+          { key: "balcony_shade", title: "ระเบียง/มีร่มรำไร", desc: "มีลมระบาย แสงรำไรสว่าง (×0.90)" },
+          { key: "indoor_window", title: "ในบ้านใกล้หน้าต่าง", desc: "แสงสว่างทางอ้อม ลมปกติ (×1.00)" },
+          { key: "indoor_far", title: "ในบ้านห่างหน้าต่าง", desc: "แสงน้อย คายน้ำช้า ต้องการน้ำน้อยลง (×1.25)" },
+          { key: "air_con", title: "ห้องแอร์", desc: "ไม่มีแดด อุณหภูมิเย็น ดินชื้นนานกว่า (×1.20)" },
+        ];
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       {/* Wizard Header */}
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-900/5 text-forest-800 text-xs font-semibold">
-          <Sprout className="w-3.5 h-3.5 text-emerald-600" />
-          <span>เพิ่มต้นไม้เข้าสวนของคุณ (ขั้นตอนที่ {step} จาก 4)</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-forest-900/5 dark:bg-forest-800/30 text-forest-800 dark:text-gold-400 text-xs font-semibold border border-forest-900/10 dark:border-forest-700/30">
+          <Sprout className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+          <span>{t.wizard.stepOf.replace("{step}", String(step))}</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-stone-900">
-          ลงทะเบียนต้นไม้ใหม่
+        <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-stone-900 dark:text-sand-50">
+          {t.wizard.title}
         </h1>
-        <p className="text-xs sm:text-sm text-stone-600">
-          ระบบจะวิเคราะห์เพื่อสร้างตารางรดน้ำที่แม่นยำที่สุดให้ต้นไม้ของคุณ
+        <p className="text-xs sm:text-sm text-stone-600 dark:text-sand-400">
+          {t.wizard.desc}
         </p>
       </div>
 
@@ -171,23 +189,23 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
           <div
             key={i}
             className={`h-2 flex-1 rounded-full transition-all ${
-              step >= i ? "bg-forest-900" : "bg-sand-200"
+              step >= i ? "bg-forest-900 dark:bg-gold-400" : "bg-sand-200 dark:bg-forest-900"
             }`}
           />
         ))}
       </div>
 
       {/* Step Content */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-sand-200 shadow-soft space-y-6">
+      <div className="bg-white dark:bg-[#0e2117] rounded-3xl p-6 sm:p-8 border border-sand-200 dark:border-forest-800 shadow-soft space-y-6">
         {/* STEP 1: Select Species (SPEC §6.6 #1) */}
         {step === 1 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <h2 className="font-serif text-xl font-semibold text-stone-900">
-                1. เลือกพันธุ์ต้นไม้ของคุณ
+              <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-sand-50">
+                {t.wizard.step1Title}
               </h2>
-              <p className="text-xs text-stone-500">
-                เลือกพันธุ์จากแคตตาล็อกของร้านเพื่อให้ระบบดึงสูตรดูแล 3 ฤดูกาลไทยอัตโนมัติ
+              <p className="text-xs text-stone-500 dark:text-sand-400">
+                {t.wizard.step1Desc}
               </p>
             </div>
 
@@ -197,43 +215,49 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                 type="text"
                 value={speciesSearch}
                 onChange={(e) => setSpeciesSearch(e.target.value)}
-                placeholder="ค้นหาชื่อพันธุ์ เช่น มอนสเตอร่า, ยางอินเดีย..."
-                className="w-full text-xs sm:text-sm pl-10 pr-4 py-2.5 bg-sand-50 border border-sand-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-700 text-stone-800 placeholder-stone-400"
+                placeholder={t.wizard.searchPlantPlaceholder}
+                className="w-full text-xs sm:text-sm pl-10 pr-4 py-2.5 bg-sand-50 dark:bg-forest-950 border border-sand-300 dark:border-forest-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-700 dark:focus:ring-gold-500 text-stone-800 dark:text-sand-100 placeholder-stone-400 dark:placeholder-sand-500"
               />
-              <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
+              <Search className="w-4 h-4 text-stone-400 dark:text-sand-500 absolute left-3.5 top-3" />
             </div>
 
             {/* Species Grid */}
             <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
-              {filteredSpecies.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedSpeciesId(item.id);
-                    setIsOtherSpecies(false);
-                    if (!nickname) setNickname(item.nameTh);
-                  }}
-                  className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left cursor-pointer ${
-                    selectedSpeciesId === item.id && !isOtherSpecies
-                      ? "bg-forest-900 text-sand-50 border-forest-900 shadow-sm"
-                      : "bg-white border-sand-200 hover:bg-sand-50 text-stone-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-sand-300">
-                      <Image src={item.primaryImage} alt={item.nameTh} fill className="object-cover" />
+              {filteredSpecies.map((item) => {
+                const itemTitle = locale === "th" ? item.nameTh : item.nameEn;
+                const itemSub = locale === "th" ? item.nameEn : item.nameTh;
+                const isSelected = selectedSpeciesId === item.id && !isOtherSpecies;
+
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedSpeciesId(item.id);
+                      setIsOtherSpecies(false);
+                      if (!nickname) setNickname(itemTitle);
+                    }}
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl border transition-all text-left cursor-pointer ${
+                      isSelected
+                        ? "bg-forest-900 text-sand-50 border-forest-900 dark:bg-forest-800 dark:border-gold-400/50 shadow-sm"
+                        : "bg-white dark:bg-[#0e2117] border-sand-200 dark:border-forest-800 hover:bg-sand-50 dark:hover:bg-forest-900 text-stone-800 dark:text-sand-200"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-sand-300 dark:border-forest-700">
+                        <Image src={item.primaryImage} alt={itemTitle} fill className="object-cover" />
+                      </div>
+                      <div>
+                        <h4 className="font-serif text-sm font-semibold truncate">{itemTitle}</h4>
+                        <p className="text-xs opacity-75 font-serif italic truncate">{itemSub}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-serif text-sm font-semibold truncate">{item.nameTh}</h4>
-                      <p className="text-xs opacity-75 font-serif italic truncate">{item.nameEn}</p>
-                    </div>
-                  </div>
-                  {selectedSpeciesId === item.id && !isOtherSpecies && (
-                    <Check className="w-5 h-5 text-gold-400 shrink-0" />
-                  )}
-                </button>
-              ))}
+                    {isSelected && (
+                      <Check className="w-5 h-5 text-gold-400 shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
 
               {/* Option: Other species (SPEC §6.6 #1) */}
               <button
@@ -244,12 +268,12 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                 }}
                 className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                   isOtherSpecies
-                    ? "bg-forest-900 text-sand-50 border-forest-900 shadow-sm"
-                    : "bg-sand-50 border-sand-300 hover:bg-sand-100 text-stone-700"
+                    ? "bg-forest-900 text-sand-50 border-forest-900 dark:bg-forest-800 dark:border-gold-400/50 shadow-sm"
+                    : "bg-sand-50 dark:bg-forest-950 border-sand-300 dark:border-forest-800 hover:bg-sand-100 dark:hover:bg-forest-900 text-stone-700 dark:text-sand-300"
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold">พันธุ์อื่น ๆ (ไม่อยู่ในรายการด้านบน)</span>
+                  <span className="text-xs font-semibold">{t.wizard.otherSpecies}</span>
                   {isOtherSpecies && <Check className="w-4 h-4 text-gold-400" />}
                 </div>
                 {isOtherSpecies && (
@@ -257,8 +281,8 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                     type="text"
                     value={customSpeciesName}
                     onChange={(e) => setCustomSpeciesName(e.target.value)}
-                    placeholder="พิมพ์ชื่อพันธุ์ของคุณที่นี่..."
-                    className="mt-3 w-full text-xs px-3 py-2 bg-white text-stone-800 rounded-xl border border-sand-300 focus:outline-none"
+                    placeholder={t.wizard.otherSpeciesPlaceholder}
+                    className="mt-3 w-full text-xs px-3 py-2 bg-white dark:bg-forest-900 text-stone-800 dark:text-sand-100 rounded-xl border border-sand-300 dark:border-forest-700 focus:outline-none"
                     onClick={(e) => e.stopPropagation()}
                   />
                 )}
@@ -271,53 +295,53 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
         {step === 2 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <h2 className="font-serif text-xl font-semibold text-stone-900">
-                2. ข้อมูลทั่วไปของต้นไม้
+              <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-sand-50">
+                {t.wizard.step2Title}
               </h2>
-              <p className="text-xs text-stone-500">
-                ตั้งชื่อเล่นให้น้องเพื่อความผูกพันและบันทึกที่มา
+              <p className="text-xs text-stone-500 dark:text-sand-400">
+                {t.wizard.step2Desc}
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
-                ชื่อเล่นต้นไม้ *
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-300 mb-1.5">
+                {t.wizard.nicknameLabel}
               </label>
               <input
                 type="text"
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
-                placeholder="เช่น เจ้าอ้วน, มอนด่างมุมห้อง, ยางอินเดียโต๊ะทำงาน"
-                className="w-full text-sm px-4 py-3 bg-sand-50 border border-sand-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-700 text-stone-800"
+                placeholder={t.wizard.nicknamePlaceholder}
+                className="w-full text-sm px-4 py-3 bg-sand-50 dark:bg-forest-950 border border-sand-300 dark:border-forest-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-700 dark:focus:ring-gold-500 text-stone-800 dark:text-sand-100 placeholder-stone-400 dark:placeholder-sand-500"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
-                  วันที่รับมาเลี้ยง
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-300 mb-1.5">
+                  {t.wizard.acquiredDateLabel}
                 </label>
                 <input
                   type="date"
                   value={acquiredAt}
                   onChange={(e) => setAcquiredAt(e.target.value)}
-                  className="w-full text-sm px-4 py-2.5 bg-sand-50 border border-sand-300 rounded-xl focus:outline-none text-stone-800"
+                  className="w-full text-sm px-4 py-2.5 bg-sand-50 dark:bg-forest-950 border border-sand-300 dark:border-forest-800 rounded-xl focus:outline-none text-stone-800 dark:text-sand-100"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
-                  ได้มาจากไหน
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-300 mb-1.5">
+                  {t.wizard.acquiredFromLabel}
                 </label>
                 <select
                   value={acquiredFrom}
                   onChange={(e) => setAcquiredFrom(e.target.value as any)}
-                  className="w-full text-sm px-4 py-2.5 bg-sand-50 border border-sand-300 rounded-xl focus:outline-none text-stone-800"
+                  className="w-full text-sm px-4 py-2.5 bg-sand-50 dark:bg-forest-950 border border-sand-300 dark:border-forest-800 rounded-xl focus:outline-none text-stone-800 dark:text-sand-100"
                 >
-                  <option value="shop">ซื้อจากร้าน TreeForLife</option>
-                  <option value="elsewhere">ซื้อจากที่อื่น</option>
-                  <option value="gift">เพื่อนหรือผู้ใหญ่ให้มา</option>
-                  <option value="propagated">ขยายพันธุ์/ตอนกิ่งเอง</option>
+                  <option value="shop">{t.wizard.sourceShop}</option>
+                  <option value="elsewhere">{t.wizard.sourceElsewhere}</option>
+                  <option value="gift">{t.wizard.sourceGift}</option>
+                  <option value="propagated">{t.wizard.sourcePropagated}</option>
                 </select>
               </div>
             </div>
@@ -328,18 +352,18 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
         {step === 3 && (
           <div className="space-y-5 animate-in fade-in duration-200">
             <div>
-              <h2 className="font-serif text-xl font-semibold text-stone-900">
-                3. ขนาดและวัสดุกระถาง
+              <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-sand-50">
+                {t.wizard.step3Title}
               </h2>
-              <p className="text-xs text-stone-500">
-                วัสดุกระถางมีผลต่ออัตราการระเหยของน้ำในดินอย่างมาก
+              <p className="text-xs text-stone-500 dark:text-sand-400">
+                {t.wizard.step3Desc}
               </p>
             </div>
 
             {/* Pot Size */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">
-                ขนาดเส้นผ่านศูนย์กลางปากกระถาง: <span className="text-forest-800 font-bold">{potSizeInch} นิ้ว</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-300 mb-1.5">
+                {t.wizard.potSizeLabel} <span className="text-forest-800 dark:text-gold-400 font-bold">{potSizeInch} {t.garden.inches}</span>
               </label>
               <input
                 type="range"
@@ -348,19 +372,19 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                 step="1"
                 value={potSizeInch}
                 onChange={(e) => setPotSizeInch(Number(e.target.value))}
-                className="w-full accent-forest-800"
+                className="w-full accent-forest-800 dark:accent-gold-400"
               />
-              <div className="flex justify-between text-[11px] text-stone-400 mt-1">
-                <span>กระถางเล็ก (&lt;6")</span>
-                <span>มาตรฐาน (6-10")</span>
-                <span>กระถางใหญ่ (&gt;10")</span>
+              <div className="flex justify-between text-[11px] text-stone-400 dark:text-sand-400 mt-1">
+                <span>{t.wizard.potSmall}</span>
+                <span>{t.wizard.potMed}</span>
+                <span>{t.wizard.potLarge}</span>
               </div>
             </div>
 
             {/* Visual Material Selector */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-2">
-                วัสดุกระถาง (แตะเลือก)
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-600 dark:text-sand-300 mb-2">
+                {t.wizard.potMaterialTitle}
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {potMaterialCards.map((card) => (
@@ -370,8 +394,8 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                     onClick={() => setPotMaterial(card.key)}
                     className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                       potMaterial === card.key
-                        ? "bg-forest-900 text-sand-50 border-forest-900 shadow-sm"
-                        : "bg-white border-sand-200 hover:bg-sand-50 text-stone-800"
+                        ? "bg-forest-900 text-sand-50 border-forest-900 dark:bg-forest-800 dark:border-gold-400/50 shadow-sm"
+                        : "bg-white dark:bg-[#0e2117] border-sand-200 dark:border-forest-800 hover:bg-sand-50 dark:hover:bg-forest-900 text-stone-800 dark:text-sand-200"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -390,11 +414,11 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
         {step === 4 && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div>
-              <h2 className="font-serif text-xl font-semibold text-stone-900">
-                4. ตำแหน่งที่วาง & ตารางดูแล
+              <h2 className="font-serif text-xl font-semibold text-stone-900 dark:text-sand-50">
+                {t.wizard.step4Title}
               </h2>
-              <p className="text-xs text-stone-500">
-                เลือกจุดที่คุณตั้งต้นไม้ไว้ในบ้าน
+              <p className="text-xs text-stone-500 dark:text-sand-400">
+                {t.wizard.step4Desc}
               </p>
             </div>
 
@@ -407,8 +431,8 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                   onClick={() => setPlacement(card.key)}
                   className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer ${
                     placement === card.key
-                      ? "bg-forest-900 text-sand-50 border-forest-900 shadow-sm"
-                      : "bg-white border-sand-200 hover:bg-sand-50 text-stone-800"
+                      ? "bg-forest-900 text-sand-50 border-forest-900 dark:bg-forest-800 dark:border-gold-400/50 shadow-sm"
+                      : "bg-white dark:bg-[#0e2117] border-sand-200 dark:border-forest-800 hover:bg-sand-50 dark:hover:bg-forest-900 text-stone-800 dark:text-sand-200"
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -426,42 +450,43 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                 <div className="flex items-center gap-2 text-gold-400">
                   <Sparkles className="w-4 h-4" />
                   <span className="text-xs font-bold uppercase tracking-wider">
-                    คำนวณรอบรดน้ำอัจฉริยะ (Care Schedule Engine)
+                    {t.wizard.calculationBoxTitle}
                   </span>
                 </div>
                 <span className="px-3 py-1 rounded-full bg-gold-400 text-forest-950 font-bold text-xs">
-                  รดทุก {previewCalculation.finalDays} วัน
+                  {t.wizard.waterEveryResult.replace("{days}", String(previewCalculation.finalDays))}
                 </span>
               </div>
 
               <div className="text-xs text-sand-300 space-y-1.5 pt-1 border-t border-forest-800">
                 <p>
-                  <span className="text-sand-100 font-medium">ฤดูกาลปัจจุบัน:</span>{" "}
-                  {previewCalculation.seasonNameTh} (ฐาน {previewCalculation.baseDays} วัน)
+                  <span className="text-sand-100 font-medium">{t.wizard.seasonLabel}</span>{" "}
+                  {locale === "en" ? (previewCalculation.seasonNameEn || previewCalculation.seasonNameTh) : previewCalculation.seasonNameTh}{" "}
+                  ({locale === "en" ? `Base ${previewCalculation.baseDays} days` : `ฐาน ${previewCalculation.baseDays} วัน`})
                 </p>
                 <p>
-                  <span className="text-sand-100 font-medium">สูตรคำนวณจริง:</span>{" "}
-                  {previewCalculation.explanationTh}
+                  <span className="text-sand-100 font-medium">{t.wizard.formulaLabel}</span>{" "}
+                  {locale === "en" ? (previewCalculation.explanationEn || previewCalculation.explanationTh) : previewCalculation.explanationTh}
                 </p>
               </div>
 
-              <div className="pt-2 text-[11px] text-stone-400">
-                * ระบบจะปรับรอบอัตโนมัติเมื่อเข้าสู่ฤดูถัดไป หรือคุณสามารถปรับวันเองได้เสมอ
+              <div className="pt-2 text-[11px] text-stone-400 dark:text-sand-400">
+                {t.wizard.autoAdjustNote}
               </div>
             </div>
           </div>
         )}
 
         {/* Wizard Navigation Buttons */}
-        <div className="pt-4 border-t border-sand-200 flex items-center justify-between gap-3">
+        <div className="pt-4 border-t border-sand-200 dark:border-forest-800 flex items-center justify-between gap-3">
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="px-5 py-2.5 rounded-xl bg-sand-100 hover:bg-sand-200 text-stone-700 font-medium text-xs flex items-center gap-2 transition-colors cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-sand-100 dark:bg-forest-900 hover:bg-sand-200 dark:hover:bg-forest-850 text-stone-700 dark:text-sand-200 font-medium text-xs flex items-center gap-2 transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>ย้อนกลับ</span>
+              <span>{t.wizard.backBtn}</span>
             </button>
           ) : (
             <div />
@@ -472,18 +497,18 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
               type="button"
               onClick={() => {
                 if (step === 1 && !selectedSpeciesId && !isOtherSpecies) {
-                  showToast("กรุณาเลือกพันธุ์ไม้", "warning");
+                  showToast(locale === "th" ? "กรุณาเลือกพันธุ์ไม้" : "Please select a plant species", "warning");
                   return;
                 }
                 if (step === 2 && !nickname.trim()) {
-                  showToast("กรุณาระบุชื่อเล่นของต้นไม้", "warning");
+                  showToast(locale === "th" ? "กรุณาระบุชื่อเล่นของต้นไม้" : "Please enter a nickname", "warning");
                   return;
                 }
                 setStep(step + 1);
               }}
-              className="px-6 py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 text-sand-50 font-medium text-xs flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+              className="px-6 py-2.5 rounded-xl bg-forest-900 hover:bg-forest-800 dark:bg-forest-800 dark:hover:bg-forest-700 text-sand-50 font-medium text-xs flex items-center gap-2 border border-transparent dark:border-forest-700 transition-colors shadow-sm cursor-pointer"
             >
-              <span>ถัดไป</span>
+              <span>{t.wizard.nextBtn}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
@@ -493,7 +518,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
               disabled={submitting}
               className="px-7 py-3 rounded-xl bg-gold-500 hover:bg-gold-400 text-forest-950 font-bold text-xs flex items-center gap-2 transition-all shadow-gold cursor-pointer disabled:opacity-50"
             >
-              <span>{submitting ? "กำลังสร้างตารางดูแล..." : "เสร็จสิ้น & สร้างตารางดูแล"}</span>
+              <span>{submitting ? t.wizard.creatingBtn : t.wizard.finishBtn}</span>
               <Check className="w-4 h-4" />
             </button>
           )}

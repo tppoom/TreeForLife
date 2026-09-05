@@ -29,6 +29,7 @@ export interface PlantConditionsInput {
 export interface CalculationBreakdown {
   season: ThaiSeason;
   seasonNameTh: string;
+  seasonNameEn: string;
   baseDays: number;
   potMaterialFactor: number;
   potMaterialDesc: string;
@@ -40,6 +41,7 @@ export interface CalculationBreakdown {
   finalDays: number;
   isCustom: boolean;
   explanationTh: string;
+  explanationEn: string;
 }
 
 /**
@@ -63,30 +65,128 @@ export function getThaiSeasonName(season: ThaiSeason): string {
   }
 }
 
-export const POT_MATERIAL_FACTORS: Record<PotMaterial, { factor: number; labelTh: string; descTh: string }> = {
-  terracotta: { factor: 0.80, labelTh: "ดินเผา", descTh: "ระเหยผ่านผนังกระถาง ดินแห้งเร็ว" },
-  plastic: { factor: 1.00, labelTh: "พลาสติก", descTh: "กักเก็บความชื้นมาตรฐาน" },
-  hanging: { factor: 1.00, labelTh: "กระถางแขวน", descTh: "กักเก็บความชื้นมาตรฐาน ลมผ่านดี" },
-  ceramic_glazed: { factor: 1.15, labelTh: "เซรามิกเคลือบ", descTh: "ไม่ระบายน้ำทางผนัง ดินชื้นนาน" },
-  cement: { factor: 1.15, labelTh: "ปูน/คอนกรีต", descTh: "ผนังหนา กักเก็บความชื้นสูง" },
-};
-
-export function getPotSizeFactor(inches: number): { factor: number; labelTh: string; descTh: string } {
-  if (inches < 6) {
-    return { factor: 0.85, labelTh: `< 6 นิ้ว (${inches}")`, descTh: "ดินน้อย ระเหยไว ดินแห้งเร็ว" };
+export function getThaiSeasonNameEn(season: ThaiSeason): string {
+  switch (season) {
+    case "hot": return "Hot Season (Mar–May)";
+    case "rainy": return "Rainy Season (Jun–Oct)";
+    case "cool": return "Cool / Dry Season (Nov–Feb)";
   }
-  if (inches <= 10) {
-    return { factor: 1.00, labelTh: `6–10 นิ้ว (${inches}")`, descTh: "ขนาดกระถางมาตรฐาน" };
-  }
-  return { factor: 1.20, labelTh: `> 10 นิ้ว (${inches}")`, descTh: "ปริมาณดินมาก อุ้มน้ำและความชื้นได้นาน" };
 }
 
-export const PLACEMENT_FACTORS: Record<Placement, { factor: number; labelTh: string; descTh: string }> = {
-  outdoor_sun: { factor: 0.70, labelTh: "กลางแจ้งแดดเต็มวัน", descTh: "รับแดดจัดและลม ดินแห้งเร็วที่สุด" },
-  balcony_shade: { factor: 0.90, labelTh: "ระเบียง/มีร่มรำไร", descTh: "มีลมถ่ายเท แสงสว่างพอเหมาะ" },
-  indoor_window: { factor: 1.00, labelTh: "ในบ้านใกล้หน้าต่าง", descTh: "แสงทางอ้อมสว่าง ระบายอากาศปกติ" },
-  indoor_far: { factor: 1.25, labelTh: "ในบ้านห่างหน้าต่าง", descTh: "แสงน้อย ดินคายน้ำช้า ต้องการน้ำน้อยลง" },
-  air_con: { factor: 1.20, labelTh: "ห้องแอร์", descTh: "ไม่มีแดด อุณหภูมิเย็น สุทธิแล้วดินชื้นนานกว่า" },
+export const POT_MATERIAL_FACTORS: Record<
+  PotMaterial,
+  { factor: number; labelTh: string; descTh: string; labelEn: string; descEn: string }
+> = {
+  terracotta: {
+    factor: 0.80,
+    labelTh: "ดินเผา",
+    descTh: "ระเหยผ่านผนังกระถาง ดินแห้งเร็ว",
+    labelEn: "Terracotta",
+    descEn: "Evaporates via porous walls, dries faster",
+  },
+  plastic: {
+    factor: 1.00,
+    labelTh: "พลาสติก",
+    descTh: "กักเก็บความชื้นมาตรฐาน",
+    labelEn: "Plastic",
+    descEn: "Standard moisture retention",
+  },
+  hanging: {
+    factor: 1.00,
+    labelTh: "กระถางแขวน",
+    descTh: "กักเก็บความชื้นมาตรฐาน ลมผ่านดี",
+    labelEn: "Hanging Basket",
+    descEn: "Standard moisture retention with good airflow",
+  },
+  ceramic_glazed: {
+    factor: 1.15,
+    labelTh: "เซรามิกเคลือบ",
+    descTh: "ไม่ระบายน้ำทางผนัง ดินชื้นนาน",
+    labelEn: "Glazed Ceramic",
+    descEn: "Non-porous walls, stays moist longer",
+  },
+  cement: {
+    factor: 1.15,
+    labelTh: "ปูน/คอนกรีต",
+    descTh: "ผนังหนา กักเก็บความชื้นสูง",
+    labelEn: "Concrete / Cement",
+    descEn: "Thick walls, high moisture retention",
+  },
+};
+
+export function getPotSizeFactor(inches: number): {
+  factor: number;
+  labelTh: string;
+  descTh: string;
+  labelEn: string;
+  descEn: string;
+} {
+  if (inches < 6) {
+    return {
+      factor: 0.85,
+      labelTh: `< 6 นิ้ว (${inches}")`,
+      descTh: "ดินน้อย ระเหยไว ดินแห้งเร็ว",
+      labelEn: `< 6" (${inches}")`,
+      descEn: "Low soil volume, dries faster",
+    };
+  }
+  if (inches <= 10) {
+    return {
+      factor: 1.00,
+      labelTh: `6–10 นิ้ว (${inches}")`,
+      descTh: "ขนาดกระถางมาตรฐาน",
+      labelEn: `6–10" (${inches}")`,
+      descEn: "Standard pot size",
+    };
+  }
+  return {
+    factor: 1.20,
+    labelTh: `> 10 นิ้ว (${inches}")`,
+    descTh: "ปริมาณดินมาก อุ้มน้ำและความชื้นได้นาน",
+    labelEn: `> 10" (${inches}")`,
+    descEn: "Large soil volume, retains moisture longer",
+  };
+}
+
+export const PLACEMENT_FACTORS: Record<
+  Placement,
+  { factor: number; labelTh: string; descTh: string; labelEn: string; descEn: string }
+> = {
+  outdoor_sun: {
+    factor: 0.70,
+    labelTh: "กลางแจ้งแดดเต็มวัน",
+    descTh: "รับแดดจัดและลม ดินแห้งเร็วที่สุด",
+    labelEn: "Outdoor Full Sun",
+    descEn: "Direct sun and high wind, dries fastest",
+  },
+  balcony_shade: {
+    factor: 0.90,
+    labelTh: "ระเบียง/มีร่มรำไร",
+    descTh: "มีลมถ่ายเท แสงสว่างพอเหมาะ",
+    labelEn: "Balcony / Filtered",
+    descEn: "Good breeze and bright filtered light",
+  },
+  indoor_window: {
+    factor: 1.00,
+    labelTh: "ในบ้านใกล้หน้าต่าง",
+    descTh: "แสงทางอ้อมสว่าง ระบายอากาศปกติ",
+    labelEn: "Indoor by Window",
+    descEn: "Bright indirect light and standard ventilation",
+  },
+  indoor_far: {
+    factor: 1.25,
+    labelTh: "ในบ้านห่างหน้าต่าง",
+    descTh: "แสงน้อย ดินคายน้ำช้า ต้องการน้ำน้อยลง",
+    labelEn: "Indoor away from Window",
+    descEn: "Lower light, slower water uptake",
+  },
+  air_con: {
+    factor: 1.20,
+    labelTh: "ห้องแอร์",
+    descTh: "ไม่มีแดด อุณหภูมิเย็น สุทธิแล้วดินชื้นนานกว่า",
+    labelEn: "Air-Conditioned Room",
+    descEn: "No direct sunlight, cooler temperature",
+  },
 };
 
 /**
@@ -97,11 +197,16 @@ export function calculateWateringInterval(
   conditions: PlantConditionsInput,
   date: Date = new Date()
 ): CalculationBreakdown {
+  const season = getThaiSeason(date);
+  const seasonNameTh = getThaiSeasonName(season);
+  const seasonNameEn = getThaiSeasonNameEn(season);
+
   if (conditions.customWaterDays && conditions.customWaterDays > 0) {
     const finalDays = Math.min(30, Math.max(1, Math.round(conditions.customWaterDays)));
     return {
-      season: getThaiSeason(date),
-      seasonNameTh: getThaiSeasonName(getThaiSeason(date)),
+      season,
+      seasonNameTh,
+      seasonNameEn,
       baseDays: finalDays,
       potMaterialFactor: 1,
       potMaterialDesc: "กำหนดเอง",
@@ -113,10 +218,10 @@ export function calculateWateringInterval(
       finalDays,
       isCustom: true,
       explanationTh: `คุณตั้งค่ารอบรดน้ำเอง: รดทุก ${finalDays} วัน`,
+      explanationEn: `Custom interval: Every ${finalDays} days`,
     };
   }
 
-  const season = getThaiSeason(date);
   let baseDays = template.waterDaysRainy;
   if (season === "hot") baseDays = template.waterDaysHot;
   if (season === "cool") baseDays = template.waterDaysCool;
@@ -129,11 +234,13 @@ export function calculateWateringInterval(
   // Rule: Round to integer, clamp between 1 and 30 days
   const finalDays = Math.min(30, Math.max(1, Math.round(raw)));
 
-  const explanationTh = `${getThaiSeasonName(season)} (ฐาน ${baseDays} วัน) × กระถาง${mat.labelTh} (×${mat.factor}) × ขนาด ${size.labelTh} (×${size.factor}) × ตำแหน่ง${place.labelTh} (×${place.factor}) = ${raw.toFixed(2)} → รดทุก ${finalDays} วัน`;
+  const explanationTh = `${seasonNameTh} (ฐาน ${baseDays} วัน) × กระถาง${mat.labelTh} (×${mat.factor}) × ขนาด ${size.labelTh} (×${size.factor}) × ตำแหน่ง${place.labelTh} (×${place.factor}) = ${raw.toFixed(2)} → รดทุก ${finalDays} วัน`;
+  const explanationEn = `${seasonNameEn} (Base ${baseDays}d) × Pot ${mat.labelEn} (×${mat.factor}) × Size ${size.labelEn} (×${size.factor}) × Location ${place.labelEn} (×${place.factor}) = ${raw.toFixed(2)} → Every ${finalDays} days`;
 
   return {
     season,
-    seasonNameTh: getThaiSeasonName(season),
+    seasonNameTh,
+    seasonNameEn,
     baseDays,
     potMaterialFactor: mat.factor,
     potMaterialDesc: mat.descTh,
@@ -145,6 +252,7 @@ export function calculateWateringInterval(
     finalDays,
     isCustom: false,
     explanationTh,
+    explanationEn,
   };
 }
 
@@ -165,7 +273,7 @@ export function checkAdaptiveIntervalSuggestion(
   scheduledDueDate: Date,
   actualWateredDate: Date,
   currentIntervalDays: number
-): { shouldSuggest: boolean; suggestedIntervalDays?: number; messageTh?: string } {
+): { shouldSuggest: boolean; suggestedIntervalDays?: number; messageTh?: string; messageEn?: string } {
   const diffTime = actualWateredDate.getTime() - scheduledDueDate.getTime();
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
@@ -176,6 +284,7 @@ export function checkAdaptiveIntervalSuggestion(
       shouldSuggest: true,
       suggestedIntervalDays: suggested,
       messageTh: `รอบนี้คุณรดช้ากว่ากำหนด ${diffDays} วัน หากต้นไม้ยังดูสดชื่นดี อยากปรับรอบเป็นทุก ${suggested} วันแทนไหมครับ?`,
+      messageEn: `You watered ${diffDays} days later than scheduled. If your plant looks healthy, would you like to adjust the interval to every ${suggested} days?`,
     };
   }
 
