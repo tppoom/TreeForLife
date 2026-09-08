@@ -189,15 +189,24 @@ describe("Example Service Test Suite", () => {
 
 ---
 
-## 4. Key Project Commands
+## 4. Key Project Commands (Makefile Available)
 
-| Command | Action | Notes |
-|---|---|---|
-| `npm run dev` | Start Next.js dev server | Boots PGlite at `http://localhost:3000` |
-| `npm run test` | Run full test suite | Vitest in single-run mode (158 tests) |
-| `npm run test:watch` | Run tests in watch mode | Vitest interactive mode |
-| `npm run build` | Production Next.js build | Compiles all 12 routes & verifies TS types |
-| `npx tsc --noEmit` | Check TypeScript errors | Fast static type check |
+A self-documenting `Makefile` is provided. Run `make help` or `make` for full target documentation.
+
+| Make Command | Equivalent NPM Command | Action | Notes |
+|---|---|---|---|
+| `make` / `make help` | — | Display interactive command menu | Colorized help output |
+| `make setup` | `npm install` | Setup dependencies & .env.local | Prepares .data/pglite directory |
+| `make dev` | `npm run dev` | Start Next.js dev server | Boots PGlite at `http://localhost:3000` |
+| `make test` | `npm run test` | Run full test suite | Vitest in single-run mode (158 tests) |
+| `make test-watch` | `npm run test:watch` | Run tests in watch mode | Vitest interactive mode |
+| `make test-care` | `npx vitest run lib/care/scheduler.test.ts` | Test care schedule engine | Fast targeted run |
+| `make build` | `npm run build` | Production Next.js build | Compiles all 12 routes & verifies TS types |
+| `make typecheck` | `npx tsc --noEmit` | Check TypeScript errors | Fast static type check |
+| `make db-status` | — | Query PGlite table counts | Instant row counts across 8 tables |
+| `make db-species` | — | List 30 seeded Thai species | Prints species names & stock status |
+| `make check` | — | Quick pre-commit check | Runs `typecheck` + `test` |
+| `make verify` | — | Full CI / pre-push verification | Runs `typecheck` + `test` + `build` |
 
 ---
 

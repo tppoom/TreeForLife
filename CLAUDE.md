@@ -18,17 +18,24 @@ TreeForLife is a bilingual (Thai/English) boutique plant shop + plant-care web a
 
 ## 2. Essential Commands
 
-- `npm run dev` — starts Next.js dev server (self-bootstraps embedded PGlite on port 3000)
-- `npm run test` — runs full Vitest suite (all 158 tests)
-- `npm run test:watch` — runs Vitest in watch mode
-- `npm run build` — runs Next.js production build (compiles all 12 routes, checks TS validity)
+A comprehensive `Makefile` is available. You can run `make` or `make help` to inspect all targets.
+
+- `make dev` (or `npm run dev`) — starts Next.js dev server (self-bootstraps embedded PGlite on port 3000)
+- `make test` (or `npm run test`) — runs full Vitest suite (all 158 tests)
+- `make test-watch` (or `npm run test:watch`) — runs Vitest in watch mode
+- `make build` (or `npm run build`) — runs Next.js production build (compiles all 12 routes, checks TS validity)
+- `make typecheck` (or `npx tsc --noEmit`) — fast static TypeScript verification
+- `make db-status` — inspects embedded PGlite table counts
+- `make db-species` — lists 30 seeded Thai plant species
+- `make check` — fast pre-commit check (`typecheck` + `test`)
+- `make verify` (or `make ci`) — full pre-push verification (`typecheck` + `test` + `build`)
 - Run a single test file:
-  - `npx vitest run lib/care/scheduler.test.ts`
-  - `npx vitest run test/admin.test.tsx`
-  - `npx vitest run test/catalog-search-detail.test.ts`
-  - `npx vitest run test/garden.test.tsx`
-  - `npx vitest run test/inquiry-modal.test.tsx`
-  - `npx vitest run test/today.test.tsx`
+  - `make test-care` (or `npx vitest run lib/care/scheduler.test.ts`)
+  - `make test-admin` (or `npx vitest run test/admin.test.tsx`)
+  - `make test-catalog` (or `npx vitest run test/catalog-search-detail.test.ts`)
+  - `make test-garden` (or `npx vitest run test/garden.test.tsx`)
+  - `make test-inquiry` (or `npx vitest run test/inquiry-modal.test.tsx`)
+  - `make test-today` (or `npx vitest run test/today.test.tsx`)
 
 ---
 
