@@ -102,6 +102,7 @@ export async function getAllSpecies(params: SpeciesFilterParams = {}) {
       shopNote: species.shopNote,
       stockStatus: species.stockStatus,
       createdAt: species.createdAt,
+      updatedAt: species.updatedAt,
     })
     .from(species)
     .where(and(...conditions))

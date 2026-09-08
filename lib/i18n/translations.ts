@@ -212,6 +212,36 @@ export interface TranslationDictionary {
     total_species: string;
     query_count: string;
     last_seen: string;
+    tab_inventory: string;
+    tab_inquiries: string;
+    tab_search_misses: string;
+    search_placeholder: string;
+    filter_stock_all: string;
+    stock_in_stock: string;
+    stock_made_to_order: string;
+    stock_seasonal: string;
+    stock_hidden: string;
+    last_updated: string;
+    ref_code: string;
+    customer_intent: string;
+    source_page: string;
+    payload_details: string;
+    missed_query: string;
+    demand_count: string;
+    stats_in_stock: string;
+    stats_made_to_order: string;
+    stats_seasonal: string;
+    stats_inquiries: string;
+    stats_misses: string;
+    role_upgrade_desc: string;
+    switch_to_staff: string;
+    switch_to_admin_btn: string;
+    role_current: string;
+    action_update_success: string;
+    action_update_error: string;
+    empty_inventory: string;
+    empty_inquiries: string;
+    empty_search_misses: string;
   };
   toasts: {
     plant_added: string;
@@ -455,6 +485,36 @@ export const translations: Record<Locale, TranslationDictionary> = {
       total_species: "พันธุ์ไม้ทั้งหมด {count} ชนิด",
       query_count: "จำนวนการค้นหา",
       last_seen: "ค้นหาล่าสุดเมื่อ",
+      tab_inventory: "คลังพันธุ์ไม้และสต็อก",
+      tab_inquiries: "บันทึกสอบถามจากลูกค้า",
+      tab_search_misses: "คำค้นหาที่ไม่พบผลลัพธ์",
+      search_placeholder: "ค้นหาชื่อพันธุ์ไม้ (ไทย/อังกฤษ/วิทยาศาสตร์)...",
+      filter_stock_all: "ทุกสถานะสต็อก",
+      stock_in_stock: "มีสินค้าพร้อมส่ง",
+      stock_made_to_order: "สั่งเพาะ / สั่งทำ",
+      stock_seasonal: "ตามฤดูกาล",
+      stock_hidden: "ซ่อนจากหน้าร้าน",
+      last_updated: "อัปเดตล่าสุด",
+      ref_code: "รหัสอ้างอิง",
+      customer_intent: "จุดประสงค์การติดต่อ",
+      source_page: "จากหน้า",
+      payload_details: "ข้อมูลการสอบถาม",
+      missed_query: "คำค้นหาที่ไม่พบ",
+      demand_count: "จำนวนค้นหา",
+      stats_in_stock: "พร้อมส่ง",
+      stats_made_to_order: "สั่งทำ",
+      stats_seasonal: "ตามฤดูกาล",
+      stats_inquiries: "รายการสอบถาม",
+      stats_misses: "ความต้องการที่ค้นหาไม่พบ",
+      role_upgrade_desc: "หน้านี้มีข้อมูลสต็อกสินค้า รายการลูกค้า และสถิติเชิงลึกของร้าน กรุณาสลับเป็นบทบาท Staff หรือ Admin เพื่อเข้าใช้งาน",
+      switch_to_staff: "สลับเป็น พนักงานร้าน (Staff)",
+      switch_to_admin_btn: "สลับเป็น เจ้าของร้าน (Admin)",
+      role_current: "บทบาทปัจจุบันของคุณคือ",
+      action_update_success: "ปรับปรุงสถานะสต็อกเรียบร้อยแล้ว",
+      action_update_error: "เกิดข้อผิดพลาดในการปรับสถานะ กรุณาลองใหม่อีกครั้ง",
+      empty_inventory: "ไม่พบพันธุ์ไม้ที่ตรงกับคำค้นหา",
+      empty_inquiries: "ยังไม่มีประวัติการสอบถามจากลูกค้า",
+      empty_search_misses: "ยังไม่มีประวัติคำค้นหาที่ไม่พบผลลัพธ์",
     },
     toasts: {
       plant_added: "เพิ่มต้นไม้เข้าสู่สวนของคุณเรียบร้อยแล้ว 🌿",
@@ -696,6 +756,36 @@ export const translations: Record<Locale, TranslationDictionary> = {
       total_species: "{count} total species",
       query_count: "Searches",
       last_seen: "Last Queried",
+      tab_inventory: "Species Inventory & Stock",
+      tab_inquiries: "Customer Inquiries Log",
+      tab_search_misses: "Search Misses & Demand",
+      search_placeholder: "Search species (Thai/English/Scientific)...",
+      filter_stock_all: "All Stock Statuses",
+      stock_in_stock: "In Stock",
+      stock_made_to_order: "Made to Order",
+      stock_seasonal: "Seasonal",
+      stock_hidden: "Hidden",
+      last_updated: "Last Updated",
+      ref_code: "Reference Code",
+      customer_intent: "Customer Intent",
+      source_page: "Source Page",
+      payload_details: "Payload Details",
+      missed_query: "Search Query",
+      demand_count: "Search Count",
+      stats_in_stock: "In Stock",
+      stats_made_to_order: "Made to Order",
+      stats_seasonal: "Seasonal",
+      stats_inquiries: "Inquiries",
+      stats_misses: "Search Misses",
+      role_upgrade_desc: "This dashboard contains inventory controls, customer leads, and search demand analytics. Please switch to Staff or Admin to access.",
+      switch_to_staff: "Switch to Staff Role",
+      switch_to_admin_btn: "Switch to Admin Role",
+      role_current: "Your current role is",
+      action_update_success: "Stock status updated successfully",
+      action_update_error: "Failed to update stock status. Please try again.",
+      empty_inventory: "No species found matching your filter",
+      empty_inquiries: "No customer inquiries recorded yet",
+      empty_search_misses: "No search misses recorded yet",
     },
     toasts: {
       plant_added: "Plant added to your garden successfully! 🌿",

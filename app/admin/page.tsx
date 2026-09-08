@@ -1,30 +1,35 @@
 import React from "react";
-import { Metadata } from "next";
-import { getAdminStats, getAdminInquiriesList, getAdminSearchMisses } from "@/lib/services/adminService";
-import { getSpeciesList } from "@/lib/services/speciesService";
+import type { Metadata } from "next";
+import { getAllSpecies } from "@/lib/services/speciesService";
+import {
+  getAdminInquiriesList,
+  getSearchMisses,
+  getAdminStats,
+} from "@/lib/services/adminService";
 import { AdminDashboardClient } from "@/components/admin/AdminDashboardClient";
+
+export const metadata: Metadata = {
+  title: "ระบบจัดการร้าน (Shop Admin Dashboard) | TreeForLife",
+  description:
+    "ระบบจัดการหลังร้านสำหรับทีมงาน TreeForLife จัดการสต็อกสินค้า ตรวจสอบคำถามลูกค้า และวิเคราะห์สถิติความต้องการ",
+};
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "ระบบหลังบ้านร้าน | TreeForLife",
-  description: "จัดการสต็อกพันธุ์ไม้ ตรวจสอบรหัสถามร้าน และดูคำค้นที่ไม่เจอผลลัพธ์",
-};
-
 export default async function AdminPage() {
-  const [stats, species, inquiries, misses] = await Promise.all([
+  const [speciesList, inquiries, searchMisses, stats] = await Promise.all([
+    getAllSpecies({ stockStatus: "all" }),
+    getAdminInquiriesList(100),
+    getSearchMisses(100),
     getAdminStats(),
-    getSpeciesList({ stockStatus: "all" }),
-    getAdminInquiriesList(50),
-    getAdminSearchMisses(50),
   ]);
 
   return (
     <AdminDashboardClient
-      stats={stats}
-      initialSpecies={species}
+      initialSpecies={speciesList}
       initialInquiries={inquiries}
-      initialMisses={misses}
+      initialSearchMisses={searchMisses}
+      initialStats={stats}
     />
   );
 }
