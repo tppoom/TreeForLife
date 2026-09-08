@@ -84,16 +84,6 @@ export async function getDb(): Promise<DbClient> {
 }
 
 export async function initDatabase(client: QueryableClient) {
-  // If a pg.Pool is passed directly, acquire a dedicated client so transaction BEGIN/COMMIT are on the same connection
-  if ("connect" in client && typeof (client as any).connect === "function") {
-    const dedicatedClient = await (client as any).connect();
-    try {
-      return await initDatabase(dedicatedClient);
-    } finally {
-      dedicatedClient.release();
-    }
-  }
-
   // Execute DDL schema
   if (client.exec) {
     await client.exec(SCHEMA_DDL);

@@ -128,7 +128,7 @@ describe("Task 6: Public Catalog, Faceted Search & Plant Detail Integration", ()
       const results = await getAllSpecies({ search: uniqueQuery });
       expect(results.length).toBe(0);
 
-      const misses = await getSearchMisses();
+      const misses = await getSearchMisses(1000);
       const match = misses.find((m) => m.query.toLowerCase() === uniqueQuery.toLowerCase());
       expect(match).toBeDefined();
       expect(match?.count).toBeGreaterThanOrEqual(1);
