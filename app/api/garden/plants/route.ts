@@ -23,6 +23,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    if (!body.userId && !body.guestToken) {
+      return NextResponse.json({ error: "Missing userId or guestToken" }, { status: 400 });
+    }
+
+    const potSize =
+      body.potSizeInch !== undefined && body.potSizeInch !== null && body.potSizeInch !== ""
+        ? Number(body.potSizeInch)
+        : 6;
+    if (isNaN(potSize) || potSize <= 0) {
+      return NextResponse.json({ error: "Invalid potSizeInch" }, { status: 400 });
+    }
+    body.potSizeInch = potSize;
+
     const plant = await addUserPlant(body);
     return NextResponse.json({ plant, success: true }, { status: 201 });
   } catch (error: unknown) {

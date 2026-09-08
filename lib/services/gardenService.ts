@@ -240,6 +240,16 @@ export async function getUserPlantById(id: string) {
 }
 
 export async function addUserPlant(input: AddUserPlantInput) {
+  if (!input.userId && !input.guestToken) {
+    throw new Error("Plant must belong to a userId or guestToken");
+  }
+
+  const numericPotSize =
+    input.potSizeInch !== undefined && input.potSizeInch !== null && input.potSizeInch !== ""
+      ? Number(input.potSizeInch)
+      : 6;
+  const safePotSize = isNaN(numericPotSize) || numericPotSize <= 0 ? 6 : numericPotSize;
+
   const db = await getDb();
 
   const [plant] = await db
@@ -253,7 +263,7 @@ export async function addUserPlant(input: AddUserPlantInput) {
       photoUrl: input.photoUrl || null,
       acquiredAt: input.acquiredAt,
       acquiredFrom: input.acquiredFrom || "shop",
-      potSizeInch: String(input.potSizeInch),
+      potSizeInch: String(safePotSize),
       potMaterial: input.potMaterial,
       placement: input.placement,
       customWaterDays: input.customWaterDays || null,
@@ -327,7 +337,10 @@ export async function updateUserPlant(id: string, input: Partial<AddUserPlantInp
   if (input.photoUrl !== undefined) updateData.photoUrl = input.photoUrl;
   if (input.acquiredAt !== undefined) updateData.acquiredAt = input.acquiredAt;
   if (input.acquiredFrom !== undefined) updateData.acquiredFrom = input.acquiredFrom;
-  if (input.potSizeInch !== undefined) updateData.potSizeInch = String(input.potSizeInch);
+  if (input.potSizeInch !== undefined && input.potSizeInch !== null && input.potSizeInch !== "") {
+    const num = Number(input.potSizeInch);
+    updateData.potSizeInch = isNaN(num) || num <= 0 ? "6" : String(num);
+  }
   if (input.potMaterial !== undefined) updateData.potMaterial = input.potMaterial;
   if (input.placement !== undefined) updateData.placement = input.placement;
   if (input.customWaterDays !== undefined) updateData.customWaterDays = input.customWaterDays;
@@ -361,6 +374,66 @@ export interface CompleteTaskInput {
   source?: "app" | "line" | "backfill";
 }
 
+async function calculateNextIntervalForTask(
+  db: Awaited<ReturnType<typeof getDb>>,
+  taskType: string,
+  plant: {
+    speciesId: string | null;
+    customWaterDays: number | null;
+    potSizeInch: string;
+    potMaterial: string;
+    placement: string;
+  }
+): Promise<number> {
+  if (taskType === "water") {
+    if (plant.customWaterDays) {
+      return plant.customWaterDays;
+    }
+    if (plant.speciesId) {
+      const [tmpl] = await db
+        .select()
+        .from(careTemplates)
+        .where(eq(careTemplates.speciesId, plant.speciesId))
+        .limit(1);
+      if (tmpl) {
+        return calculateCareInterval({
+          template: tmpl,
+          potSizeInch: Number(plant.potSizeInch),
+          potMaterial: plant.potMaterial as PotMaterial,
+          placement: plant.placement as Placement,
+        });
+      }
+    }
+    return 3;
+  }
+
+  if (taskType === "fertilize") {
+    if (plant.speciesId) {
+      const [tmpl] = await db
+        .select()
+        .from(careTemplates)
+        .where(eq(careTemplates.speciesId, plant.speciesId))
+        .limit(1);
+      return tmpl?.fertilizeDays || 30;
+    }
+    return 30;
+  }
+
+  if (taskType === "pest_check") {
+    if (plant.speciesId) {
+      const [tmpl] = await db
+        .select()
+        .from(careTemplates)
+        .where(eq(careTemplates.speciesId, plant.speciesId))
+        .limit(1);
+      return tmpl?.pestCheckDays || 14;
+    }
+    return 14;
+  }
+
+  return 30;
+}
+
 export async function completeTask(input: CompleteTaskInput) {
   const db = await getDb();
 
@@ -372,6 +445,10 @@ export async function completeTask(input: CompleteTaskInput) {
 
   if (!task) {
     throw new Error("Task not found");
+  }
+
+  if (task.status !== "pending") {
+    throw new Error(`Task is already ${task.status}`);
   }
 
   const [plant] = await db
@@ -403,51 +480,7 @@ export async function completeTask(input: CompleteTaskInput) {
   });
 
   // Calculate next interval using scheduler
-  let intervalDays = 3;
-  if (task.type === "water") {
-    if (plant.customWaterDays) {
-      intervalDays = plant.customWaterDays;
-    } else if (plant.speciesId) {
-      const [tmpl] = await db
-        .select()
-        .from(careTemplates)
-        .where(eq(careTemplates.speciesId, plant.speciesId))
-        .limit(1);
-      if (tmpl) {
-        intervalDays = calculateCareInterval({
-          template: tmpl,
-          potSizeInch: Number(plant.potSizeInch),
-          potMaterial: plant.potMaterial as PotMaterial,
-          placement: plant.placement as Placement,
-        });
-      }
-    }
-  } else if (task.type === "fertilize") {
-    if (plant.speciesId) {
-      const [tmpl] = await db
-        .select()
-        .from(careTemplates)
-        .where(eq(careTemplates.speciesId, plant.speciesId))
-        .limit(1);
-      intervalDays = tmpl?.fertilizeDays || 30;
-    } else {
-      intervalDays = 30;
-    }
-  } else if (task.type === "pest_check") {
-    if (plant.speciesId) {
-      const [tmpl] = await db
-        .select()
-        .from(careTemplates)
-        .where(eq(careTemplates.speciesId, plant.speciesId))
-        .limit(1);
-      intervalDays = tmpl?.pestCheckDays || 14;
-    } else {
-      intervalDays = 14;
-    }
-  } else {
-    intervalDays = 30;
-  }
-
+  const intervalDays = await calculateNextIntervalForTask(db, task.type, plant);
   const nextDueDateStr = generateNextTaskDue(performedAt, intervalDays);
 
   // Create next task
@@ -495,6 +528,10 @@ export async function snoozeTask(input: SnoozeTaskInput) {
     throw new Error("Task not found");
   }
 
+  if (task.status !== "pending") {
+    throw new Error(`Task is already ${task.status}`);
+  }
+
   if (task.snoozeCount >= 3) {
     throw new Error("เลื่อนได้สูงสุด 3 ครั้งติดต่อกัน กรุณาเลือก 'รดแล้ว' หรือ 'ข้ามรอบนี้'");
   }
@@ -536,6 +573,10 @@ export async function skipTask(input: SkipTaskInput) {
     throw new Error("Task not found");
   }
 
+  if (task.status !== "pending") {
+    throw new Error(`Task is already ${task.status}`);
+  }
+
   const [plant] = await db
     .select()
     .from(userPlants)
@@ -551,28 +592,8 @@ export async function skipTask(input: SkipTaskInput) {
     .set({ status: "skipped" })
     .where(eq(careTasks.id, task.id));
 
-  // Calculate next due date from scheduled due date
-  let intervalDays = 3;
-  if (task.type === "water") {
-    if (plant.customWaterDays) {
-      intervalDays = plant.customWaterDays;
-    } else if (plant.speciesId) {
-      const [tmpl] = await db
-        .select()
-        .from(careTemplates)
-        .where(eq(careTemplates.speciesId, plant.speciesId))
-        .limit(1);
-      if (tmpl) {
-        intervalDays = calculateCareInterval({
-          template: tmpl,
-          potSizeInch: Number(plant.potSizeInch),
-          potMaterial: plant.potMaterial as PotMaterial,
-          placement: plant.placement as Placement,
-        });
-      }
-    }
-  }
-
+  // Calculate next due date from scheduled due date using scheduler
+  const intervalDays = await calculateNextIntervalForTask(db, task.type, plant);
   const nextDueDateStr = generateNextTaskDue(task.dueDate, intervalDays);
 
   await db

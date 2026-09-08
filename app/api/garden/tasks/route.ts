@@ -60,23 +60,8 @@ export async function GET(req: Request) {
       return NextResponse.json({ tasks });
     }
 
-    // Default: fetch up to 100 tasks
-    const conditions = [];
-    if (status) {
-      conditions.push(eq(careTasks.status, status));
-    }
-    const query = db
-      .select()
-      .from(careTasks)
-      .orderBy(asc(careTasks.dueDate))
-      .limit(100);
-
-    if (conditions.length > 0) {
-      query.where(and(...conditions));
-    }
-
-    const tasks = await query;
-    return NextResponse.json({ tasks });
+    // If no scoping parameter is provided, return empty array to prevent leaking data across users
+    return NextResponse.json({ tasks: [] });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to fetch tasks";
     console.error("Error fetching tasks:", error);

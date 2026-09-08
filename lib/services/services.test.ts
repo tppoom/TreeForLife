@@ -254,6 +254,74 @@ describe("Domain Services & REST API Endpoints", () => {
       expect(res.action).toBe("complete");
     });
 
+    it("guards against non-pending tasks in completeTask, snoozeTask, and skipTask", async () => {
+      // completed task cannot be completed again
+      await expect(
+        completeTask({
+          taskId: initialTaskId,
+          userPlantId: createdPlantId,
+        })
+      ).rejects.toThrow("Task is already done");
+
+      // completed task cannot be snoozed
+      await expect(
+        snoozeTask({
+          taskId: initialTaskId,
+          userPlantId: createdPlantId,
+        })
+      ).rejects.toThrow("Task is already done");
+
+      // completed task cannot be skipped
+      await expect(
+        skipTask({
+          taskId: initialTaskId,
+          userPlantId: createdPlantId,
+        })
+      ).rejects.toThrow("Task is already done");
+    });
+
+    it("skipTask calculates fertilize interval from care template rather than defaulting to 3 days", async () => {
+      const detail = await getUserPlantById(createdPlantId);
+      const fertilizeTask = detail?.tasks.find((t) => t.type === "fertilize" && t.status === "pending");
+      if (fertilizeTask) {
+        const skipRes = await skipTask({
+          taskId: fertilizeTask.id,
+          userPlantId: createdPlantId,
+        });
+        expect(skipRes.success).toBe(true);
+
+        const currentDue = new Date(fertilizeTask.dueDate);
+        const nextDue = new Date(skipRes.nextDueDate);
+        const diffDays = Math.round((nextDue.getTime() - currentDue.getTime()) / (1000 * 60 * 60 * 24));
+        // Fertilize interval should be around 30+ days from template, not 3 days
+        expect(diffDays).toBeGreaterThanOrEqual(14);
+      }
+    });
+
+    it("addUserPlant enforces ownership and safe potSizeInch formatting", async () => {
+      // Ownership validation
+      await expect(
+        addUserPlant({
+          nickname: "ต้นไร้เจ้าของ",
+          acquiredAt: "2026-09-08",
+          potSizeInch: 8,
+          potMaterial: "plastic",
+          placement: "indoor_window",
+        })
+      ).rejects.toThrow("Plant must belong to a userId or guestToken");
+
+      // Safe potSizeInch handling when invalid/empty
+      const safePlant = await addUserPlant({
+        guestToken: "safe-pot-test",
+        nickname: "ต้นกระถางปลอดภัย",
+        acquiredAt: "2026-09-08",
+        potSizeInch: "" as any,
+        potMaterial: "plastic",
+        placement: "indoor_window",
+      });
+      expect(Number(safePlant.potSizeInch)).toBe(6);
+    });
+
     it("mergeGuestPlants migrates guest plants to registered user", async () => {
       const registeredUserId = "a0000000-0000-0000-0000-000000000001";
       const mergeRes = await mergeGuestPlants(guestToken, registeredUserId);
@@ -387,6 +455,39 @@ describe("Domain Services & REST API Endpoints", () => {
       apiPlantId = data.plant.id;
     });
 
+    it("POST /api/garden/plants rejects requests missing ownership or invalid potSize", async () => {
+      // Missing ownership
+      const reqNoOwner = new Request("http://localhost/api/garden/plants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: "ไม่มีเจ้าของ",
+          acquiredAt: "2026-09-08",
+          potSizeInch: 8,
+          potMaterial: "plastic",
+          placement: "indoor_window",
+        }),
+      });
+      const resNoOwner = await postPlantRoute(reqNoOwner);
+      expect(resNoOwner.status).toBe(400);
+
+      // Invalid potSize
+      const reqInvalidPot = new Request("http://localhost/api/garden/plants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guestToken: "some-token",
+          nickname: "กระถางผิด",
+          acquiredAt: "2026-09-08",
+          potSizeInch: -5,
+          potMaterial: "plastic",
+          placement: "indoor_window",
+        }),
+      });
+      const resInvalidPot = await postPlantRoute(reqInvalidPot);
+      expect(resInvalidPot.status).toBe(400);
+    });
+
     it("GET /api/garden/plants returns list of plants", async () => {
       const req = new Request(`http://localhost/api/garden/plants?guestToken=${apiGuestToken}`);
       const res = await getPlantsRoute(req);
@@ -396,7 +497,15 @@ describe("Domain Services & REST API Endpoints", () => {
       expect(data.plants[0].nickname).toBe("ต้นยางอินเดียระเบียง");
     });
 
-    it("GET /api/garden/tasks retrieves pending tasks", async () => {
+    it("GET /api/garden/tasks returns empty array when unscoped to prevent data leakage", async () => {
+      const req = new Request("http://localhost/api/garden/tasks");
+      const res = await getTasksRoute(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.tasks).toEqual([]);
+    });
+
+    it("GET /api/garden/tasks retrieves pending tasks when scoped", async () => {
       const req = new Request(`http://localhost/api/garden/tasks?guestToken=${apiGuestToken}&status=pending`);
       const res = await getTasksRoute(req);
       expect(res.status).toBe(200);
