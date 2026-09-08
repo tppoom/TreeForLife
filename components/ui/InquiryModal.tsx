@@ -63,6 +63,38 @@ export function InquiryModal({
     lineOaId: string;
   } | null>(null);
 
+  // Reset modal state when closed or when species changes
+  const speciesIdKey = species?.id || speciesId || null;
+  useEffect(() => {
+    if (!isOpen) {
+      setInquiryResult(null);
+      setCopied(false);
+      setCustomNote(initialQuery || "");
+      setQrError(false);
+      setLoading(false);
+    }
+  }, [isOpen, initialQuery]);
+
+  useEffect(() => {
+    setInquiryResult(null);
+    setCopied(false);
+    setCustomNote(initialQuery || "");
+    setQrError(false);
+    setLoading(false);
+  }, [speciesIdKey, initialQuery]);
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isOpen]);
+
   // Sync default intent if changed from parent
   useEffect(() => {
     if (initialIntentProp) {
@@ -260,7 +292,7 @@ export function InquiryModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-sand-500 hover:text-forest-950 dark:hover:text-sand-100 hover:bg-sand-100 dark:hover:bg-forest-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="p-2 rounded-xl text-sand-500 hover:text-forest-950 dark:hover:text-sand-100 hover:bg-sand-100 dark:hover:bg-forest-800 transition min-w-[44px] min-h-[44px] w-11 h-11 flex items-center justify-center"
             aria-label={t("nav.close") || "Close"}
           >
             <X className="w-5 h-5" />

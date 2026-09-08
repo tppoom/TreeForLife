@@ -169,6 +169,10 @@ describe("Task 7: LINE Inquiry Modal & Handoff Integration", () => {
       // Note textarea and CTA button
       expect(html).toContain("<textarea");
       expect(html).toContain("สร้างรหัสและเชื่อมต่อ LINE");
+
+      // Close button with >= 44x44px touch target
+      expect(html).toContain("min-w-[44px]");
+      expect(html).toContain("min-h-[44px]");
     });
 
     it("renders species information when species prop is provided", () => {
