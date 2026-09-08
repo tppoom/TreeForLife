@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
-import { careTasks, userPlants } from "@/db/schema";
+import { careTasks, userPlants, species } from "@/db/schema";
 import { eq, and, sql, asc } from "drizzle-orm";
 import {
   recordTaskAction,
@@ -23,8 +23,31 @@ export async function GET(req: Request) {
         conditions.push(eq(careTasks.status, status));
       }
       const tasks = await db
-        .select()
+        .select({
+          id: careTasks.id,
+          userPlantId: careTasks.userPlantId,
+          type: careTasks.type,
+          dueDate: careTasks.dueDate,
+          status: careTasks.status,
+          snoozeCount: careTasks.snoozeCount,
+          doneAt: careTasks.doneAt,
+          notifiedAt: careTasks.notifiedAt,
+          createdAt: careTasks.createdAt,
+          plantNickname: userPlants.nickname,
+          plantPhotoUrl: userPlants.photoUrl,
+          plantNotes: userPlants.notes,
+          potSizeInch: userPlants.potSizeInch,
+          potMaterial: userPlants.potMaterial,
+          placement: userPlants.placement,
+          customSpeciesName: userPlants.customSpeciesName,
+          speciesId: userPlants.speciesId,
+          speciesNameTh: species.nameTh,
+          speciesNameEn: species.nameEn,
+          speciesSlug: species.slug,
+        })
         .from(careTasks)
+        .innerJoin(userPlants, eq(careTasks.userPlantId, userPlants.id))
+        .leftJoin(species, eq(userPlants.speciesId, species.id))
         .where(and(...conditions))
         .orderBy(asc(careTasks.dueDate));
 
@@ -52,8 +75,31 @@ export async function GET(req: Request) {
       }
 
       const tasks = await db
-        .select()
+        .select({
+          id: careTasks.id,
+          userPlantId: careTasks.userPlantId,
+          type: careTasks.type,
+          dueDate: careTasks.dueDate,
+          status: careTasks.status,
+          snoozeCount: careTasks.snoozeCount,
+          doneAt: careTasks.doneAt,
+          notifiedAt: careTasks.notifiedAt,
+          createdAt: careTasks.createdAt,
+          plantNickname: userPlants.nickname,
+          plantPhotoUrl: userPlants.photoUrl,
+          plantNotes: userPlants.notes,
+          potSizeInch: userPlants.potSizeInch,
+          potMaterial: userPlants.potMaterial,
+          placement: userPlants.placement,
+          customSpeciesName: userPlants.customSpeciesName,
+          speciesId: userPlants.speciesId,
+          speciesNameTh: species.nameTh,
+          speciesNameEn: species.nameEn,
+          speciesSlug: species.slug,
+        })
         .from(careTasks)
+        .innerJoin(userPlants, eq(careTasks.userPlantId, userPlants.id))
+        .leftJoin(species, eq(userPlants.speciesId, species.id))
         .where(and(...conditions))
         .orderBy(asc(careTasks.dueDate));
 
@@ -71,12 +117,26 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const body: TaskActionInput = await req.json();
-    if (!body.userPlantId || !body.taskId || !body.action) {
+    const body = await req.json();
+
+    // Support batch completion if batch is true and tasks array is provided
+    if (body.batch && Array.isArray(body.tasks)) {
+      const results = [];
+      for (const item of body.tasks) {
+        if (item.userPlantId && item.taskId && item.action) {
+          const res = await recordTaskAction(item);
+          results.push(res);
+        }
+      }
+      return NextResponse.json({ success: true, count: results.length, results });
+    }
+
+    const singleInput: TaskActionInput = body;
+    if (!singleInput.userPlantId || !singleInput.taskId || !singleInput.action) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    const result = await recordTaskAction(body);
+    const result = await recordTaskAction(singleInput);
     return NextResponse.json(result);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to update task";

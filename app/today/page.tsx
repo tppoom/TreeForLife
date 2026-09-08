@@ -1,10 +1,11 @@
 import React from "react";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { TodayTasksClient } from "@/components/today/TodayTasksClient";
 
 export const metadata: Metadata = {
-  title: "ภารกิจประจำวันนี้ | TreeForLife",
-  description: "บันทึกการรดน้ำและดูแลต้นไม้ประจำวันนี้อย่างรวดเร็วในคลิกเดียว",
+  title: "งานดูแลวันนี้ (Today's Tasks) & Checklist | TreeForLife",
+  description:
+    "รายการงานดูแลต้นไม้ประจำวัน งานที่เลยกำหนดและงานที่ต้องทำวันนี้ พร้อมฟังก์ชันทำครบในคลิกเดียว เลื่อน และข้ามรอบ",
 };
 
 export default function TodayPage() {
