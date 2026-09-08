@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useApp } from "@/lib/context/AppContext";
 import {
   Sprout,
@@ -12,23 +11,33 @@ import {
   AlertCircle,
   Clock,
   CheckCircle2,
-  MoreVertical,
-  Archive,
-  MessageCircle,
-  Sparkles,
   ArrowRight,
+  Sun,
+  Layers,
+  ChevronRight,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
+import {
+  POT_MATERIAL_FACTORS,
+  PLACEMENT_FACTORS,
+  PotMaterial,
+  Placement,
+} from "@/lib/care/scheduler";
 
-interface UserPlantItem {
+export interface UserPlantListItem {
   id: string;
   nickname: string;
   photoUrl?: string | null;
   displayPhoto: string;
   acquiredAt: string;
-  acquiredFrom: string;
+  acquiredFrom: "shop" | "elsewhere" | "gift" | "propagated";
   potSizeInch: string;
-  potMaterial: string;
-  placement: string;
+  potMaterial: PotMaterial;
+  placement: Placement;
+  customWaterDays?: number | null;
+  customSpeciesName?: string | null;
+  speciesId?: string | null;
   speciesNameTh?: string | null;
   speciesNameEn?: string | null;
   speciesSlug?: string | null;
@@ -41,44 +50,53 @@ interface UserPlantItem {
     id: string;
     dueDate: string;
     type: string;
-    snoozeCount: number;
+    status: string;
+    snoozeCount?: number;
   } | null;
 }
 
 export function GardenListClient() {
-  const { guestToken, currentUser, showToast, openInquiryModal, t, locale } = useApp();
-  const [plants, setPlants] = useState<UserPlantItem[]>([]);
+  const { user, guestToken, addToast, t, locale } = useApp();
+  const [plants, setPlants] = useState<UserPlantListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [filterTab, setFilterTab] = useState<"all" | "due" | "upcoming">("all");
 
-  const fetchPlants = async () => {
+  const fetchPlants = useCallback(async () => {
     try {
       setLoading(true);
-      const url = currentUser
-        ? `/api/garden/plants?userId=${currentUser.id}`
-        : `/api/garden/plants?guestToken=${guestToken}`;
-
-      const res = await fetch(url);
-      const data = await res.json();
-      if (res.ok) {
-        setPlants(data.plants || []);
+      const queryParam = user.id ? `userId=${user.id}` : `guestToken=${guestToken}`;
+      const res = await fetch(`/api/garden/plants?${queryParam}`);
+      if (!res.ok) {
+        throw new Error("Failed to load plants");
       }
+      const data = await res.json();
+      setPlants(data.plants || []);
     } catch (err) {
-      console.error(err);
+      console.error("Error fetching garden plants:", err);
+      addToast(
+        locale === "th"
+          ? "ไม่สามารถโหลดข้อมูลต้นไม้ได้ กรุณาลองใหม่"
+          : "Failed to load garden plants",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [user.id, guestToken, locale, addToast]);
 
   useEffect(() => {
-    if (guestToken || currentUser) {
-      fetchPlants();
-    }
-  }, [guestToken, currentUser]);
+    fetchPlants();
+  }, [fetchPlants]);
 
-  const handleQuickWater = async (plant: UserPlantItem) => {
+  // One-click quick watered action
+  const handleQuickWater = async (plant: UserPlantListItem, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (!plant.nextTask) return;
     setActionLoadingId(plant.id);
+
     try {
       const res = await fetch("/api/garden/tasks", {
         method: "POST",
@@ -86,234 +104,397 @@ export function GardenListClient() {
         body: JSON.stringify({
           userPlantId: plant.id,
           taskId: plant.nextTask.id,
-          action: "done",
+          action: "complete",
+          source: "app",
         }),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update task");
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to record watering");
+      }
 
       const successMsg =
         locale === "th"
-          ? `รดน้ำ ${plant.nickname} เรียบร้อย! รอบถัดไป ${data.nextDueDate}`
-          : `Watered ${plant.nickname}! Next due: ${data.nextDueDate}`;
-      showToast(successMsg, "success");
+          ? `รดน้ำ "${plant.nickname}" เรียบร้อยแล้ว! ${
+              data.nextDueDate ? `(รอบถัดไป ${data.nextDueDate})` : ""
+            }`
+          : `Watered "${plant.nickname}"! ${
+              data.nextDueDate ? `(Next due: ${data.nextDueDate})` : ""
+            }`;
+      addToast(successMsg, "success");
 
-      if (data.adaptiveSuggestion?.shouldSuggest) {
-        const adaptMsg = locale === "th" ? data.adaptiveSuggestion.messageTh : (data.adaptiveSuggestion.messageEn || data.adaptiveSuggestion.messageTh);
-        showToast(adaptMsg, "info");
-      }
-
+      // Refetch to refresh status badges and next due task
       await fetchPlants();
-    } catch (err: any) {
-      showToast(err.message || (locale === "th" ? "เกิดข้อผิดพลาดในการบันทึก" : "Error saving task"), "warning");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error completing task";
+      addToast(msg, "error");
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  const getStatusBadgeLabel = (badge: UserPlantItem["statusBadge"]) => {
-    if (badge.type === "overdue") {
-      return t.garden.overdueDays.replace("{days}", String(badge.days));
+  // Filtered plant list
+  const filteredPlants = useMemo(() => {
+    if (filterTab === "due") {
+      return plants.filter(
+        (p) =>
+          p.statusBadge.type === "overdue" || p.statusBadge.type === "today"
+      );
     }
-    if (badge.type === "today") {
-      return t.garden.dueToday;
+    if (filterTab === "upcoming") {
+      return plants.filter((p) => p.statusBadge.type === "upcoming");
     }
-    return t.garden.inDays.replace("{days}", String(badge.days));
-  };
+    return plants;
+  }, [plants, filterTab]);
+
+  const overdueCount = plants.filter((p) => p.statusBadge.type === "overdue").length;
+  const todayCount = plants.filter((p) => p.statusBadge.type === "today").length;
+  const urgentCount = overdueCount + todayCount;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-sand-200 dark:border-forest-800 pb-5">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-forest-700 dark:text-gold-400">
-            <Sprout className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{t.garden.tagline}</span>
-          </div>
-          <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-stone-950 dark:text-sand-50 mt-1">
-            {t.garden.title}
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-600 dark:text-sand-400">
-            {currentUser
-              ? (locale === "th" ? `บัญชีของ ${currentUser.displayName}` : `Account: ${currentUser.displayName}`)
-              : (locale === "th" ? "บันทึกในอุปกรณ์ (Guest-first Mode)" : "Saved on device (Guest-first Mode)")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Link
-            href="/today"
-            className="px-4 py-2.5 bg-white dark:bg-[#0e2117] border border-sand-300 dark:border-forest-700 hover:bg-sand-100 dark:hover:bg-forest-900 text-stone-700 dark:text-sand-200 rounded-xl text-xs font-medium transition-colors flex items-center gap-2"
-          >
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>{t.garden.todayTasksBtn}</span>
-          </Link>
-
-          <Link
-            href="/garden/add"
-            className="px-5 py-2.5 bg-forest-900 hover:bg-forest-800 dark:bg-forest-800 dark:hover:bg-forest-700 text-sand-50 rounded-xl text-xs font-medium shadow-sm border border-transparent dark:border-forest-700 transition-colors flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4 text-gold-400" />
-            <span>{t.garden.addNewPlantBtn}</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Guest Mode Notice Banner */}
-      {!currentUser && (
-        <div className="p-4 bg-sand-100/80 dark:bg-forest-950/80 rounded-2xl border border-sand-300/80 dark:border-forest-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-700 dark:text-sand-300">
-          <div className="flex items-center gap-2.5">
-            <Sparkles className="w-4 h-4 text-gold-600 dark:text-gold-400 shrink-0" />
-            <span>
-              {t.garden.guestNotice}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Loading Skeleton */}
-      {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 bg-sand-200/50 dark:bg-forest-900/50 rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      ) : plants.length > 0 ? (
-        /* Plant Cards Grid (SPEC §6.6) */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plants.map((plant) => {
-            const isOverdue = plant.statusBadge.type === "overdue";
-            const isToday = plant.statusBadge.type === "today";
-            const isUpcoming = plant.statusBadge.type === "upcoming";
-            const speciesTitle = locale === "th"
-              ? (plant.speciesNameTh || "พันธุ์อื่น ๆ")
-              : (plant.speciesNameEn || plant.speciesNameTh || "Other Species");
-
-            return (
-              <div
-                key={plant.id}
-                className="group bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800 overflow-hidden shadow-soft hover:shadow-card card-hover-effect flex flex-col justify-between"
-              >
-                <div>
-                  {/* Photo & Badge */}
-                  <div className="relative aspect-[16/10] bg-sand-100 dark:bg-forest-950 overflow-hidden">
-                    <Image
-                      src={plant.displayPhoto}
-                      alt={plant.nickname}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-
-                    {/* Shape & Color Status Badge (SPEC §6.6 Accessibility Requirement) */}
-                    <div className="absolute top-3 left-3">
-                      {isOverdue && (
-                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-700 text-white text-xs font-bold shadow-md">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          <span>{getStatusBadgeLabel(plant.statusBadge)}</span>
-                        </div>
-                      )}
-                      {isToday && (
-                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500 text-stone-950 text-xs font-bold shadow-md">
-                          <span className="w-2 h-2 rounded-full bg-stone-950" />
-                          <span>{getStatusBadgeLabel(plant.statusBadge)}</span>
-                        </div>
-                      )}
-                      {isUpcoming && (
-                        <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-stone-900/80 dark:bg-forest-900/90 backdrop-blur-md text-sand-100 text-xs font-medium border border-sand-100/10">
-                          <span className="w-2 h-2 rounded-full border border-sand-100" />
-                          <span>{getStatusBadgeLabel(plant.statusBadge)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Body Content */}
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-serif text-xl font-semibold text-stone-900 dark:text-sand-100 group-hover:text-forest-800 dark:group-hover:text-gold-400 transition-colors">
-                          {plant.nickname}
-                        </h3>
-                        <p className="text-xs text-stone-500 dark:text-sand-400 italic font-serif">
-                          {speciesTitle}
-                        </p>
-                      </div>
-
-                      <Link
-                        href={`/garden/${plant.id}`}
-                        className="p-1 text-stone-400 dark:text-sand-400 hover:text-stone-700 dark:hover:text-sand-200 transition-colors"
-                        title={locale === "th" ? "ดูรายละเอียดและประวัติ" : "View details and history"}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </Link>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-xs text-stone-500 dark:text-sand-400 pt-1">
-                      <span>{t.garden.potSize} {plant.potSizeInch} {t.garden.inches}</span>
-                      <span>•</span>
-                      <span>{t.garden.acquiredWhen} {plant.acquiredAt}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer 1-Click Quick Water Button (SPEC §6.6) */}
-                <div className="p-4 pt-0 border-t border-sand-100 dark:border-forest-800 mt-2 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => handleQuickWater(plant)}
-                    disabled={actionLoadingId === plant.id || !plant.nextTask}
-                    className={`flex-1 py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                      isOverdue
-                        ? "bg-rose-600 hover:bg-rose-700 text-white shadow-sm"
-                        : isToday
-                        ? "bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm"
-                        : "bg-sand-100 dark:bg-forest-900 hover:bg-sand-200 dark:hover:bg-forest-850 text-stone-700 dark:text-sand-300"
-                    } disabled:opacity-50`}
-                  >
-                    <Droplets className="w-3.5 h-3.5" />
-                    <span>
-                      {actionLoadingId === plant.id
-                        ? t.garden.recordingBtn
-                        : t.garden.wateredDoneBtn}
-                    </span>
-                  </button>
-
-                  <Link
-                    href={`/garden/${plant.id}`}
-                    className="py-2.5 px-3 bg-white dark:bg-[#0e2117] border border-sand-300 dark:border-forest-700 hover:bg-sand-100 dark:hover:bg-forest-900 text-stone-700 dark:text-sand-200 rounded-xl text-xs font-medium transition-colors"
-                  >
-                    {t.garden.calendarBtn}
-                  </Link>
-                </div>
+    <div className="min-h-[calc(100vh-140px)] bg-sand-50 dark:bg-forest-950 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-sand-200 dark:border-forest-800/60 pb-6">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-forest-800 text-sand-50 dark:bg-forest-700">
+                <Sprout className="w-6 h-6 text-forest-300" />
               </div>
-            );
-          })}
-        </div>
-      ) : (
-        /* Empty State (SPEC §6.6) */
-        <div className="bg-white dark:bg-[#0e2117] rounded-3xl p-12 sm:p-16 text-center border border-sand-200 dark:border-forest-800 shadow-soft max-w-lg mx-auto space-y-6">
-          <div className="w-16 h-16 rounded-full bg-forest-900/5 dark:bg-forest-800/20 border border-forest-900/10 dark:border-forest-700/30 flex items-center justify-center mx-auto text-forest-800 dark:text-gold-400">
-            <Sprout className="w-8 h-8" />
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="font-serif text-2xl font-semibold text-stone-900 dark:text-sand-100">
-              {t.garden.emptyTitle}
-            </h3>
-            <p className="text-xs sm:text-sm text-stone-600 dark:text-sand-400 leading-relaxed">
-              {t.garden.emptyDesc}
+              <h1 className="text-2xl sm:text-3xl font-serif font-bold text-forest-900 dark:text-sand-100">
+                {t("garden.title")}
+              </h1>
+            </div>
+            <p className="mt-1 text-sm text-sand-600 dark:text-sand-300">
+              {t("garden.subtitle")}
             </p>
           </div>
 
-          <Link
-            href="/garden/add"
-            className="inline-flex items-center gap-2 px-6 py-3.5 bg-forest-900 hover:bg-forest-800 dark:bg-forest-800 dark:hover:bg-forest-700 text-sand-50 font-medium rounded-xl text-xs sm:text-sm shadow-sm border border-transparent dark:border-forest-700 transition-all"
-          >
-            <Plus className="w-4 h-4 text-gold-400" />
-            <span>{t.garden.addFirstBtn}</span>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/today"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-sand-300 dark:border-forest-700 bg-white dark:bg-forest-900/80 text-sand-700 dark:text-sand-200 hover:border-forest-500 hover:text-forest-900 dark:hover:text-sand-100 font-medium text-sm transition shadow-sm"
+            >
+              <Calendar className="w-4 h-4 text-forest-600 dark:text-forest-400" />
+              <span>{locale === "th" ? "งานวันนี้" : "Today's Care"}</span>
+              {urgentCount > 0 && (
+                <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-rose-500 text-white">
+                  {urgentCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
+              href="/garden/add"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-forest-800 hover:bg-forest-900 dark:bg-forest-700 dark:hover:bg-forest-600 text-sand-50 font-medium text-sm transition shadow-sm"
+            >
+              <Plus className="w-4 h-4 text-forest-300" />
+              <span>{t("garden.add_plant")}</span>
+            </Link>
+          </div>
         </div>
-      )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white dark:bg-forest-900/70 rounded-2xl border border-sand-200 dark:border-forest-800/80 p-5 space-y-4"
+              >
+                <div className="h-44 bg-sand-200 dark:bg-forest-800/50 rounded-xl" />
+                <div className="h-5 bg-sand-200 dark:bg-forest-800/50 rounded w-2/3" />
+                <div className="h-4 bg-sand-100 dark:bg-forest-800/30 rounded w-1/2" />
+                <div className="h-10 bg-sand-100 dark:bg-forest-800/40 rounded-xl" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State Onboarding Card */}
+        {!loading && plants.length === 0 && (
+          <div className="bg-white dark:bg-forest-900/70 border border-sand-200 dark:border-forest-800/80 rounded-3xl p-8 sm:p-12 text-center shadow-sm max-w-3xl mx-auto space-y-8">
+            <div className="w-20 h-20 mx-auto rounded-full bg-forest-50 dark:bg-forest-800/50 flex items-center justify-center text-forest-700 dark:text-forest-300 ring-8 ring-forest-50/50 dark:ring-forest-800/20">
+              <Sprout className="w-10 h-10" />
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-forest-900 dark:text-sand-100">
+                {t("garden.empty_title")}
+              </h2>
+              <p className="text-sand-600 dark:text-sand-300 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+                {t("garden.empty_desc")}
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <Link
+                href="/garden/add"
+                className="inline-flex items-center gap-2 px-8 py-3.5 rounded-2xl bg-forest-800 hover:bg-forest-900 dark:bg-forest-700 dark:hover:bg-forest-600 text-sand-50 font-semibold text-base transition shadow-md hover:shadow-lg"
+              >
+                <Plus className="w-5 h-5 text-forest-300" />
+                <span>
+                  {locale === "th" ? "เพิ่มต้นไม้ต้นแรกของคุณ" : "Add Your First Plant"}
+                </span>
+              </Link>
+            </div>
+
+            {/* Feature Highlights Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left pt-6 border-t border-sand-100 dark:border-forest-800/60">
+              <div className="p-4 rounded-2xl bg-sand-50 dark:bg-forest-800/40 border border-sand-200/60 dark:border-forest-800/40 space-y-1.5">
+                <span className="text-2xl" role="img" aria-label="sun and rain">
+                  🌦️
+                </span>
+                <h3 className="font-semibold text-sm text-forest-900 dark:text-sand-100">
+                  {locale === "th" ? "3 ฤดูกาลไทย" : "Thai 3-Season"}
+                </h3>
+                <p className="text-xs text-sand-600 dark:text-sand-400">
+                  {locale === "th"
+                    ? "ร้อน ฝน หนาว ดินแห้งช้าเร็วต่างกัน คำนวณรอบรดน้ำแม่นยำ"
+                    : "Hot, Rainy, Cool seasons automatically adjust water cycles"}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-sand-50 dark:bg-forest-800/40 border border-sand-200/60 dark:border-forest-800/40 space-y-1.5">
+                <span className="text-2xl" role="img" aria-label="potted plant">
+                  🪴
+                </span>
+                <h3 className="font-semibold text-sm text-forest-900 dark:text-sand-100">
+                  {locale === "th" ? "กระถาง & ตำแหน่งจริง" : "Pot & Microclimate"}
+                </h3>
+                <p className="text-xs text-sand-600 dark:text-sand-400">
+                  {locale === "th"
+                    ? "ดินเผา พลาสติก เซรามิก แดดจัด ระเบียง แอร์ ปรับตัวคูณตามจริง"
+                    : "Terracotta, plastic, ceramic, outdoor, window, or AC room"}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-sand-50 dark:bg-forest-800/40 border border-sand-200/60 dark:border-forest-800/40 space-y-1.5">
+                <span className="text-2xl" role="img" aria-label="water droplet">
+                  💧
+                </span>
+                <h3 className="font-semibold text-sm text-forest-900 dark:text-sand-100">
+                  {locale === "th" ? "รดแล้วบันทึก 1 คลิก" : "1-Click Watered"}
+                </h3>
+                <p className="text-xs text-sand-600 dark:text-sand-400">
+                  {locale === "th"
+                    ? "บันทึกสะดวกรวดเร็ว ดูปฏิทิน 30 วัน และประวัติย้อนหลัง"
+                    : "Log care in 1 second, view 30-day forecast and history"}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Plants List View */}
+        {!loading && plants.length > 0 && (
+          <div className="space-y-6">
+            {/* Filter Tabs & Plant Count */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 p-1 rounded-xl bg-sand-200/60 dark:bg-forest-900 border border-sand-200 dark:border-forest-800">
+                <button
+                  type="button"
+                  onClick={() => setFilterTab("all")}
+                  className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${
+                    filterTab === "all"
+                      ? "bg-white dark:bg-forest-800 text-forest-900 dark:text-sand-100 shadow-sm"
+                      : "text-sand-600 dark:text-sand-300 hover:text-forest-900"
+                  }`}
+                >
+                  {locale === "th" ? "ทั้งหมด" : "All"} ({plants.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab("due")}
+                  className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${
+                    filterTab === "due"
+                      ? "bg-white dark:bg-forest-800 text-forest-900 dark:text-sand-100 shadow-sm"
+                      : "text-sand-600 dark:text-sand-300 hover:text-forest-900"
+                  }`}
+                >
+                  {locale === "th" ? "ต้องรดน้ำ" : "Due / Overdue"} ({urgentCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterTab("upcoming")}
+                  className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition ${
+                    filterTab === "upcoming"
+                      ? "bg-white dark:bg-forest-800 text-forest-900 dark:text-sand-100 shadow-sm"
+                      : "text-sand-600 dark:text-sand-300 hover:text-forest-900"
+                  }`}
+                >
+                  {locale === "th" ? "รอบถัดไป" : "Upcoming"} (
+                  {plants.length - urgentCount})
+                </button>
+              </div>
+
+              <div className="text-xs sm:text-sm text-sand-500 dark:text-sand-400">
+                {t("garden.my_plants_count", { count: plants.length })}
+              </div>
+            </div>
+
+            {/* Plants Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredPlants.map((plant) => {
+                const badge = plant.statusBadge;
+                const matInfo = POT_MATERIAL_FACTORS[plant.potMaterial];
+                const placeInfo = PLACEMENT_FACTORS[plant.placement];
+
+                const isWatering = actionLoadingId === plant.id;
+                const hasPendingTask = !!plant.nextTask;
+
+                return (
+                  <div
+                    key={plant.id}
+                    className="bg-white dark:bg-forest-900/80 rounded-2xl border border-sand-200 dark:border-forest-800/80 overflow-hidden shadow-sm hover:shadow-md transition flex flex-col group"
+                  >
+                    {/* Plant Image & Quick Status Bar */}
+                    <div className="relative h-48 w-full bg-sand-100 dark:bg-forest-950 overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={plant.displayPhoto}
+                        alt={plant.nickname}
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        loading="lazy"
+                      />
+
+                      {/* Accessible Colorblind-safe Status Badge */}
+                      <div className="absolute top-3 left-3">
+                        {badge.type === "overdue" && (
+                          <div
+                            role="status"
+                            aria-label={`สถานะเลยกำหนด ${Math.abs(badge.days)} วัน`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-200 text-xs font-bold shadow-sm backdrop-blur-sm"
+                          >
+                            <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                            <span>
+                              {locale === "th"
+                                ? `เลยกำหนด ${Math.abs(badge.days)} วัน`
+                                : `Overdue ${Math.abs(badge.days)}d`}
+                            </span>
+                          </div>
+                        )}
+
+                        {badge.type === "today" && (
+                          <div
+                            role="status"
+                            aria-label="สถานะต้องรดน้ำวันนี้"
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-xs font-bold shadow-sm backdrop-blur-sm"
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block ring-2 ring-amber-200 dark:ring-amber-800"
+                              aria-hidden="true"
+                            />
+                            <span>{t("care.due_today")}</span>
+                          </div>
+                        )}
+
+                        {badge.type === "upcoming" && (
+                          <div
+                            role="status"
+                            aria-label={`สถานะรดน้ำอีก ${badge.days} วัน`}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 text-xs font-medium shadow-sm backdrop-blur-sm"
+                          >
+                            <span
+                              className="w-2.5 h-2.5 rounded-full border-2 border-emerald-600 dark:border-emerald-400 inline-block"
+                              aria-hidden="true"
+                            />
+                            <span>
+                              {locale === "th"
+                                ? `อีก ${badge.days} วัน`
+                                : `In ${badge.days}d`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Source badge on right */}
+                      {plant.speciesSlug && (
+                        <div className="absolute top-3 right-3">
+                          <span className="px-2.5 py-1 rounded-full bg-forest-900/70 text-sand-100 text-[11px] font-medium backdrop-blur-sm">
+                            {locale === "th" ? "มีในระบบ" : "Catalog"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Plant Info Content */}
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="font-serif font-bold text-lg text-forest-900 dark:text-sand-100 leading-snug">
+                              {plant.nickname}
+                            </h3>
+                            <p className="text-xs text-sand-500 dark:text-sand-400">
+                              {plant.speciesNameTh || plant.customSpeciesName || plant.speciesNameEn}
+                              {plant.speciesNameEn && plant.speciesNameTh ? ` (${plant.speciesNameEn})` : ""}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Pot & Placement tags */}
+                        <div className="flex flex-wrap gap-1.5 text-[11px] text-sand-600 dark:text-sand-300">
+                          <span className="px-2 py-0.5 rounded-md bg-sand-100 dark:bg-forest-800/60 border border-sand-200/60 dark:border-forest-700/60 flex items-center gap-1">
+                            <Layers className="w-3 h-3 text-sand-400" />
+                            <span>
+                              {plant.potSizeInch}&quot; •{" "}
+                              {locale === "th" ? matInfo?.labelTh || plant.potMaterial : matInfo?.labelEn || plant.potMaterial}
+                            </span>
+                          </span>
+                          <span className="px-2 py-0.5 rounded-md bg-sand-100 dark:bg-forest-800/60 border border-sand-200/60 dark:border-forest-700/60 flex items-center gap-1">
+                            <Sun className="w-3 h-3 text-sand-400" />
+                            <span>
+                              {locale === "th" ? placeInfo?.labelTh || plant.placement : placeInfo?.labelEn || plant.placement}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions footer */}
+                      <div className="pt-3 border-t border-sand-100 dark:border-forest-800/60 flex items-center justify-between gap-3">
+                        <Link
+                          href={`/garden/${plant.id}`}
+                          className="text-xs font-medium text-forest-700 dark:text-sand-300 hover:text-forest-900 dark:hover:text-sand-100 inline-flex items-center gap-1 transition"
+                        >
+                          <span>{locale === "th" ? "ดูตารางดูแล" : "Care Details"}</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+
+                        {/* One-click "Watered" (รดแล้ว) Button */}
+                        {hasPendingTask ? (
+                          <button
+                            type="button"
+                            onClick={(e) => handleQuickWater(plant, e)}
+                            disabled={isWatering}
+                            aria-label={`บันทึกการรดน้ำสำหรับ ${plant.nickname}`}
+                            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs transition shadow-sm ${
+                              badge.type === "overdue"
+                                ? "bg-rose-600 hover:bg-rose-700 text-white"
+                                : badge.type === "today"
+                                ? "bg-amber-600 hover:bg-amber-700 text-white"
+                                : "bg-forest-800 hover:bg-forest-900 dark:bg-forest-700 text-sand-50"
+                            } ${isWatering ? "opacity-60 cursor-not-allowed" : ""}`}
+                          >
+                            <Droplets className={`w-3.5 h-3.5 ${isWatering ? "animate-spin" : ""}`} />
+                            <span>{t("care.action_water_done")}</span>
+                          </button>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{locale === "th" ? "รดแล้ว" : "All Done"}</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

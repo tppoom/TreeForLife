@@ -1,10 +1,11 @@
 import React from "react";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { GardenListClient } from "@/components/garden/GardenListClient";
 
 export const metadata: Metadata = {
-  title: "สวนของฉัน & ตารางรดน้ำ | TreeForLife",
-  description: "จัดการต้นไม้ทั้งหมดของคุณในที่เดียว คำนวณรอบรดน้ำอัตโนมัติตาม 3 ฤดูกาลไทยและสภาพกระถางจริง",
+  title: "สวนของฉัน (My Garden) & ตารางรดน้ำ | TreeForLife",
+  description:
+    "จัดการต้นไม้ทั้งหมดของคุณในที่เดียว คำนวณรอบรดน้ำอัตโนมัติตาม 3 ฤดูกาลไทยและสภาพแวดล้อมกระถางจริง",
 };
 
 export default function GardenPage() {

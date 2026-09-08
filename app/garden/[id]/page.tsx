@@ -1,36 +1,46 @@
 import React from "react";
-import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { getUserPlantById } from "@/lib/services/gardenService";
 import { PlantGardenDetailClient } from "@/components/garden/PlantGardenDetailClient";
 
-interface PlantGardenPageProps {
-  params: Promise<{
-    id: string;
-  }>;
+export const dynamic = "force-dynamic";
+
+interface GardenPlantDetailPageProps {
+  params: Promise<{ id: string }>;
 }
 
-export async function generateMetadata({ params }: PlantGardenPageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: GardenPlantDetailPageProps): Promise<Metadata> {
   const { id } = await params;
   const plant = await getUserPlantById(id);
 
-  if (!plant) {
-    return { title: "ไม่พบข้อมูลต้นไม้ | TreeForLife" };
+  if (!plant || !plant.isActive) {
+    return {
+      title: "ไม่พบต้นไม้ | Plant Not Found | TreeForLife",
+    };
   }
 
+  const speciesName = plant.speciesNameTh || plant.customSpeciesName || "ต้นไม้ในสวน";
   return {
-    title: `${plant.nickname} — สวนของฉัน | TreeForLife`,
-    description: `ตารางดูแลและประวัติการรดน้ำของ ${plant.nickname}`,
+    title: `${plant.nickname} (${speciesName}) | ปฏิทินดูแล 30 วัน & บันทึกสุขภาพ | TreeForLife`,
+    description: `ตารางรดน้ำและปฏิทินดูแล 30 วันสำหรับ ${plant.nickname}. คำนวณตาม 3 ฤดูไทย ขนาดกระถาง ${plant.potSizeInch} นิ้ว`,
   };
 }
 
-export default async function PlantGardenPage({ params }: PlantGardenPageProps) {
+export default async function GardenPlantDetailPage({
+  params,
+}: GardenPlantDetailPageProps) {
   const { id } = await params;
-  const plant = await getUserPlantById(id);
-
-  if (!plant) {
+  if (!id) {
     notFound();
   }
 
-  return <PlantGardenDetailClient plant={plant as any} />;
+  const plant = await getUserPlantById(id);
+  if (!plant || !plant.isActive) {
+    notFound();
+  }
+
+  return <PlantGardenDetailClient initialPlant={plant} />;
 }
