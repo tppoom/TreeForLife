@@ -1,264 +1,289 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { Locale, translations } from "@/lib/i18n/translations";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
+import {
+  type Locale,
+  type TranslationDictionary,
+  getTranslation,
+} from "@/lib/i18n/translations";
 
-export type ThemeMode = "light" | "dark";
+export type Theme = "light" | "dark";
+export type UserRole = "guest" | "customer" | "staff" | "admin";
+export type ToastType = "success" | "error" | "info" | "warning";
 
-export interface UserSession {
+export interface DemoUser {
   id: string;
   displayName: string;
-  email?: string;
-  role: "customer" | "staff" | "admin";
-  avatarUrl?: string;
+  role: UserRole;
+  email?: string | null;
+  avatarUrl?: string | null;
 }
 
-export interface InquiryModalData {
-  isOpen: boolean;
-  speciesId?: string | null;
-  speciesNameTh?: string;
-  speciesPhoto?: string;
-  sourcePage?: string;
-  defaultIntent?: "price" | "availability" | "care_help" | "design_quote";
-  customNote?: string;
-}
-
-interface Toast {
+export interface Toast {
   id: string;
-  type: "success" | "info" | "warning";
   message: string;
+  type: ToastType;
+  duration?: number;
 }
 
-interface AppContextType {
-  guestToken: string;
-  currentUser: UserSession | null;
-  favorites: string[]; // species IDs
-  toggleFavorite: (speciesId: string) => void;
-  isFavorite: (speciesId: string) => boolean;
-  loginAsDemoUser: (role?: "customer" | "admin") => Promise<void>;
-  logout: () => void;
-  inquiryModal: InquiryModalData;
-  openInquiryModal: (data: Partial<InquiryModalData>) => void;
-  closeInquiryModal: () => void;
-  toasts: Toast[];
-  showToast: (message: string, type?: "success" | "info" | "warning") => void;
-  removeToast: (id: string) => void;
-  // i18n & Theme
+export const DEMO_USERS: Record<UserRole, DemoUser> = {
+  guest: {
+    id: "guest",
+    displayName: "ผู้เยี่ยมชม (Guest)",
+    role: "guest",
+    email: null,
+  },
+  customer: {
+    id: "11111111-1111-4111-a111-111111111111",
+    displayName: "คุณนุ่น (Customer)",
+    role: "customer",
+    email: "noon@example.com",
+  },
+  staff: {
+    id: "22222222-2222-4222-a222-222222222222",
+    displayName: "สมชาย พนักงานร้าน (Staff)",
+    role: "staff",
+    email: "staff@treeforlife.shop",
+  },
+  admin: {
+    id: "33333333-3333-4333-a333-333333333333",
+    displayName: "เจ้าของร้าน (Admin)",
+    role: "admin",
+    email: "admin@treeforlife.shop",
+  },
+};
+
+export interface AppContextValue {
+  // Locale & i18n
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  toggleLocale: () => void;
-  theme: ThemeMode;
+  t: (key: string, params?: Record<string, string | number>) => string;
+
+  // Theme
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
-  t: typeof translations.th;
+
+  // Demo Auth & User
+  guestToken: string;
+  user: DemoUser;
+  role: UserRole;
+  setRole: (role: UserRole) => void;
+  loginAsDemoUser: (role: UserRole) => void;
+
+  // Toast notifications
+  toasts: Toast[];
+  addToast: (message: string, type?: ToastType, duration?: number) => void;
+  removeToast: (id: string) => void;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const AppContext = createContext<AppContextValue | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [guestToken, setGuestToken] = useState<string>("");
-  const [currentUser, setCurrentUser] = useState<UserSession | null>(null);
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [toasts, setToasts] = useState<Toast[]>([]);
-  const [locale, setLocaleState] = useState<Locale>("th");
-  const [theme, setThemeState] = useState<ThemeMode>("light");
-
-  const [inquiryModal, setInquiryModal] = useState<InquiryModalData>({
-    isOpen: false,
-    defaultIntent: "price",
+export function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
   });
+}
 
-  // Initialize guest token, favorites, theme, and locale from localStorage
+export function AppContextProvider({ children }: { children: ReactNode }) {
+  // 1. Locale state
+  const [locale, setLocaleState] = useState<Locale>("th");
+
+  // 2. Theme state
+  const [theme, setThemeState] = useState<Theme>("light");
+
+  // 3. Guest token state
+  const [guestToken, setGuestToken] = useState<string>("");
+
+  // 4. Role & User state
+  const [role, setRoleState] = useState<UserRole>("guest");
+  const [user, setUser] = useState<DemoUser>(DEMO_USERS.guest);
+
+  // 5. Toasts state
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  // Initialize client storage on mount
   useEffect(() => {
     try {
+      // Restore Locale
+      const savedLocale = localStorage.getItem("tfl_locale") as Locale | null;
+      if (savedLocale === "en" || savedLocale === "th") {
+        setLocaleState(savedLocale);
+        if (typeof document !== "undefined") {
+          document.documentElement.lang = savedLocale;
+        }
+      }
+
+      // Restore Theme
+      const savedTheme = localStorage.getItem("tfl_theme") as Theme | null;
+      if (savedTheme === "dark" || savedTheme === "light") {
+        setThemeState(savedTheme);
+        if (typeof document !== "undefined") {
+          document.documentElement.classList.toggle("dark", savedTheme === "dark");
+        }
+      } else if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        setThemeState("dark");
+        document.documentElement.classList.add("dark");
+      }
+
+      // Restore or generate Guest Token
       let token = localStorage.getItem("tfl_guest_token");
       if (!token) {
-        token = "guest_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        token = generateUUID();
         localStorage.setItem("tfl_guest_token", token);
       }
       setGuestToken(token);
 
-      const savedFavs = localStorage.getItem("tfl_favorites");
-      if (savedFavs) {
-        setFavorites(JSON.parse(savedFavs));
-      }
-
-      const savedUser = localStorage.getItem("tfl_user");
-      if (savedUser) {
-        setCurrentUser(JSON.parse(savedUser));
-      }
-
-      const savedLocale = localStorage.getItem("tfl_locale") as Locale;
-      if (savedLocale === "en" || savedLocale === "th") {
-        setLocaleState(savedLocale);
-        document.documentElement.lang = savedLocale;
-      }
-
-      const savedTheme = localStorage.getItem("tfl_theme") as ThemeMode;
-      if (savedTheme === "dark" || (!savedTheme && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-        setThemeState("dark");
-        document.documentElement.classList.add("dark");
+      // Restore Demo Role
+      const savedRole = localStorage.getItem("tfl_demo_role") as UserRole | null;
+      if (savedRole && DEMO_USERS[savedRole]) {
+        setRoleState(savedRole);
+        const baseUser = DEMO_USERS[savedRole];
+        setUser(savedRole === "guest" ? { ...baseUser, id: token } : baseUser);
       } else {
-        setThemeState("light");
-        document.documentElement.classList.remove("dark");
+        setUser({ ...DEMO_USERS.guest, id: token });
       }
-    } catch (e) {
-      console.error("Storage error:", e);
+    } catch {
+      // Safe fallback if localStorage is blocked (private browsing/iframes)
     }
   }, []);
 
-  const setLocale = (newLocale: Locale) => {
+  // Update locale helper
+  const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
+    if (typeof document !== "undefined") {
+      document.documentElement.lang = newLocale;
+    }
     try {
       localStorage.setItem("tfl_locale", newLocale);
-      document.documentElement.lang = newLocale;
-    } catch (e) {}
-  };
+    } catch {}
+  }, []);
 
-  const toggleLocale = () => {
-    setLocale(locale === "th" ? "en" : "th");
-  };
-
-  const toggleTheme = () => {
-    const nextTheme = theme === "light" ? "dark" : "light";
-    setThemeState(nextTheme);
-    try {
-      localStorage.setItem("tfl_theme", nextTheme);
-      if (nextTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    } catch (e) {}
-  };
-
-  const toggleFavorite = (speciesId: string) => {
-    setFavorites((prev) => {
-      const next = prev.includes(speciesId)
-        ? prev.filter((id) => id !== speciesId)
-        : [...prev, speciesId];
-      try {
-        localStorage.setItem("tfl_favorites", JSON.stringify(next));
-      } catch (e) {}
-      showToast(
-        next.includes(speciesId)
-          ? (locale === "th" ? "บันทึกในรายการที่สนใจแล้ว" : "Added to saved list")
-          : (locale === "th" ? "นำออกจากรายการที่สนใจแล้ว" : "Removed from saved list"),
-        "info"
-      );
-      return next;
-    });
-  };
-
-  const isFavorite = (speciesId: string) => favorites.includes(speciesId);
-
-  const loginAsDemoUser = async (role: "customer" | "admin" = "customer") => {
-    const user: UserSession = {
-      id: role === "admin" ? "a0000000-0000-0000-0000-000000000001" : "u0000000-0000-0000-0000-000000000002",
-      displayName: role === "admin" ? "เจ้าของร้าน TreeForLife" : "คุณนุ่น (สมาชิกคนรักต้นไม้)",
-      email: role === "admin" ? "admin@treeforlife.shop" : "noon.plantlover@example.com",
-      role,
-      avatarUrl: role === "admin" ? undefined : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-    };
-
-    setCurrentUser(user);
-    try {
-      localStorage.setItem("tfl_user", JSON.stringify(user));
-
-      // Merge guest plants
-      if (guestToken) {
-        const res = await fetch("/api/garden/merge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ guestToken, userId: user.id }),
-        });
-        const data = await res.json();
-        if (data.plantCount > 0) {
-          showToast(
-            locale === "th"
-              ? `ย้ายต้นไม้ ${data.plantCount} ต้นที่บันทึกไว้เข้าบัญชีแล้ว 🌿`
-              : `Migrated ${data.plantCount} saved plants to your account! 🌿`,
-            "success"
-          );
-        } else {
-          showToast(`ยินดีต้อนรับ ${user.displayName}!`, "success");
-        }
-      }
-    } catch (e) {
-      showToast(`ยินดีต้อนรับ ${user.displayName}!`, "success");
-    }
-  };
-
-  const logout = () => {
-    setCurrentUser(null);
-    try {
-      localStorage.removeItem("tfl_user");
-    } catch (e) {}
-    showToast(locale === "th" ? "ออกจากระบบแล้ว" : "Signed out", "info");
-  };
-
-  const openInquiryModal = (data: Partial<InquiryModalData>) => {
-    setInquiryModal({
-      isOpen: true,
-      speciesId: data.speciesId,
-      speciesNameTh: data.speciesNameTh,
-      speciesPhoto: data.speciesPhoto,
-      sourcePage: data.sourcePage || (typeof window !== "undefined" ? window.location.pathname : "/"),
-      defaultIntent: data.defaultIntent || "price",
-      customNote: data.customNote,
-    });
-  };
-
-  const closeInquiryModal = () => {
-    setInquiryModal((prev) => ({ ...prev, isOpen: false }));
-  };
-
-  const showToast = (message: string, type: "success" | "info" | "warning" = "info") => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      removeToast(id);
-    }, 4000);
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const t = translations[locale];
-
-  return (
-    <AppContext.Provider
-      value={{
-        guestToken,
-        currentUser,
-        favorites,
-        toggleFavorite,
-        isFavorite,
-        loginAsDemoUser,
-        logout,
-        inquiryModal,
-        openInquiryModal,
-        closeInquiryModal,
-        toasts,
-        showToast,
-        removeToast,
-        locale,
-        setLocale,
-        toggleLocale,
-        theme,
-        toggleTheme,
-        t,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+  // Translation helper
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>) => {
+      return getTranslation(locale, key, params);
+    },
+    [locale]
   );
+
+  // Update theme helper
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", newTheme === "dark");
+    }
+    try {
+      localStorage.setItem("tfl_theme", newTheme);
+    } catch {}
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === "light" ? "dark" : "light");
+  }, [theme, setTheme]);
+
+  // Remove toast
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  // Add toast
+  const addToast = useCallback(
+    (message: string, type: ToastType = "info", duration = 4000) => {
+      const id = generateUUID();
+      setToasts((prev) => [...prev, { id, message, type, duration }]);
+      if (duration > 0) {
+        setTimeout(() => {
+          removeToast(id);
+        }, duration);
+      }
+    },
+    [removeToast]
+  );
+
+  // Role switching
+  const setRole = useCallback(
+    (newRole: UserRole) => {
+      setRoleState(newRole);
+      const baseUser = DEMO_USERS[newRole] || DEMO_USERS.guest;
+      const updatedUser = newRole === "guest" ? { ...baseUser, id: guestToken || "guest" } : baseUser;
+      setUser(updatedUser);
+
+      try {
+        localStorage.setItem("tfl_demo_role", newRole);
+      } catch {}
+
+      const roleLabel = getTranslation(locale, `roles.${newRole}`);
+      addToast(getTranslation(locale, "toasts.role_switched", { role: roleLabel }), "info");
+    },
+    [guestToken, locale, addToast]
+  );
+
+  const loginAsDemoUser = useCallback(
+    (newRole: UserRole) => {
+      setRole(newRole);
+    },
+    [setRole]
+  );
+
+  const value = useMemo<AppContextValue>(
+    () => ({
+      locale,
+      setLocale,
+      t,
+      theme,
+      setTheme,
+      toggleTheme,
+      guestToken,
+      user,
+      role,
+      setRole,
+      loginAsDemoUser,
+      toasts,
+      addToast,
+      removeToast,
+    }),
+    [
+      locale,
+      setLocale,
+      t,
+      theme,
+      setTheme,
+      toggleTheme,
+      guestToken,
+      user,
+      role,
+      setRole,
+      loginAsDemoUser,
+      toasts,
+      addToast,
+      removeToast,
+    ]
+  );
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
-export function useApp() {
+export function useApp(): AppContextValue {
   const context = useContext(AppContext);
   if (!context) {
-    throw new Error("useApp must be used within an AppProvider");
+    throw new Error("useApp must be used within an AppContextProvider");
   }
   return context;
 }

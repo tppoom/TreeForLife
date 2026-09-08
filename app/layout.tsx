@@ -1,43 +1,48 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { AppProvider } from "@/lib/context/AppContext";
+import { AppContextProvider } from "@/lib/context/AppContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/ToastContainer";
-import { InquiryModal } from "@/components/ui/InquiryModal";
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  variable: "--font-serif",
-  display: "swap",
-});
-
-const jakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
-  title: "TreeForLife — บ้านแห่งพันธุ์ไม้คัดพิเศษและการดูแลอย่างประณีต",
-  description: "แพลตฟอร์มค้นหาพันธุ์ไม้กระถางพร้อมตารางรดน้ำอัจฉริยะ 3 ฤดูกาลไทย บันทึกการดูแลและปรึกษาผู้เชี่ยวชาญจากร้านโดยตรง",
-  keywords: ["ต้นไม้ฟอกอากาศ", "มอนสเตอร่า", "ยางอินเดีย", "ตารางรดน้ำ", "ร้านต้นไม้", "ไม้ด่าง", "TreeForLife"],
+  title: {
+    default: "TreeForLife | Boutique Plant Shop & Care Assistant",
+    template: "%s | TreeForLife",
+  },
+  description:
+    "ร้านต้นไม้และระบบดูแลต้นไม้อัจฉริยะ ปรับตาม 3 ฤดูกาลไทย | Authentic boutique plant shop with smart climate-adjusted care schedules",
+  keywords: [
+    "ต้นไม้",
+    "ร้านต้นไม้",
+    "รดน้ำต้นไม้",
+    "มอนสเตอร่า",
+    "สวนของฉัน",
+    "ต้นไม้ฟอกอากาศ",
+    "plant shop",
+    "plant care",
+    "bangkok plants",
+  ],
   authors: [{ name: "TreeForLife" }],
   openGraph: {
-    title: "TreeForLife — บ้านแห่งพันธุ์ไม้คัดพิเศษและการดูแลอย่างประณีต",
-    description: "ค้นพบต้นไม้ที่เหมาะกับพื้นที่ของคุณ พร้อมคำแนะนำจากประสบการณ์จริงของร้าน",
     type: "website",
     locale: "th_TH",
+    alternateLocale: ["en_US"],
     siteName: "TreeForLife",
+    title: "TreeForLife — Boutique Plant Shop & Care Assistant",
+    description:
+      "ร้านต้นไม้และระบบดูแลต้นไม้อัจฉริยะ ปรับตาม 3 ฤดูกาลไทย | Authentic boutique plant shop with smart climate-adjusted care schedules",
   },
 };
 
 export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf8f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1a13" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#0f291e",
 };
 
 export default function RootLayout({
@@ -46,15 +51,37 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" suppressHydrationWarning className={`${playfair.variable} ${jakarta.variable}`}>
-      <body className="min-h-screen flex flex-col bg-sand-50 dark:bg-[#0b1a13] text-stone-900 dark:text-sand-100 selection:bg-forest-800 selection:text-gold-200 selection:dark:bg-gold-400 selection:dark:text-forest-950">
-        <AppProvider>
+    <html lang="th" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('tfl_theme');
+                var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (theme === 'dark' || (!theme && prefersDark)) {
+                  document.documentElement.classList.add('dark');
+                } else {
+                  document.documentElement.classList.remove('dark');
+                }
+                var locale = localStorage.getItem('tfl_locale');
+                if (locale) {
+                  document.documentElement.lang = locale;
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen flex flex-col antialiased bg-sand-50 dark:bg-forest-950 text-forest-950 dark:text-sand-100 transition-colors selection:bg-forest-200 dark:selection:bg-forest-800">
+        <AppContextProvider>
           <Navbar />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 w-full">
+            {children}
+          </main>
           <Footer />
           <ToastContainer />
-          <InquiryModal />
-        </AppProvider>
+        </AppContextProvider>
       </body>
     </html>
   );

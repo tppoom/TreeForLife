@@ -1,590 +1,781 @@
 export type Locale = "th" | "en";
 
-export const translations = {
+export interface TranslationDictionary {
+  nav: {
+    home: string;
+    catalog: string;
+    garden: string;
+    today: string;
+    favorites: string;
+    admin: string;
+    search: string;
+    role: string;
+    language: string;
+    theme: string;
+    light: string;
+    dark: string;
+    menu: string;
+    close: string;
+    open_menu: string;
+    close_menu: string;
+  };
+  roles: {
+    guest: string;
+    customer: string;
+    staff: string;
+    admin: string;
+    switch_role: string;
+    current_role: string;
+    guest_desc: string;
+    customer_desc: string;
+    staff_desc: string;
+    admin_desc: string;
+  };
+  search: {
+    placeholder: string;
+    search_button: string;
+    quick_filters: string;
+    shortcut_indoor: string;
+    shortcut_sun: string;
+    shortcut_pet: string;
+    shortcut_beginner: string;
+    shortcut_air: string;
+    shortcut_desk: string;
+    filters: string;
+    clear_filters: string;
+    results_count: string;
+    no_results_title: string;
+    no_results_desc: string;
+    ask_shop_line: string;
+    sort_by: string;
+    sort_relevance: string;
+    sort_in_stock: string;
+    sort_easiest: string;
+    view_all: string;
+  };
+  filters: {
+    light: string;
+    water: string;
+    placement: string;
+    difficulty: string;
+    pet: string;
+    size: string;
+    status: string;
+    light_full_sun: string;
+    light_partial: string;
+    light_shade: string;
+    light_indoor_bright: string;
+    light_low_light: string;
+    water_low: string;
+    water_medium: string;
+    water_high: string;
+    placement_outdoor_sun: string;
+    placement_balcony_shade: string;
+    placement_indoor_window: string;
+    placement_indoor_far: string;
+    placement_air_con: string;
+    placement_indoor: string;
+    placement_outdoor: string;
+    placement_balcony: string;
+    placement_bathroom: string;
+    pot_terracotta: string;
+    pot_plastic: string;
+    pot_ceramic_glazed: string;
+    pot_cement: string;
+    pot_hanging: string;
+    size_xs: string;
+    size_sm: string;
+    size_md: string;
+    size_lg: string;
+    size_xl: string;
+    difficulty_1: string;
+    difficulty_2: string;
+    difficulty_3: string;
+    difficulty_4: string;
+    difficulty_5: string;
+    pet_safe: string;
+    pet_toxic: string;
+    pet_unknown: string;
+    stock_in_stock: string;
+    stock_made_to_order: string;
+    stock_seasonal: string;
+    stock_hidden: string;
+    acquired_shop: string;
+    acquired_elsewhere: string;
+    acquired_gift: string;
+    acquired_propagated: string;
+  };
+  care: {
+    water: string;
+    fertilize: string;
+    repot: string;
+    prune: string;
+    pest_check: string;
+    days_unit: string;
+    every_days: string;
+    every_months: string;
+    season_hot: string;
+    season_rainy: string;
+    season_cool: string;
+    schedule_explanation: string;
+    pot_size: string;
+    inches: string;
+    overdue_days: string;
+    due_today: string;
+    due_in_days: string;
+    action_water_done: string;
+    action_mark_done: string;
+    action_snooze: string;
+    action_skip: string;
+    shop_owner_tip: string;
+    common_problems: string;
+    similar_plants: string;
+    care_guide: string;
+    soil_mix: string;
+    fertilizer_note: string;
+    propagation: string;
+  };
+  garden: {
+    title: string;
+    subtitle: string;
+    add_plant: string;
+    my_plants_count: string;
+    empty_title: string;
+    empty_desc: string;
+    step_1: string;
+    step_2: string;
+    step_3: string;
+    step_4: string;
+    custom_species: string;
+    custom_species_prompt: string;
+    nickname_label: string;
+    nickname_placeholder: string;
+    acquired_date: string;
+    acquired_source: string;
+    pot_size_label: string;
+    pot_material_label: string;
+    placement_label: string;
+    preview_schedule: string;
+    submit_add: string;
+    archive_plant: string;
+    history_timeline: string;
+    calendar_30_days: string;
+    plant_details: string;
+    edit_plant: string;
+    save_changes: string;
+    notes_label: string;
+    notes_placeholder: string;
+  };
+  today: {
+    title: string;
+    subtitle: string;
+    overdue_section: string;
+    today_section: string;
+    upcoming_section: string;
+    mark_all_done: string;
+    all_done_title: string;
+    all_done_desc: string;
+    no_tasks: string;
+    snooze_day: string;
+    skip_cycle: string;
+  };
+  inquiry: {
+    ask_shop: string;
+    intent_price: string;
+    intent_availability: string;
+    intent_care_help: string;
+    intent_design_quote: string;
+    chat_line_title: string;
+    ref_code_label: string;
+    copy_message: string;
+    message_copied: string;
+    open_line_app: string;
+    inquiry_sent: string;
+    desktop_line_prompt: string;
+  };
+  admin: {
+    portal_title: string;
+    species_mgmt: string;
+    care_templates: string;
+    problems: string;
+    inquiries: string;
+    search_misses: string;
+    add_species: string;
+    edit_species: string;
+    save: string;
+    cancel: string;
+    delete: string;
+    stock_status: string;
+    inline_edit_saved: string;
+    unauthorized: string;
+    switch_to_admin: string;
+    total_species: string;
+    query_count: string;
+    last_seen: string;
+  };
+  toasts: {
+    plant_added: string;
+    task_done: string;
+    task_snoozed: string;
+    task_skipped: string;
+    all_tasks_done: string;
+    copied: string;
+    role_switched: string;
+    locale_switched: string;
+    theme_switched: string;
+    guest_merged: string;
+    error_generic: string;
+  };
+  footer: {
+    about_title: string;
+    about_desc: string;
+    hours_label: string;
+    hours_val: string;
+    location_label: string;
+    location_val: string;
+    line_cta_title: string;
+    line_cta_button: string;
+    line_id: string;
+    quick_links: string;
+    copyright: string;
+    nurtured_note: string;
+  };
+}
+
+export const translations: Record<Locale, TranslationDictionary> = {
   th: {
     nav: {
-      tagline: "Boutique Botanical",
-      catalog: "ค้นหาต้นไม้",
+      home: "หน้าแรก",
+      catalog: "พันธุ์ไม้",
       garden: "สวนของฉัน",
       today: "งานวันนี้",
-      admin: "หลังบ้าน",
-      consultShop: "ปรึกษาร้าน",
-      login: "เข้าสู่ระบบ",
-      logout: "ออกจากระบบ",
-      guest: "ผู้เยี่ยมชม (Guest-first)",
-      customer: "สมาชิกคนรักต้นไม้",
-      adminRole: "เจ้าของร้าน (Admin)",
-      userStatus: "สถานะผู้ใช้งาน",
-      savedInDevice: "ข้อมูลบันทึกในอุปกรณ์",
-      switchRole: "สลับโหมดทดสอบ",
-      usingNow: "กำลังใช้",
+      favorites: "รายการโปรด",
+      admin: "จัดการร้าน",
+      search: "ค้นหา",
+      role: "บทบาท",
+      language: "ภาษา",
+      theme: "โหมดสี",
+      light: "สว่าง",
+      dark: "มืด",
+      menu: "เมนู",
+      close: "ปิด",
+      open_menu: "เปิดเมนู",
+      close_menu: "ปิดเมนู",
     },
-    home: {
-      badge: "ต้นไม้คัดฟอร์มพิเศษ พร้อมสูตรการดูแลเฉพาะตัว 3 ฤดูกาลไทย",
-      heroTitle1: "ความงดงามของธรรมชาติ",
-      heroTitle2: "ที่เติบโตได้จริง",
-      heroTitle3: "ในบ้านคุณ",
-      heroDesc: "เราไม่เพียงส่งมอบต้นไม้สวยจากเรือนเพาะชำ แต่สร้างตารางดูแลอัจฉริยะที่คำนวณตามขนาดกระถาง แสง และฤดูจริง พร้อมคำแนะนำจากคนปลูกที่บ้าน",
-      searchPlaceholder: "ค้นหาชื่อต้นไม้ เช่น มอนสเตอร่า, ต้นไม้ห้องแอร์, ปลอดภัยกับแมว...",
-      searchBtn: "ค้นหา",
-      popularShortcuts: "ทางลัดยอดฮิต:",
-      indoor: "ในบ้าน & คอนโด",
-      fullSun: "ทนแดดจัด",
-      petSafe: "ปลอดภัยกับสัตว์เลี้ยง",
-      beginner: "เลี้ยงง่ายมือใหม่",
-      airPurify: "ฟอกอากาศ",
-      deskPlant: "ต้นเล็กวางโต๊ะ",
-      inStockNow: "มีพร้อมรับที่ร้านตอนนี้",
-      inStockDesc: "อัปเดตสต็อกสดจากเรือนเพาะชำ",
-      viewAllInStock: "ดูพันธุ์ไม้ทั้งหมดที่มี",
-      shotInStore: "ถ่ายที่ร้าน",
-      inStockBadge: "มีที่ร้าน",
-      madeToOrderBadge: "สั่งได้",
-      seasonalBadge: "ตามฤดูกาล",
-      diffLevel: "ความยาก",
-      details: "รายละเอียด",
-      whyTitle: "ทำไมคนรักต้นไม้จึงไว้วางใจ TreeForLife",
-      whySub: "จุดต่างที่ลอกไม่ได้",
-      careEngineTitle: "ตารางรดน้ำ 3 ฤดูกาลไทย",
-      careEngineDesc: "ไม่ใช้สูตรเหมารวมแบบแอปต่างชาติ แต่คำนวณจากฤดูร้อน ฝน หนาว วัสดุกระถาง และตำแหน่งจริงในบ้านคุณ เพื่อไม่ให้รากเน่าหรือต้นขาดน้ำ",
-      shopNoteTitle: "ความรู้จริงจากคนปลูกที่บ้าน",
-      shopNoteDesc: "ทุกพันธุ์ผ่านการทดลองเลี้ยงและบันทึกข้อควรระวังโดยครอบครัวเรา 'ที่ร้านบอกว่า' คือเคล็ดลับเฉพาะที่หาไม่ได้จากอินเทอร์เน็ตทั่วไป",
-      noCartTitle: "ไม่มีตะกร้า ทักคุยกับคนจริง",
-      noCartDesc: "เราคัดต้นไม้ให้ตรงใจคุณที่สุด ทุกการสอบถามเชื่อมต่อไปยังแชท LINE ของร้านพร้อมรหัสอ้างอิงและรูปต้นที่คุณสนใจในคลิกเดียว",
-      ctaBadge: "เริ่มใช้งานได้ทันที ไม่ต้องสมัครสมาชิก",
-      ctaTitle1: "สร้างปฏิทินดูแล",
-      ctaTitle2: "สำหรับต้นไม้ที่คุณมีอยู่แล้ว",
-      ctaDesc: "แม้คุณจะไม่ได้ซื้อต้นไม้จากเรา ก็สามารถเพิ่มต้นไม้ในบ้านเข้าสู่ 'สวนของฉัน' ให้ระบบช่วยคำนวณรอบรดน้ำและแจ้งเตือนเมื่อถึงกำหนดได้ฟรี",
-      addFirstPlant: "เพิ่มต้นแรกเข้าสวนของฉัน",
-      browseAll: "เลือกดูพันธุ์ไม้ทั้งหมด",
+    roles: {
+      guest: "ผู้เยี่ยมชม (Guest)",
+      customer: "ลูกค้า (Customer)",
+      staff: "พนักงานร้าน (Staff)",
+      admin: "ผู้ดูแลระบบ (Admin)",
+      switch_role: "สลับบทบาทเดโม",
+      current_role: "บทบาทปัจจุบัน",
+      guest_desc: "ผู้ใช้งานทั่วไป ไม่ต้องเข้าสู่ระบบ บันทึกข้อมูลในเครื่อง",
+      customer_desc: "สมาชิกลูกค้า จัดการสวนและซิงค์ข้อมูลข้ามอุปกรณ์",
+      staff_desc: "พนักงานร้าน ตรวจสอบและอัปเดตสต็อกต้นไม้",
+      admin_desc: "ผู้ดูแลระบบเต็มรูปแบบ จัดการพันธุ์ไม้ สูตรดูแล และคำค้นหา",
     },
     search: {
-      title: "คัดเลือกพันธุ์ไม้",
-      savedTitle: "ต้นไม้ที่คุณบันทึกไว้",
-      countSuffix: "พันธุ์ที่ตรงตามเงื่อนไข · พร้อมข้อมูลการดูแลจริงจากร้าน",
-      searchPlaceholder: "ค้นหาชื่อไทย, อังกฤษ, ชื่อวิทย์ หรือชื่อเล่น...",
-      filterBtn: "ตัวกรองละเอียด",
-      clearFilter: "ล้างตัวกรอง",
-      sortBy: "เรียงตาม:",
-      relevance: "ตรงที่สุด",
-      inStockFirst: "มีที่ร้านก่อน",
-      easiestFirst: "เลี้ยงง่ายที่สุด",
-      nameAsc: "ชื่อ ก-ฮ",
-      filters: "ตัวกรองละเอียด",
-      clearAll: "ล้างทั้งหมด",
-      stockStatus: "สถานะที่ร้าน",
-      lightCondition: "สภาพแสง",
-      waterFrequency: "ความถี่รดน้ำ",
-      placement: "ตำแหน่งที่วาง",
-      petFriendlyOnly: "ปลอดภัยกับสัตว์เลี้ยงเท่านั้น",
-      emptyTitle: "ยังไม่มีข้อมูลต้นนี้ในระบบ",
-      emptyDescPrefix: "คำค้นว่า",
-      emptyDescSuffix: "บันทึกเข้าคลังคำขอของร้านแล้ว ทางเรากำลังจัดเตรียมพันธุ์ไม้นี้",
-      emptyNoFilterDesc: "ไม่มีต้นไม้ที่ตรงกับตัวกรองที่คุณเลือก ลองปรับตัวกรองใหม่อีกครั้ง",
-      askShopLine: "ทักไปถามร้านใน LINE เลยไหม",
-      viewItems: "ดู",
-      itemsSuffix: "รายการ",
-      askShopShort: "ถามร้าน",
-      careFormulaShort: "สูตรดูแล",
+      placeholder: "ค้นหาชื่อไทย อังกฤษ หรือชื่อเล่น เช่น มอนสเตอร่า...",
+      search_button: "ค้นหา",
+      quick_filters: "ทางลัดยอดนิยม",
+      shortcut_indoor: "ในบ้าน",
+      shortcut_sun: "ทนแดด",
+      shortcut_pet: "ปลอดภัยกับสัตว์เลี้ยง",
+      shortcut_beginner: "เลี้ยงง่ายมือใหม่",
+      shortcut_air: "ฟอกอากาศ",
+      shortcut_desk: "ต้นเล็กวางโต๊ะ",
+      filters: "ตัวกรอง",
+      clear_filters: "ล้างตัวกรอง",
+      results_count: "พบ {count} พันธุ์ไม้",
+      no_results_title: "ยังไม่มีข้อมูลต้นไม้นี้",
+      no_results_desc: "ทักถามที่ร้านโดยตรงทาง LINE ได้เลย เราอาจมีต้นที่คุณกำลังตามหาอยู่!",
+      ask_shop_line: "ทักถามร้านทาง LINE",
+      sort_by: "เรียงตาม",
+      sort_relevance: "ตรงที่สุด",
+      sort_in_stock: "มีที่ร้านก่อน",
+      sort_easiest: "เลี้ยงง่ายที่สุด",
+      view_all: "ดูทั้งหมด",
     },
-    plant: {
-      home: "หน้าแรก",
-      plants: "พันธุ์ไม้",
-      shotInStore100: "ถ่ายที่ร้าน 100%",
-      inStockReady: "มีที่ร้านพร้อมส่ง",
-      madeToOrderDays: "สั่งได้ ~7–14 วัน",
-      seasonal: "ตามฤดูกาล",
-      aliases: "ชื่อเล่น:",
-      lightLabel: "แสงสว่าง",
-      waterLabel: "น้ำ",
-      placementLabel: "ที่วาง",
-      diffLabel: "ความยาก",
-      petLabel: "สัตว์เลี้ยง",
-      sizeLabel: "ขนาดโตเต็มที่",
-      petSafe100: "ปลอดภัย 100%",
-      petToxic: "มีพิษเมื่อกัดกิน",
-      petUnknown: "ข้อมูลไม่แน่ชัด",
-      askShopViaLine: "ถามร้านเรื่องต้นนี้ผ่าน LINE",
-      askShopThisPlant: "ถามร้านเรื่องต้นนี้",
-      addToGarden: "+ เพิ่มเข้าสวนของฉัน",
-      shopNoteHeader: "ที่ร้านบอกว่า — ประสบการณ์จริงจากเรือนเพาะชำ",
-      shopNoteBy: "— บันทึกโดยครอบครัว TreeForLife เพื่อผู้เลี้ยงชาวไทย",
-      careGuideTag: "คู่มือการปลูก",
-      careGuideTitle: "วิธีดูแลให้เติบโตอย่างสมบูรณ์",
-      threeSeasonWaterTitle: "รอบการรดน้ำ 3 ฤดู",
-      hotSeason: "ฤดูร้อน (มี.ค.–พ.ค.):",
-      rainySeason: "ฤดูฝน (มิ.ย.–ต.ค.):",
-      coolSeason: "ฤดูหนาว/แล้ง (พ.ย.–ก.พ.):",
-      everyDays: "ทุก {days} วัน",
-      soilRecipeTitle: "สูตรดินที่ร้านใช้จริง",
-      fertRepotTitle: "ปุ๋ย & เปลี่ยนกระถาง",
-      fertilizerLabel: "ปุ๋ย:",
-      repottingLabel: "เปลี่ยนกระถาง:",
-      diagnosisTag: "การวินิจฉัย",
-      diagnosisTitle: "ปัญหาที่พบบ่อยและวิธีรักษา",
-      causeLabel: "สาเหตุ:",
-      fixLabel: "วิธีแก้ไข:",
-      similarTag: "คำแนะนำเพิ่มเติม",
-      similarTitle: "พันธุ์ที่ต้องการสภาพแวดล้อมใกล้เคียงกัน",
+    filters: {
+      light: "ความต้องการแสง",
+      water: "ความต้องการน้ำ",
+      placement: "ตำแหน่งที่เหมาะสม",
+      difficulty: "ระดับความยาก",
+      pet: "ความปลอดภัยกับสัตว์เลี้ยง",
+      size: "ขนาดเมื่อโตเต็มที่",
+      status: "สถานะสินค้า",
+      light_full_sun: "แดดจัด (6+ ชม.)",
+      light_partial: "แดดรำไร",
+      light_shade: "ร่มรำไร",
+      light_indoor_bright: "ในบ้านสว่าง",
+      light_low_light: "แสงน้อย",
+      water_low: "น้ำน้อย (7+ วัน)",
+      water_medium: "น้ำปานกลาง (3–7 วัน)",
+      water_high: "น้ำมาก (1–3 วัน)",
+      placement_outdoor_sun: "กลางแจ้งแดดจัด",
+      placement_balcony_shade: "ระเบียงร่มรำไร",
+      placement_indoor_window: "ริมหน้าต่างในบ้าน",
+      placement_indoor_far: "กลางห้องในบ้าน",
+      placement_air_con: "ห้องแอร์",
+      placement_indoor: "ในบ้าน",
+      placement_outdoor: "นอกบ้าน",
+      placement_balcony: "ระเบียง",
+      placement_bathroom: "ห้องน้ำ",
+      pot_terracotta: "ดินเผา",
+      pot_plastic: "พลาสติก",
+      pot_ceramic_glazed: "เซรามิกเคลือบ",
+      pot_cement: "ปูนเปลือย / ซีเมนต์",
+      pot_hanging: "กระเช้าแขวน / มะพร้าว",
+      size_xs: "เล็กมาก (<15 ซม.)",
+      size_sm: "เล็ก (15–30 ซม.)",
+      size_md: "กลาง (30–100 ซม.)",
+      size_lg: "ใหญ่ (100–200 ซม.)",
+      size_xl: "สูงมาก (>200 ซม.)",
+      difficulty_1: "ง่ายมาก (1/5)",
+      difficulty_2: "ค่อนข้างง่าย (2/5)",
+      difficulty_3: "ปานกลาง (3/5)",
+      difficulty_4: "ต้องดูแลเป็นพิเศษ (4/5)",
+      difficulty_5: "ผู้เชี่ยวชาญ (5/5)",
+      pet_safe: "ปลอดภัยกับสัตว์เลี้ยง",
+      pet_toxic: "เป็นพิษต่อสัตว์เลี้ยง",
+      pet_unknown: "ไม่ระบุ / ควรระวัง",
+      stock_in_stock: "มีที่ร้านพร้อมส่ง",
+      stock_made_to_order: "สั่งได้ (~7-14 วัน)",
+      stock_seasonal: "ตามฤดูกาล",
+      stock_hidden: "ซ่อน",
+      acquired_shop: "ซื้อจากร้าน TreeForLife",
+      acquired_elsewhere: "ซื้อจากที่อื่น",
+      acquired_gift: "ได้เป็นของขวัญ",
+      acquired_propagated: "ขยายพันธุ์เอง",
+    },
+    care: {
+      water: "รดน้ำ",
+      fertilize: "ใส่ปุ๋ย",
+      repot: "เปลี่ยนกระถาง",
+      prune: "ตัดแต่งกิ่ง",
+      pest_check: "ตรวจโรคและแมลง",
+      days_unit: "{days} วัน",
+      every_days: "ทุกๆ {days} วัน",
+      every_months: "ทุกๆ {months} เดือน",
+      season_hot: "หน้าร้อน (มี.ค. - พ.ค.)",
+      season_rainy: "หน้าฝน (มิ.ย. - ต.ค.)",
+      season_cool: "หน้าหนาว (พ.ย. - ก.พ.)",
+      schedule_explanation: "คำนวณตามสภาพอากาศไทย วัสดุกระถาง และตำแหน่งที่วาง",
+      pot_size: "ขนาดกระถาง",
+      inches: "{inches} นิ้ว",
+      overdue_days: "เลยกำหนด {count} วัน",
+      due_today: "ครบกำหนดวันนี้",
+      due_in_days: "อีก {count} วัน",
+      action_water_done: "รดน้ำแล้ว",
+      action_mark_done: "บันทึกเรียบร้อย",
+      action_snooze: "เลื่อนไป 1 วัน",
+      action_skip: "ข้ามรอบนี้",
+      shop_owner_tip: "คำแนะนำจากที่ร้าน",
+      common_problems: "ปัญหาที่พบบ่อยและวิธีแก้",
+      similar_plants: "พันธุ์ที่ใกล้เคียงกัน",
+      care_guide: "คู่มือการดูแล",
+      soil_mix: "สูตรผสมดิน",
+      fertilizer_note: "คำแนะนำการให้ปุ๋ย",
+      propagation: "การขยายพันธุ์",
     },
     garden: {
-      tagline: "สวนส่วนตัวและปฏิทินดูแล",
       title: "สวนของฉัน",
-      guestNotice: "คุณกำลังใช้งานในโหมดผู้เยี่ยมชม ข้อมูลบันทึกปลอดภัยในเครื่องนี้ เข้าสู่ระบบเมื่อต้องการสำรองข้อมูลข้ามเครื่อง",
-      todayTasksBtn: "ภารกิจวันนี้",
-      addNewPlantBtn: "+ เพิ่มต้นไม้ใหม่",
-      overdueDays: "เลยกำหนด {days} วัน",
-      dueToday: "รดน้ำวันนี้",
-      inDays: "อีก {days} วัน",
-      potSize: "กระถาง:",
-      inches: "นิ้ว",
-      acquiredWhen: "รับมาเมื่อ:",
-      wateredDoneBtn: "รดน้ำแล้ว",
-      recordingBtn: "กำลังบันทึก...",
-      calendarBtn: "ปฏิทิน",
-      emptyTitle: "ยังไม่มีต้นไม้ในสวนของคุณ",
-      emptyDesc: "เพิ่มต้นไม้ต้นแรกเพื่อให้ระบบคำนวณรอบรดน้ำตามสภาพอากาศไทยและช่วยบันทึกการดูแลให้อัตโนมัติ",
-      addFirstBtn: "เพิ่มต้นแรกเข้าสวนของฉัน",
-      backToGarden: "กลับไปสวนของฉัน",
-      archiveBtn: "ย้ายเข้าคลังประวัติ (Archive)",
-      caredSince: "เลี้ยงมาตั้งแต่",
-      waterTodayDone: "รดน้ำวันนี้ (Done)",
-      askShopThisPlant: "ถามร้านเรื่องต้นนี้",
-      currentEnv: "สภาพแวดล้อมที่ตั้งไว้",
-      potMaterial: "วัสดุกระถาง:",
-      placement: "ตำแหน่งที่วาง:",
-      acquiredFrom: "แหล่งที่มา:",
-      careEngineResults: "ผลการคำนวณจาก Care Schedule Engine",
-      waterInterval: "รอบรดน้ำ: ทุก {days} วัน",
-      currentSeason: "ฤดูกาล:",
-      mathFormula: "สูตรคำนวณ:",
-      thirtyDayTitle: "กำหนดการดูแลข้างหน้า (30 วัน)",
-      pendingTasksSuffix: "งานที่รอดำเนินการ",
-      waterPlantTask: "รดน้ำต้นไม้",
-      dueLabel: "กำหนด:",
-      taskDone: "ทำเรียบร้อย",
-      taskPending: "รอดำเนินการ",
-      taskSkipped: "ข้ามรอบนี้",
-      timelineTitle: "ประวัติการดูแลย้อนหลัง (Care Timeline)",
-      waterSuccess: "รดน้ำสำเร็จ",
-      noLogs: "ยังไม่มีประวัติการดูแลย้อนหลัง",
-      noCalendarTasks: "ยังไม่มีงานในปฏิทิน",
-    },
-    wizard: {
-      stepOf: "เพิ่มต้นไม้เข้าสวนของคุณ (ขั้นตอนที่ {step} จาก 4)",
-      title: "ลงทะเบียนต้นไม้ใหม่",
-      desc: "ระบบจะวิเคราะห์เพื่อสร้างตารางรดน้ำที่แม่นยำที่สุดให้ต้นไม้ของคุณ",
-      step1Title: "1. เลือกพันธุ์ต้นไม้ของคุณ",
-      step1Desc: "เลือกพันธุ์จากแคตตาล็อกของร้านเพื่อให้ระบบดึงสูตรดูแล 3 ฤดูกาลไทยอัตโนมัติ",
-      searchPlantPlaceholder: "ค้นหาชื่อพันธุ์ เช่น มอนสเตอร่า, ยางอินเดีย...",
-      otherSpecies: "พันธุ์อื่น ๆ (ไม่อยู่ในรายการด้านบน)",
-      otherSpeciesPlaceholder: "พิมพ์ชื่อพันธุ์ของคุณที่นี่...",
-      step2Title: "2. ข้อมูลทั่วไปของต้นไม้",
-      step2Desc: "ตั้งชื่อเล่นให้น้องเพื่อความผูกพันและบันทึกที่มา",
-      nicknameLabel: "ชื่อเล่นต้นไม้ *",
-      nicknamePlaceholder: "เช่น เจ้าอ้วน, มอนด่างมุมห้อง, ยางอินเดียโต๊ะทำงาน",
-      acquiredDateLabel: "วันที่รับมาเลี้ยง",
-      acquiredFromLabel: "ได้มาจากไหน",
-      sourceShop: "ซื้อจากร้าน TreeForLife",
-      sourceElsewhere: "ซื้อจากที่อื่น",
-      sourceGift: "เพื่อนหรือผู้ใหญ่ให้มา",
-      sourcePropagated: "ขยายพันธุ์/ตอนกิ่งเอง",
-      step3Title: "3. ขนาดและวัสดุกระถาง",
-      step3Desc: "วัสดุกระถางมีผลต่ออัตราการระเหยของน้ำในดินอย่างมาก",
-      potSizeLabel: "ขนาดเส้นผ่านศูนย์กลางปากกระถาง:",
-      potSmall: "กระถางเล็ก (<6\")",
-      potMed: "มาตรฐาน (6-10\")",
-      potLarge: "กระถางใหญ่ (>10\")",
-      potMaterialTitle: "วัสดุกระถาง (แตะเลือก)",
-      step4Title: "4. ตำแหน่งที่วาง & ตารางดูแล",
-      step4Desc: "เลือกจุดที่คุณตั้งต้นไม้ไว้ในบ้าน",
-      calculationBoxTitle: "คำนวณรอบรดน้ำอัจฉริยะ (Care Schedule Engine)",
-      waterEveryResult: "รดทุก {days} วัน",
-      seasonLabel: "ฤดูกาลปัจจุบัน:",
-      formulaLabel: "สูตรคำนวณจริง:",
-      autoAdjustNote: "* ระบบจะปรับรอบอัตโนมัติเมื่อเข้าสู่ฤดูถัดไป หรือคุณสามารถปรับวันเองได้เสมอ",
-      backBtn: "ย้อนกลับ",
-      nextBtn: "ถัดไป",
-      finishBtn: "เสร็จสิ้น & สร้างตารางดูแล",
-      creatingBtn: "กำลังสร้างตารางดูแล...",
+      subtitle: "จัดการต้นไม้และตารางดูแลอัตโนมัติที่ออกแบบมาเพื่อคุณ",
+      add_plant: "เพิ่มต้นไม้เข้าสวน",
+      my_plants_count: "ต้นไม้ทั้งหมด {count} ต้น",
+      empty_title: "ยังไม่มีต้นไม้ในสวนของคุณ",
+      empty_desc: "เริ่มเพิ่มต้นไม้ต้นแรกเพื่อให้ระบบช่วยจำตารางรดน้ำและแจ้งเตือนอย่างแม่นยำ",
+      step_1: "เลือกพันธุ์ไม้",
+      step_2: "ตั้งชื่อเล่นและที่มา",
+      step_3: "เลือกกระถางและขนาด",
+      step_4: "เลือกตำแหน่งที่วาง",
+      custom_species: "พันธุ์อื่นๆ / ระบุเอง",
+      custom_species_prompt: "ระบุชื่อพันธุ์ต้นไม้ของคุณ",
+      nickname_label: "ชื่อเล่นของต้นไม้",
+      nickname_placeholder: "เช่น น้องมอน, มารวย",
+      acquired_date: "วันที่รับมาเลี้ยง",
+      acquired_source: "ที่มาของต้นไม้",
+      pot_size_label: "ขนาดกระถาง (เส้นผ่านศูนย์กลางเป็นนิ้ว)",
+      pot_material_label: "วัสดุของกระถาง",
+      placement_label: "ตำแหน่งที่ตั้งวาง",
+      preview_schedule: "ตารางดูแลที่คำนวณได้สำหรับต้นนี้",
+      submit_add: "บันทึกเข้าสู่สวนของฉัน",
+      archive_plant: "เก็บเข้าคลังประวัติ (ต้นตาย/ส่งต่อ)",
+      history_timeline: "ประวัติการดูแลย้อนหลัง",
+      calendar_30_days: "ปฏิทินดูแล 30 วันข้างหน้า",
+      plant_details: "รายละเอียดต้นไม้",
+      edit_plant: "แก้ไขข้อมูลต้นไม้",
+      save_changes: "บันทึกการเปลี่ยนแปลง",
+      notes_label: "บันทึกช่วยจำ",
+      notes_placeholder: "จดบันทึกเกี่ยวกับต้นไม้นี้ เช่น อาการ หรือการเปลี่ยนกระถาง...",
     },
     today: {
-      tagline: "ภารกิจประจำวันนี้",
       title: "งานดูแลวันนี้",
-      completeAllBtn: "ทำครบทุกอย่างแล้ว ({count} ต้น)",
-      snoozeBtn: "เลื่อน 1 วัน",
-      skipBtn: "ข้าม",
-      wateredBtn: "รดแล้ว",
-      overdueDays: "เลยกำหนด {days} วัน",
-      dueTodayBadge: "ครบกำหนดวันนี้",
-      emptyHeader: "ยอดเยี่ยม! ไม่มีงานค้างวันนี้",
-      emptyDesc: "ต้นไม้ทุกต้นในสวนของคุณได้รับการดูแลอย่างครบถ้วนแล้ว พักผ่อนและเพลิดเพลินกับความเขียวชอุ่มได้เลย",
-      viewGardenBtn: "ดูสวนทั้งหมด",
+      subtitle: "รายการดูแลต้นไม้ที่ครบกำหนดประจำวัน",
+      overdue_section: "งานที่เลยกำหนด",
+      today_section: "งานที่ต้องทำวันนี้",
+      upcoming_section: "งานเร็วๆ นี้",
+      mark_all_done: "ทำครบทุกงานแล้ว",
+      all_done_title: "ยอดเยี่ยม! งานดูแลเสร็จสิ้นทั้งหมดแล้ว",
+      all_done_desc: "ต้นไม้ในสวนของคุณได้รับการดูแลอย่างอบอุ่นและสมบูรณ์แบบในวันนี้",
+      no_tasks: "ไม่มีงานดูแลค้างในวันนี้ ขอให้มีความสุขกับการชมสวน!",
+      snooze_day: "เลื่อน 1 วัน",
+      skip_cycle: "ข้ามรอบนี้",
+    },
+    inquiry: {
+      ask_shop: "ถามร้านเรื่องต้นนี้",
+      intent_price: "สอบถามราคาและขนาดที่มี",
+      intent_availability: "สอบถามว่ามีของหรือไม่",
+      intent_care_help: "ปรึกษาอาการและวิธีดูแล",
+      intent_design_quote: "ขอใบเสนอราคาจัดมุมต้นไม้",
+      chat_line_title: "ทักแชทกับที่ร้านผ่าน LINE",
+      ref_code_label: "รหัสอ้างอิง",
+      copy_message: "คัดลอกข้อความ",
+      message_copied: "คัดลอกข้อความแล้ว ส่งในแชท LINE ได้ทันที",
+      open_line_app: "เปิดแอป LINE เลย",
+      inquiry_sent: "สร้างรหัสสอบถามเรียบร้อยแล้ว",
+      desktop_line_prompt: "สแกน QR Code หรือเพิ่มเพื่อน @treeforlife ใน LINE พร้อมส่งข้อความด้านล่างนี้:",
     },
     admin: {
-      tagline: "ระบบหลังบ้านสำหรับเจ้าของร้าน",
-      title: "แดชบอร์ดร้าน TreeForLife",
-      desc: "อัปเดตสถานะของ ตรวจสอบรหัสลูกค้าที่ทัก LINE และดูคำค้นที่ไม่เจอผลลัพธ์",
-      switchDemoAdmin: "สลับเป็นบัญชีเจ้าของร้าน (Admin Demo)",
-      metricAllSpecies: "พันธุ์ไม้ทั้งหมด",
-      inStockCount: "มีของ {count}",
-      metricInquiries: "ลูกค้ากด \"ถามร้าน\"",
-      inquiriesUnit: "ครั้ง (นำทางสู่ LINE)",
-      metricMisses: "คำค้นที่หาไม่เจอ",
-      missesUnit: "รายการที่ควรหามาขาย",
-      metricGardenPlants: "ต้นไม้ในสวนผู้ใช้",
-      plantsUnit: "ต้นที่ดูแลอยู่",
-      tabSpecies: "จัดการพันธุ์ไม้ & สถานะของ",
-      tabInquiries: "รายการคนทัก LINE (Inquiries Log)",
-      tabMisses: "คำค้นที่ลูกค้าหาไม่เจอ (Search Misses) 🔥",
-      searchInAdmin: "ค้นหาชื่อพันธุ์ในระบบ...",
-      statusTip: "💡 แตะที่ป้ายสถานะเพื่อสลับ: มีที่ร้าน → สั่งได้ → ตามฤดูกาล → ซ่อน",
-      thPlant: "พันธุ์ไม้",
-      thFamily: "วงศ์",
-      thDiff: "ความยาก",
-      thStockStatus: "สถานะที่ร้าน (คลิกเพื่อเปลี่ยน)",
-      thWebLink: "ลิงก์หน้าเว็บ",
-      openLook: "เปิดดู",
-      inqNotice: "ทุกแถวคือ 1 ครั้งที่ลูกค้ากด \"ถามร้าน\" พร้อมรหัสอ้างอิง Ref Code สำหรับตรวจสอบกับแชท LINE",
-      thRefCode: "รหัสอ้างอิง (Ref Code)",
-      thTopic: "เรื่องที่ถาม",
-      thInterestedPlant: "ต้นไม้ที่สนใจ",
-      thSourcePage: "หน้าต้นทาง",
-      thTimestamp: "วันเวลา",
-      emptyInquiries: "ยังไม่มีประวัติการกดถามร้าน",
-      missesInsight: "ข้อมูลที่มีค่าที่สุดสำหรับร้าน: รายการคำที่ลูกค้าค้นหาในเว็บแล้วไม่เจอผลลัพธ์ นำไปใช้ตัดสินใจคัดเลือกพันธุ์ไม้มาเข้าร้านเพื่อตอบสนองความต้องการของตลาดจริง",
-      thQuery: "คำค้นที่ลูกค้าหา (Search Query)",
-      thFrequency: "จำนวนครั้งที่ค้นหา",
-      thLastSearch: "ค้นหาล่าสุด",
-      emptyMisses: "ยังไม่มีคำค้นที่ตกหล่น (ทุกคำค้นมีผลลัพธ์ในระบบ)",
+      portal_title: "ระบบจัดการร้าน",
+      species_mgmt: "จัดการพันธุ์ไม้",
+      care_templates: "สูตรการดูแล",
+      problems: "ปัญหาที่พบบ่อย",
+      inquiries: "รายการสอบถามจากลูกค้า",
+      search_misses: "คำค้นหาที่ไม่พบผลลัพธ์",
+      add_species: "เพิ่มพันธุ์ไม้ใหม่",
+      edit_species: "แก้ไขพันธุ์ไม้",
+      save: "บันทึกข้อมูล",
+      cancel: "ยกเลิก",
+      delete: "ลบ",
+      stock_status: "สถานะสต็อก",
+      inline_edit_saved: "บันทึกสถานะเรียบร้อยแล้ว",
+      unauthorized: "คุณไม่มีสิทธิ์เข้าถึงหน้านี้ (เฉพาะพนักงานหรือผู้ดูแลระบบ)",
+      switch_to_admin: "สลับเป็นบทบาท Admin หรือ Staff เพื่อทดสอบ",
+      total_species: "พันธุ์ไม้ทั้งหมด {count} ชนิด",
+      query_count: "จำนวนการค้นหา",
+      last_seen: "ค้นหาล่าสุดเมื่อ",
     },
-    modal: {
-      title: "ส่งข้อความถึงร้าน TreeForLife",
-      desc: "ปรึกษาโดยตรงผ่าน LINE Official ของทางร้าน",
-      plantInterested: "ต้นไม้ที่คุณสนใจ",
-      topicLabel: "เรื่องที่ต้องการสอบถาม",
-      detailsLabel: "ระบุรายละเอียดเพิ่มเติม (ถ้ามี)",
-      detailsPlaceholder: "เช่น อยากได้ต้นสูงประมาณ 1 เมตร หรือสอบถามวิธีแก้ใบเหลือง...",
-      openLineBtn: "เปิดแชท LINE พร้อมข้อความระบุชื่อต้นนี้",
-      creatingMsg: "กำลังสร้างข้อความ...",
-      lineSubtext: "ระบบจะสร้างรหัสอ้างอิงและเปิด LINE Official ของร้านให้อัตโนมัติ",
-      refCodeLabel: "รหัสอ้างอิงของคุณ",
-      refCodeDesc: "หาก LINE ไม่เปิดขึ้นอัตโนมัติ คุณสามารถคัดลอกข้อความด้านล่างนี้ไปส่งให้ร้านได้ทันที",
-      prefilledLabel: "ข้อความตั้งต้นที่ระบุรหัสแล้ว",
-      copyBtn: "คัดลอกข้อความ",
-      copiedBtn: "คัดลอกแล้ว!",
-      reopenLineBtn: "เปิด LINE อีกครั้ง",
-      closeBtn: "เสร็จสิ้นและปิดหน้าต่าง",
+    toasts: {
+      plant_added: "เพิ่มต้นไม้เข้าสู่สวนของคุณเรียบร้อยแล้ว 🌿",
+      task_done: "บันทึกงานดูแลเรียบร้อยแล้ว!",
+      task_snoozed: "เลื่อนงานไปอีก 1 วันแล้ว",
+      task_skipped: "ข้ามรอบการดูแลนี้แล้ว",
+      all_tasks_done: "บันทึกสำเร็จครบทุกงานแล้วในคลิกเดียว!",
+      copied: "คัดลอกลงคลิปบอร์ดแล้ว",
+      role_switched: "เปลี่ยนบทบาทเดโมเป็น {role} แล้ว",
+      locale_switched: "เปลี่ยนภาษาเป็น {lang} แล้ว",
+      theme_switched: "เปลี่ยนโหมดสีเป็น {theme} แล้ว",
+      guest_merged: "โอนย้ายต้นไม้ที่บันทึกไว้เข้าสู่บัญชีของคุณเรียบร้อยแล้ว",
+      error_generic: "เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง",
     },
     footer: {
-      philosophy: "บ้านแห่งพันธุ์ไม้คัดพิเศษและการดูแลอย่างประณีต เราเชื่อว่าต้นไม้ที่ดีไม่ใช่แค่สวยงามตอนซื้อ แต่ต้องเติบโตได้อย่างสมบูรณ์ในบ้านคุณ ด้วยตารางดูแลเฉพาะตัวที่ออกแบบตามสภาพจริง",
-      shotInStoreNote: "ภาพถ่ายจากต้นจริงที่ร้าน 100% · ไม่มีรูปจำลอง",
-      navTitle: "แผนผังบริการ",
-      navCatalog: "ค้นหาและคัดเลือกพันธุ์ไม้ (Catalog)",
-      navGarden: "สวนของฉัน & ตารางรดน้ำอัจฉริยะ",
-      navToday: "ภารกิจประจำวันนี้ (Today's Care)",
-      navAdmin: "ระบบจัดการหลังบ้านร้าน",
-      contactTitle: "ติดต่อและเยี่ยมชมร้าน",
-      openingHours: "เรือนเพาะชำ TreeForLife เปิดบริการทุกวัน 08:30 – 18:00 น.",
-      lineOa: "LINE Official: @treeforlife",
-      pdpaNote: "ปฏิบัติตามมาตรฐาน PDPA ปกป้องข้อมูลส่วนบุคคล",
-      rights: "All rights reserved. Crafted with care for plant lovers.",
-      privacyLink: "ความเป็นส่วนตัว & ข้อกำหนด (PDPA)",
-      madeWith: "Made with",
-      forPlants: "for Botanicals",
+      about_title: "ร้าน TreeForLife",
+      about_desc: "ร้านต้นไม้คัดพิเศษใจกลางกรุงเทพฯ ทุกต้นผ่านการเพาะเลี้ยงและทดสอบการเติบโตในสภาพอากาศจริงของไทย พร้อมตารางการดูแลที่ปรับตาม 3 ฤดูกาลอย่างแม่นยำ",
+      hours_label: "เวลาทำการ",
+      hours_val: "เปิดทุกวัน 09:00 - 18:00 น.",
+      location_label: "ที่ตั้งร้าน",
+      location_val: "กรุงเทพมหานคร ประเทศไทย",
+      line_cta_title: "ต้องการคำปรึกษาเรื่องต้นไม้?",
+      line_cta_button: "ทักคุยกับร้านทาง LINE",
+      line_id: "LINE OA: @treeforlife",
+      quick_links: "เมนูลัด",
+      copyright: "© {year} TreeForLife. สงวนลิขสิทธิ์ทั้งหมด",
+      nurtured_note: "ดูแลด้วยใจ ปลูกด้วยรัก · Nurtured with care",
     },
   },
   en: {
     nav: {
-      tagline: "Boutique Botanical",
-      catalog: "Plant Catalog",
+      home: "Home",
+      catalog: "Catalog",
       garden: "My Garden",
       today: "Today's Tasks",
-      admin: "Backoffice",
-      consultShop: "Ask Shop",
-      login: "Sign In",
-      logout: "Sign Out",
-      guest: "Guest-first Mode",
-      customer: "Plant Enthusiast",
-      adminRole: "Shop Owner (Admin)",
-      userStatus: "User Account Status",
-      savedInDevice: "Stored locally on device",
-      switchRole: "Switch Demo Mode",
-      usingNow: "Active",
+      favorites: "Favorites",
+      admin: "Admin Portal",
+      search: "Search",
+      role: "Role",
+      language: "Language",
+      theme: "Theme",
+      light: "Light",
+      dark: "Dark",
+      menu: "Menu",
+      close: "Close",
+      open_menu: "Open menu",
+      close_menu: "Close menu",
     },
-    home: {
-      badge: "Curated Boutique Plants with 3-Season Thai Care Engine",
-      heroTitle1: "The Elegance of Nature",
-      heroTitle2: "Thriving Truly",
-      heroTitle3: "in Your Home",
-      heroDesc: "We don't merely provide lush plants from our sanctuary; we design intelligent care schedules tailored to your pot size, light, and season with authentic grower wisdom.",
-      searchPlaceholder: "Search plants e.g., Monstera, Aircon tolerant, Pet friendly...",
-      searchBtn: "Search",
-      popularShortcuts: "Popular shortcuts:",
-      indoor: "Indoor & Condo",
-      fullSun: "Full Sun",
-      petSafe: "Pet Friendly",
-      beginner: "Beginner Easy",
-      airPurify: "Air Purifying",
-      deskPlant: "Desk Plant",
-      inStockNow: "In Stock at the Nursery",
-      inStockDesc: "Live stock updated directly from our greenhouse",
-      viewAllInStock: "View all in-stock varieties",
-      shotInStore: "Shot In-Store",
-      inStockBadge: "In Stock",
-      madeToOrderBadge: "Pre-order",
-      seasonalBadge: "Seasonal",
-      diffLevel: "Difficulty",
-      details: "Details",
-      whyTitle: "Why Plant Lovers Trust TreeForLife",
-      whySub: "Our Irreplicable Difference",
-      careEngineTitle: "Thai 3-Season Watering Engine",
-      careEngineDesc: "No generic overseas advice. Calculated specifically for Hot, Rainy, and Cool Thai seasons, pot material, and indoor placement to prevent root rot.",
-      shopNoteTitle: "Authentic Family Grower Wisdom",
-      shopNoteDesc: "Every variety is tested in our nursery. 'What the Shop Says' offers proprietary insights and secrets you can't find online.",
-      noCartTitle: "No Cart, Direct Human Touch",
-      noCartDesc: "Every inquiry connects directly to our family team on LINE with a reference code and exact plant details in one touch.",
-      ctaBadge: "Instant Access — No Signup Required",
-      ctaTitle1: "Create a Care Calendar",
-      ctaTitle2: "for the Plants You Already Own",
-      ctaDesc: "Even if you bought your plants elsewhere, add them to 'My Garden' to receive automated watering schedules and reminders for free.",
-      addFirstPlant: "Add My First Plant",
-      browseAll: "Browse All Species",
+    roles: {
+      guest: "Guest",
+      customer: "Customer",
+      staff: "Shop Staff",
+      admin: "Administrator",
+      switch_role: "Switch Demo Role",
+      current_role: "Current Role",
+      guest_desc: "Anonymous user, data stored locally in your browser",
+      customer_desc: "Registered member, syncs plants & garden across devices",
+      staff_desc: "Shop staff, inspect and update live plant stock",
+      admin_desc: "Full administrator, manage species, care formulas, and analytics",
     },
     search: {
-      title: "Botanical Catalog",
-      savedTitle: "Your Saved Plants",
-      countSuffix: "varieties matched your criteria · with real nursery care specs",
-      searchPlaceholder: "Search by Thai, English, Scientific, or Nicknames...",
-      filterBtn: "Filters",
-      clearFilter: "Clear Filters",
-      sortBy: "Sort by:",
-      relevance: "Relevance",
-      inStockFirst: "In Stock First",
-      easiestFirst: "Easiest First",
-      nameAsc: "Name A–Z",
-      filters: "Detailed Filters",
-      clearAll: "Clear All",
-      stockStatus: "Shop Stock Status",
-      lightCondition: "Light Conditions",
-      waterFrequency: "Watering Frequency",
-      placement: "Placement",
-      petFriendlyOnly: "Pet Safe Only",
-      emptyTitle: "No Plant Found in System",
-      emptyDescPrefix: "Your search for",
-      emptyDescSuffix: "has been logged into our restocking wishlist. We are preparing this variety!",
-      emptyNoFilterDesc: "No plants matched your selected filters. Please adjust your criteria.",
-      askShopLine: "Ask the shop via LINE directly?",
-      viewItems: "View",
-      itemsSuffix: "items",
-      askShopShort: "Ask Shop",
-      careFormulaShort: "Care Guide",
+      placeholder: "Search Thai, English, or nicknames e.g. Monstera...",
+      search_button: "Search",
+      quick_filters: "Popular Shortcuts",
+      shortcut_indoor: "Indoor",
+      shortcut_sun: "Sun Loving",
+      shortcut_pet: "Pet Friendly",
+      shortcut_beginner: "Beginner",
+      shortcut_air: "Air Purifying",
+      shortcut_desk: "Desk Plants",
+      filters: "Filters",
+      clear_filters: "Clear Filters",
+      results_count: "Found {count} plants",
+      no_results_title: "No plants found",
+      no_results_desc: "Ask our nursery directly on LINE! We might have it in our greenhouse.",
+      ask_shop_line: "Ask Shop on LINE",
+      sort_by: "Sort By",
+      sort_relevance: "Most Relevant",
+      sort_in_stock: "In Stock First",
+      sort_easiest: "Easiest Care",
+      view_all: "View All",
     },
-    plant: {
-      home: "Home",
-      plants: "Plants",
-      shotInStore100: "100% Shot In-Store",
-      inStockReady: "In Stock & Ready",
-      madeToOrderDays: "Pre-order ~7–14 Days",
-      seasonal: "Seasonal",
-      aliases: "Aliases:",
-      lightLabel: "Light",
-      waterLabel: "Water",
-      placementLabel: "Placement",
-      diffLabel: "Difficulty",
-      petLabel: "Pet Safe",
-      sizeLabel: "Mature Size",
-      petSafe100: "100% Safe",
-      petToxic: "Toxic if ingested",
-      petUnknown: "Unspecified",
-      askShopViaLine: "Ask the Shop via LINE",
-      askShopThisPlant: "Ask Shop About This Plant",
-      addToGarden: "+ Add to My Garden",
-      shopNoteHeader: "What the Shop Says — Authentic Nursery Experience",
-      shopNoteBy: "— Recorded by the TreeForLife family for local growers",
-      careGuideTag: "Care Manual",
-      careGuideTitle: "How to Help This Plant Flourish",
-      threeSeasonWaterTitle: "3-Season Watering Schedule",
-      hotSeason: "Hot Season (Mar–May):",
-      rainySeason: "Rainy Season (Jun–Oct):",
-      coolSeason: "Cool Season (Nov–Feb):",
-      everyDays: "Every {days} days",
-      soilRecipeTitle: "Authentic Nursery Soil Recipe",
-      fertRepotTitle: "Fertilizer & Repotting",
-      fertilizerLabel: "Fertilizer:",
-      repottingLabel: "Repotting:",
-      diagnosisTag: "Plant Diagnosis",
-      diagnosisTitle: "Common Issues & Solutions",
-      causeLabel: "Cause:",
-      fixLabel: "Solution:",
-      similarTag: "Recommendations",
-      similarTitle: "Plants with Similar Requirements",
+    filters: {
+      light: "Light Needs",
+      water: "Water Needs",
+      placement: "Suitable Placement",
+      difficulty: "Difficulty",
+      pet: "Pet Safety",
+      size: "Mature Size",
+      status: "Availability",
+      light_full_sun: "Full Sun (6+ hrs)",
+      light_partial: "Partial Sun",
+      light_shade: "Shade",
+      light_indoor_bright: "Bright Indoor",
+      light_low_light: "Low Light",
+      water_low: "Low (7+ days)",
+      water_medium: "Medium (3–7 days)",
+      water_high: "High (1–3 days)",
+      placement_outdoor_sun: "Outdoor Full Sun",
+      placement_balcony_shade: "Balcony Shade",
+      placement_indoor_window: "Indoor Window",
+      placement_indoor_far: "Indoor Center",
+      placement_air_con: "Air-Conditioned Room",
+      placement_indoor: "Indoor",
+      placement_outdoor: "Outdoor",
+      placement_balcony: "Balcony",
+      placement_bathroom: "Bathroom",
+      pot_terracotta: "Terracotta",
+      pot_plastic: "Plastic",
+      pot_ceramic_glazed: "Glazed Ceramic",
+      pot_cement: "Cement / Concrete",
+      pot_hanging: "Hanging Basket / Coir",
+      size_xs: "Extra Small (<15 cm)",
+      size_sm: "Small (15–30 cm)",
+      size_md: "Medium (30–100 cm)",
+      size_lg: "Large (100–200 cm)",
+      size_xl: "Extra Large (>200 cm)",
+      difficulty_1: "Very Easy (1/5)",
+      difficulty_2: "Easy (2/5)",
+      difficulty_3: "Moderate (3/5)",
+      difficulty_4: "Challenging (4/5)",
+      difficulty_5: "Expert Only (5/5)",
+      pet_safe: "Pet Safe",
+      pet_toxic: "Toxic to Pets",
+      pet_unknown: "Unknown / Use Caution",
+      stock_in_stock: "In Stock Ready",
+      stock_made_to_order: "Made to Order (~7-14 days)",
+      stock_seasonal: "Seasonal",
+      stock_hidden: "Hidden",
+      acquired_shop: "Bought from TreeForLife",
+      acquired_elsewhere: "Bought Elsewhere",
+      acquired_gift: "Received as Gift",
+      acquired_propagated: "Self Propagated",
+    },
+    care: {
+      water: "Watering",
+      fertilize: "Fertilizing",
+      repot: "Repotting",
+      prune: "Pruning",
+      pest_check: "Pest Inspection",
+      days_unit: "{days} days",
+      every_days: "Every {days} days",
+      every_months: "Every {months} months",
+      season_hot: "Hot Season (Mar - May)",
+      season_rainy: "Rainy Season (Jun - Oct)",
+      season_cool: "Cool Season (Nov - Feb)",
+      schedule_explanation: "Adjusted for Thai climate, pot material, and placement",
+      pot_size: "Pot Size",
+      inches: "{inches} inches",
+      overdue_days: "{count} days overdue",
+      due_today: "Due today",
+      due_in_days: "In {count} days",
+      action_water_done: "Watered",
+      action_mark_done: "Mark Done",
+      action_snooze: "Snooze 1 Day",
+      action_skip: "Skip Cycle",
+      shop_owner_tip: "Shop Owner's Advice",
+      common_problems: "Common Issues & Remedies",
+      similar_plants: "Similar Plants",
+      care_guide: "Care Guide",
+      soil_mix: "Soil Mix Formula",
+      fertilizer_note: "Fertilizer Recommendation",
+      propagation: "Propagation",
     },
     garden: {
-      tagline: "Private Sanctuary & Care Schedule",
       title: "My Garden",
-      guestNotice: "You are in Guest-first mode. Data is stored safely on your device. Sign in whenever you want cross-device backup.",
-      todayTasksBtn: "Today's Tasks",
-      addNewPlantBtn: "+ Add New Plant",
-      overdueDays: "{days} days overdue",
-      dueToday: "Water Today",
-      inDays: "In {days} days",
-      potSize: "Pot:",
-      inches: "inches",
-      acquiredWhen: "Acquired:",
-      wateredDoneBtn: "Watered",
-      recordingBtn: "Saving...",
-      calendarBtn: "Calendar",
-      emptyTitle: "No Plants in Your Garden Yet",
-      emptyDesc: "Add your first plant to let our engine calculate Thai-climate watering schedules and keep track for you.",
-      addFirstBtn: "Add My First Plant",
-      backToGarden: "Back to My Garden",
-      archiveBtn: "Archive Plant",
-      caredSince: "Cultivated since",
-      waterTodayDone: "Water Today (Done)",
-      askShopThisPlant: "Ask Shop About This Plant",
-      currentEnv: "Current Environment Settings",
-      potMaterial: "Pot Material:",
-      placement: "Placement:",
-      acquiredFrom: "Acquired From:",
-      careEngineResults: "Care Schedule Engine Calculation",
-      waterInterval: "Watering Interval: Every {days} days",
-      currentSeason: "Current Season:",
-      mathFormula: "Math Formula:",
-      thirtyDayTitle: "Upcoming 30-Day Schedule",
-      pendingTasksSuffix: "pending tasks",
-      waterPlantTask: "Water Plant",
-      dueLabel: "Due:",
-      taskDone: "Completed",
-      taskPending: "Pending",
-      taskSkipped: "Skipped",
-      timelineTitle: "Care Timeline History",
-      waterSuccess: "Watered Successfully",
-      noLogs: "No care logs recorded yet",
-      noCalendarTasks: "No tasks scheduled yet",
-    },
-    wizard: {
-      stepOf: "Add Plant to Your Garden (Step {step} of 4)",
-      title: "Register New Plant",
-      desc: "Our engine will analyze conditions to create an accurate watering schedule.",
-      step1Title: "1. Select Plant Variety",
-      step1Desc: "Pick from our nursery catalog to automatically load the 3-season care template.",
-      searchPlantPlaceholder: "Search variety e.g., Monstera, Rubber Tree...",
-      otherSpecies: "Other Variety (Not listed above)",
-      otherSpeciesPlaceholder: "Type your plant variety name here...",
-      step2Title: "2. Plant Profile",
-      step2Desc: "Give your green friend a nickname and track where you got it.",
-      nicknameLabel: "Plant Nickname *",
-      nicknamePlaceholder: "e.g., Chubby, Window Monstera, Desk Ficus",
-      acquiredDateLabel: "Acquired Date",
-      acquiredFromLabel: "Acquired From",
-      sourceShop: "Purchased at TreeForLife",
-      sourceElsewhere: "Bought elsewhere",
-      sourceGift: "Gift from friend / family",
-      sourcePropagated: "Propagated by myself",
-      step3Title: "3. Pot Size & Material",
-      step3Desc: "Pot material significantly affects soil moisture evaporation rate.",
-      potSizeLabel: "Pot Diameter:",
-      potSmall: "Small (<6\")",
-      potMed: "Standard (6-10\")",
-      potLarge: "Large (>10\")",
-      potMaterialTitle: "Pot Material (Tap to Select)",
-      step4Title: "4. Placement & Care Schedule",
-      step4Desc: "Choose where you place this plant inside your home.",
-      calculationBoxTitle: "Care Schedule Engine Calculation",
-      waterEveryResult: "Water every {days} days",
-      seasonLabel: "Current Season:",
-      formulaLabel: "Calculation Breakdown:",
-      autoAdjustNote: "* The schedule adapts automatically as Thai seasons change, or you can override it anytime.",
-      backBtn: "Back",
-      nextBtn: "Next",
-      finishBtn: "Complete & Generate Schedule",
-      creatingBtn: "Generating Schedule...",
+      subtitle: "Personal plant collection with intelligent climate-tailored reminders",
+      add_plant: "Add Plant",
+      my_plants_count: "{count} plants in your garden",
+      empty_title: "Your garden is empty",
+      empty_desc: "Add your first plant to get automatic watering reminders tailored to Bangkok weather!",
+      step_1: "Choose Species",
+      step_2: "Nickname & Source",
+      step_3: "Pot & Diameter",
+      step_4: "Placement",
+      custom_species: "Other / Custom Species",
+      custom_species_prompt: "Enter your plant species name",
+      nickname_label: "Plant Nickname",
+      nickname_placeholder: "e.g. Monty, Greenie",
+      acquired_date: "Acquisition Date",
+      acquired_source: "Acquired From",
+      pot_size_label: "Pot Diameter (inches)",
+      pot_material_label: "Pot Material",
+      placement_label: "Location / Placement",
+      preview_schedule: "Calculated Care Schedule for this Plant",
+      submit_add: "Save to My Garden",
+      archive_plant: "Archive Plant (Passed away / Gifted)",
+      history_timeline: "Care Timeline History",
+      calendar_30_days: "Next 30 Days Calendar",
+      plant_details: "Plant Details",
+      edit_plant: "Edit Plant Info",
+      save_changes: "Save Changes",
+      notes_label: "Care Notes",
+      notes_placeholder: "Keep private notes about this plant, health issues, or repotting...",
     },
     today: {
-      tagline: "Today's Care Routine",
       title: "Today's Tasks",
-      completeAllBtn: "Complete All ({count} plants)",
-      snoozeBtn: "Snooze 1d",
-      skipBtn: "Skip",
-      wateredBtn: "Watered",
-      overdueDays: "{days} days overdue",
-      dueTodayBadge: "Due Today",
-      emptyHeader: "Splendid! No Pending Tasks Today",
-      emptyDesc: "All your green companions have been tended to. Relax and enjoy the lush sanctuary.",
-      viewGardenBtn: "View All Plants",
+      subtitle: "Daily care tasks requiring attention today",
+      overdue_section: "Overdue Tasks",
+      today_section: "Due Today",
+      upcoming_section: "Upcoming Soon",
+      mark_all_done: "Mark All Done",
+      all_done_title: "All caught up!",
+      all_done_desc: "Every plant in your garden has received proper care and love today.",
+      no_tasks: "No pending tasks for today. Enjoy your garden!",
+      snooze_day: "Snooze 1 Day",
+      skip_cycle: "Skip Cycle",
+    },
+    inquiry: {
+      ask_shop: "Ask Shop About This Plant",
+      intent_price: "Inquire Price & Sizes",
+      intent_availability: "Check Availability",
+      intent_care_help: "Care Help & Plant Doctor",
+      intent_design_quote: "Garden Design Quote",
+      chat_line_title: "Chat with Shop via LINE",
+      ref_code_label: "Reference Code",
+      copy_message: "Copy Message",
+      message_copied: "Message copied! You can now paste it into LINE.",
+      open_line_app: "Open LINE App",
+      inquiry_sent: "Inquiry reference generated successfully",
+      desktop_line_prompt: "Scan QR Code or add @treeforlife on LINE, then send this message:",
     },
     admin: {
-      tagline: "Shop Management Backoffice",
-      title: "TreeForLife Management Dashboard",
-      desc: "Update stock status, inspect LINE inquiry ref codes, and discover top missed searches.",
-      switchDemoAdmin: "Switch to Shop Owner (Admin Demo)",
-      metricAllSpecies: "Total Species",
-      inStockCount: "In stock: {count}",
-      metricInquiries: "Inquiries Clicked",
-      inquiriesUnit: "times (routed to LINE)",
-      metricMisses: "Zero-Result Misses",
-      missesUnit: "items to consider stocking",
-      metricGardenPlants: "User Garden Plants",
-      plantsUnit: "plants in care",
-      tabSpecies: "Species Catalog & Stock",
-      tabInquiries: "LINE Inquiries Log",
-      tabMisses: "Top Search Misses 🔥",
-      searchInAdmin: "Search species in system...",
-      statusTip: "💡 Tap status pill to cycle: In Stock → Pre-order → Seasonal → Hidden",
-      thPlant: "Variety",
-      thFamily: "Family",
-      thDiff: "Difficulty",
-      thStockStatus: "Stock Status (Click to Toggle)",
-      thWebLink: "Web Page",
-      openLook: "View",
-      inqNotice: "Each row represents a customer clicking 'Ask the Shop' with a unique Ref Code to cross-check in LINE chat.",
-      thRefCode: "Ref Code",
-      thTopic: "Inquiry Topic",
-      thInterestedPlant: "Plant of Interest",
-      thSourcePage: "Source Page",
-      thTimestamp: "Timestamp",
-      emptyInquiries: "No inquiries recorded yet",
-      missesInsight: "Valuable Business Intelligence: Real searches with zero results help you decide what new plant varieties to procure.",
-      thQuery: "Customer Query",
-      thFrequency: "Search Count",
-      thLastSearch: "Last Seen",
-      emptyMisses: "No missed searches yet (All searches found results)",
+      portal_title: "Admin Portal",
+      species_mgmt: "Species Management",
+      care_templates: "Care Formulas",
+      problems: "Common Problems",
+      inquiries: "Customer Inquiries",
+      search_misses: "Search Misses",
+      add_species: "Add New Species",
+      edit_species: "Edit Species",
+      save: "Save Changes",
+      cancel: "Cancel",
+      delete: "Delete",
+      stock_status: "Stock Status",
+      inline_edit_saved: "Status updated successfully",
+      unauthorized: "You do not have permission to view this page (Staff or Admin required)",
+      switch_to_admin: "Switch demo role to Admin or Staff to test",
+      total_species: "{count} total species",
+      query_count: "Searches",
+      last_seen: "Last Queried",
     },
-    modal: {
-      title: "Message TreeForLife Nursery",
-      desc: "Connect directly with our family experts via LINE Official",
-      plantInterested: "Plant of Interest",
-      topicLabel: "Inquiry Subject",
-      detailsLabel: "Additional Details (Optional)",
-      detailsPlaceholder: "e.g., Looking for a ~1m tall specimen, or asking about yellow leaves...",
-      openLineBtn: "Open LINE Chat with Prefilled Plant Name",
-      creatingMsg: "Creating message...",
-      lineSubtext: "A unique Ref Code is generated and attached to LINE OA automatically.",
-      refCodeLabel: "Your Reference Code",
-      refCodeDesc: "If LINE does not launch automatically, you can copy the text below and paste it into our LINE chat.",
-      prefilledLabel: "Generated Prefilled Text",
-      copyBtn: "Copy Message",
-      copiedBtn: "Copied!",
-      reopenLineBtn: "Reopen LINE",
-      closeBtn: "Done & Close Window",
+    toasts: {
+      plant_added: "Plant added to your garden successfully! 🌿",
+      task_done: "Care task marked as completed!",
+      task_snoozed: "Task snoozed by 1 day",
+      task_skipped: "Task skipped for this cycle",
+      all_tasks_done: "All tasks marked complete with one click!",
+      copied: "Copied to clipboard",
+      role_switched: "Switched demo role to {role}",
+      locale_switched: "Language changed to {lang}",
+      theme_switched: "Theme changed to {theme}",
+      guest_merged: "Transferred locally saved plants into your account",
+      error_generic: "Something went wrong. Please try again.",
     },
     footer: {
-      philosophy: "A boutique sanctuary of curated plants and mindful care. We believe great plants shouldn't just look stunning upon purchase, but flourish permanently in your home through authentic climate-tailored care.",
-      shotInStoreNote: "100% genuine plants shot in our nursery · No artificial renders",
-      navTitle: "Site Directory",
-      navCatalog: "Plant Catalog & Search",
-      navGarden: "My Garden & Care Schedules",
-      navToday: "Today's Care Tasks",
-      navAdmin: "Shop Backoffice Dashboard",
-      contactTitle: "Visit & Contact Us",
-      openingHours: "TreeForLife Nursery open daily 08:30 – 18:00",
-      lineOa: "LINE Official: @treeforlife",
-      pdpaNote: "Compliant with PDPA personal data protection guidelines",
-      rights: "All rights reserved. Crafted with care for plant lovers.",
-      privacyLink: "Privacy Policy (PDPA)",
-      madeWith: "Made with",
-      forPlants: "for Botanicals",
+      about_title: "TreeForLife Boutique Shop",
+      about_desc: "A boutique plant nursery in Bangkok offering hand-picked plants nurtured and tested for the real Thai climate, backed by intelligent 3-season care schedules.",
+      hours_label: "Opening Hours",
+      hours_val: "Open Daily 09:00 - 18:00",
+      location_label: "Location",
+      location_val: "Bangkok, Thailand",
+      line_cta_title: "Need Plant Advice?",
+      line_cta_button: "Chat with Us on LINE",
+      line_id: "LINE OA: @treeforlife",
+      quick_links: "Quick Links",
+      copyright: "© {year} TreeForLife. All rights reserved.",
+      nurtured_note: "Nurtured with care · ดูแลด้วยใจ ปลูกด้วยรัก",
     },
   },
 };
+
+/**
+ * Resolves a nested translation key (e.g. 'nav.home' or 'filters.light_full_sun')
+ * with fallback to Thai (th) then English (en) then returning the key.
+ */
+export function getTranslation(
+  locale: Locale,
+  key: string,
+  params?: Record<string, string | number>
+): string {
+  const parts = key.split(".");
+
+  function findInDict(dict: Record<string, unknown>): string | undefined {
+    let current: unknown = dict;
+    for (const part of parts) {
+      if (current && typeof current === "object" && part in (current as Record<string, unknown>)) {
+        current = (current as Record<string, unknown>)[part];
+      } else {
+        return undefined;
+      }
+    }
+    return typeof current === "string" ? current : undefined;
+  }
+
+  // 1. Try selected locale
+  let text = findInDict(translations[locale] as unknown as Record<string, unknown>);
+
+  // 2. Fallback to default Thai locale if missing
+  if (text === undefined && locale !== "th") {
+    text = findInDict(translations.th as unknown as Record<string, unknown>);
+  }
+
+  // 3. Fallback to English if missing in Thai
+  if (text === undefined && locale !== "en") {
+    text = findInDict(translations.en as unknown as Record<string, unknown>);
+  }
+
+  // 4. Return raw key if completely missing
+  if (text === undefined) {
+    return key;
+  }
+
+  // 5. Replace interpolation parameters: {paramName}
+  if (params) {
+    for (const [paramKey, paramValue] of Object.entries(params)) {
+      text = text.replace(new RegExp(`\\{${paramKey}\\}`, "g"), String(paramValue));
+    }
+  }
+
+  return text;
+}
+
+export const t = getTranslation;
