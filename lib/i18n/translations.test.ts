@@ -207,5 +207,9 @@ describe("AppContext Utilities", () => {
       expect(DEMO_USERS.admin.email).toContain("@treeforlife.shop");
       expect(DEMO_USERS.guest.email).toBeNull();
     });
+
+    it("ensures guest user id is null to avoid invalid foreign key usage", () => {
+      expect(DEMO_USERS.guest.id).toBeNull();
+    });
   });
 });

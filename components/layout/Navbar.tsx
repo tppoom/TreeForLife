@@ -50,16 +50,19 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change
+  const [searchParamsStr, setSearchParamsStr] = useState("");
+
   useEffect(() => {
-    setMobileMenuOpen(false);
+    if (typeof window !== "undefined") {
+      setSearchParamsStr(window.location.search);
+    }
   }, [pathname]);
 
   const navLinks = [
-    { href: "/catalog", label: t("nav.catalog"), icon: BookOpen },
+    { href: "/search", label: t("nav.catalog"), icon: BookOpen },
     { href: "/garden", label: t("nav.garden"), icon: Sprout },
     { href: "/today", label: t("nav.today"), icon: CalendarCheck },
-    { href: "/favorites", label: t("nav.favorites"), icon: Heart },
+    { href: "/search?fav=true", label: t("nav.favorites"), icon: Heart },
     {
       href: "/admin",
       label: t("nav.admin"),
@@ -67,6 +70,23 @@ export function Navbar() {
       badge: role === "admin" || role === "staff" ? role.toUpperCase() : undefined,
     },
   ];
+
+  const isLinkActive = (href: string) => {
+    if (href === "/search") {
+      if (pathname.startsWith("/plants")) return true;
+      if (pathname === "/search") {
+        return !searchParamsStr.includes("fav=true");
+      }
+      return false;
+    }
+    if (href === "/search?fav=true") {
+      return pathname === "/search" && searchParamsStr.includes("fav=true");
+    }
+    if (href === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(href);
+  };
 
   const rolesList: { id: UserRole; label: string; desc: string }[] = [
     {
@@ -127,10 +147,7 @@ export function Navbar() {
           <nav className="hidden md:flex items-center gap-1 lg:gap-2">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive =
-                link.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(link.href);
+              const isActive = isLinkActive(link.href);
 
               return (
                 <Link
@@ -281,10 +298,7 @@ export function Navbar() {
           <div className="space-y-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
-              const isActive =
-                link.href === "/"
-                  ? pathname === "/"
-                  : pathname.startsWith(link.href);
+              const isActive = isLinkActive(link.href);
 
               return (
                 <Link

@@ -20,7 +20,7 @@ export type UserRole = "guest" | "customer" | "staff" | "admin";
 export type ToastType = "success" | "error" | "info" | "warning";
 
 export interface DemoUser {
-  id: string;
+  id: string | null;
   displayName: string;
   role: UserRole;
   email?: string | null;
@@ -36,7 +36,7 @@ export interface Toast {
 
 export const DEMO_USERS: Record<UserRole, DemoUser> = {
   guest: {
-    id: "guest",
+    id: null,
     displayName: "ผู้เยี่ยมชม (Guest)",
     role: "guest",
     email: null,
@@ -154,10 +154,9 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
       const savedRole = localStorage.getItem("tfl_demo_role") as UserRole | null;
       if (savedRole && DEMO_USERS[savedRole]) {
         setRoleState(savedRole);
-        const baseUser = DEMO_USERS[savedRole];
-        setUser(savedRole === "guest" ? { ...baseUser, id: token } : baseUser);
+        setUser(DEMO_USERS[savedRole]);
       } else {
-        setUser({ ...DEMO_USERS.guest, id: token });
+        setUser(DEMO_USERS.guest);
       }
     } catch {
       // Safe fallback if localStorage is blocked (private browsing/iframes)
@@ -220,10 +219,10 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   // Role switching
   const setRole = useCallback(
     (newRole: UserRole) => {
+      const previousRole = role;
       setRoleState(newRole);
-      const baseUser = DEMO_USERS[newRole] || DEMO_USERS.guest;
-      const updatedUser = newRole === "guest" ? { ...baseUser, id: guestToken || "guest" } : baseUser;
-      setUser(updatedUser);
+      const targetUser = DEMO_USERS[newRole] || DEMO_USERS.guest;
+      setUser(targetUser);
 
       try {
         localStorage.setItem("tfl_demo_role", newRole);
@@ -231,8 +230,31 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
 
       const roleLabel = getTranslation(locale, `roles.${newRole}`);
       addToast(getTranslation(locale, "toasts.role_switched", { role: roleLabel }), "info");
+
+      // Auto-migrate guest data when switching from guest to customer
+      if (previousRole === "guest" && newRole === "customer" && guestToken && targetUser.id) {
+        fetch("/api/garden/merge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ guestToken, userId: targetUser.id }),
+        })
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (
+              data &&
+              ((typeof data.plantCount === "number" && data.plantCount > 0) ||
+                (typeof data.favoriteCount === "number" && data.favoriteCount > 0) ||
+                (typeof data.mergedCount === "number" && data.mergedCount > 0))
+            ) {
+              addToast(getTranslation(locale, "toasts.guest_merged"), "success");
+            }
+          })
+          .catch((err) => {
+            console.error("Auto guest merge failed:", err);
+          });
+      }
     },
-    [guestToken, locale, addToast]
+    [role, guestToken, locale, addToast]
   );
 
   const loginAsDemoUser = useCallback(

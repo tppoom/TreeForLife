@@ -60,7 +60,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
-                  href="/catalog"
+                  href="/search"
                   className="text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50 hover:underline transition"
                 >
                   {t("nav.catalog")}
@@ -84,7 +84,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/favorites"
+                  href="/search?fav=true"
                   className="text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50 hover:underline transition"
                 >
                   {t("nav.favorites")}
