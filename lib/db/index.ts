@@ -33,37 +33,47 @@ export async function getDb(): Promise<DbClient> {
   }
 
   initPromise = (async () => {
-    const databaseUrl = process.env.DATABASE_URL;
+    try {
+      const databaseUrl = process.env.DATABASE_URL;
 
-    if (databaseUrl) {
-      if (!pgPoolInstance) {
-        pgPoolInstance = new Pool({
-          connectionString: databaseUrl,
-          ssl: databaseUrl.includes("localhost") || databaseUrl.includes("127.0.0.1")
-            ? false
-            : { rejectUnauthorized: false },
-        });
-      }
-      dbInstance = drizzleNodePg(pgPoolInstance, { schema });
-      await initDatabase(pgPoolInstance);
-    } else {
-      const dataDir = path.join(process.cwd(), ".data", "pglite");
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
+      if (databaseUrl) {
+        if (!pgPoolInstance) {
+          pgPoolInstance = new Pool({
+            connectionString: databaseUrl,
+            ssl: databaseUrl.includes("localhost") || databaseUrl.includes("127.0.0.1")
+              ? false
+              : { rejectUnauthorized: false },
+          });
+        }
+        dbInstance = drizzleNodePg(pgPoolInstance, { schema });
+        await initDatabase(pgPoolInstance);
+      } else {
+        const dataDir = path.join(process.cwd(), ".data", "pglite");
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+
+        if (!pgliteInstance) {
+          pgliteInstance = new PGlite(dataDir);
+          await pgliteInstance.waitReady;
+        }
+
+        dbInstance = drizzlePglite(pgliteInstance, { schema });
+        await initDatabase(pgliteInstance);
       }
 
-      if (!pgliteInstance) {
-        pgliteInstance = new PGlite(dataDir);
-        await pgliteInstance.waitReady;
-      }
-
-      dbInstance = drizzlePglite(pgliteInstance, { schema });
-      await initDatabase(pgliteInstance);
+      isInitialized = true;
+      return dbInstance;
+    } catch (err) {
+      dbInstance = null;
+      isInitialized = false;
+      throw err;
     }
-
-    isInitialized = true;
-    return dbInstance;
   })();
+
+  initPromise.catch(() => {
+    initPromise = null;
+  });
 
   return initPromise;
 }
@@ -83,93 +93,102 @@ export async function initDatabase(client: QueryableClient) {
   if (count === 0) {
     console.log("Seeding initial 30 curated Thai plant species into TreeForLife database...");
 
-    for (const item of SEED_SPECIES) {
-      const speciesRes = await client.query(
-        `INSERT INTO species (
-          slug, name_th, name_en, name_sci, aliases, family, summary,
-          light, water_need, placement, difficulty, pet_safe, mature_size,
-          mature_height_cm, growth_rate, soil_mix, fertilizer_note, propagation,
-          shop_note, stock_status
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
-        ) RETURNING id;`,
-        [
-          item.slug,
-          item.nameTh,
-          item.nameEn,
-          item.nameSci,
-          JSON.stringify(item.aliases),
-          item.family,
-          item.summary,
-          item.light,
-          item.waterNeed,
-          JSON.stringify(item.placement),
-          item.difficulty,
-          item.petSafe,
-          item.matureSize,
-          item.matureHeightCm ?? null,
-          item.growthRate,
-          item.soilMix,
-          item.fertilizerNote ?? null,
-          item.propagation ?? null,
-          item.shopNote,
-          item.stockStatus,
-        ]
-      );
-
-      const speciesId = speciesRes.rows[0]?.id as string | undefined;
-      if (!speciesId) continue;
-
-      // Insert media
-      for (let i = 0; i < item.images.length; i++) {
-        const img = item.images[i];
-        await client.query(
-          `INSERT INTO species_media (species_id, blob_url, alt_th, sort_order, is_primary, credit)
-           VALUES ($1, $2, $3, $4, $5, $6);`,
-          [speciesId, img.url, img.altTh, i, img.isPrimary, "ถ่ายที่ร้าน"]
+    await client.query("BEGIN;");
+    try {
+      for (const item of SEED_SPECIES) {
+        const speciesRes = await client.query(
+          `INSERT INTO species (
+            slug, name_th, name_en, name_sci, aliases, family, summary,
+            light, water_need, placement, difficulty, pet_safe, mature_size,
+            mature_height_cm, growth_rate, soil_mix, fertilizer_note, propagation,
+            shop_note, stock_status
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+          ) ON CONFLICT (slug) DO UPDATE SET slug = EXCLUDED.slug RETURNING id;`,
+          [
+            item.slug,
+            item.nameTh,
+            item.nameEn,
+            item.nameSci,
+            JSON.stringify(item.aliases),
+            item.family,
+            item.summary,
+            item.light,
+            item.waterNeed,
+            JSON.stringify(item.placement),
+            item.difficulty,
+            item.petSafe,
+            item.matureSize,
+            item.matureHeightCm ?? null,
+            item.growthRate,
+            item.soilMix,
+            item.fertilizerNote ?? null,
+            item.propagation ?? null,
+            item.shopNote,
+            item.stockStatus,
+          ]
         );
+
+        const speciesId = speciesRes.rows[0]?.id as string | undefined;
+        if (!speciesId) continue;
+
+        // Insert media
+        for (let i = 0; i < item.images.length; i++) {
+          const img = item.images[i];
+          await client.query(
+            `INSERT INTO species_media (species_id, blob_url, alt_th, sort_order, is_primary, credit)
+             VALUES ($1, $2, $3, $4, $5, $6);`,
+            [speciesId, img.url, img.altTh, i, img.isPrimary, "ถ่ายที่ร้าน"]
+          );
+        }
+
+        // Insert care template
+        await client.query(
+          `INSERT INTO care_templates (
+            species_id, water_days_hot, water_days_rainy, water_days_cool,
+            fertilize_days, fertilize_pause_months, repot_months, prune_days,
+            pest_check_days, notes_th
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ON CONFLICT (species_id) DO NOTHING;`,
+          [
+            speciesId,
+            item.careTemplate.waterDaysHot,
+            item.careTemplate.waterDaysRainy,
+            item.careTemplate.waterDaysCool,
+            item.careTemplate.fertilizeDays ?? null,
+            JSON.stringify(item.careTemplate.fertilizePauseMonths || []),
+            item.careTemplate.repotMonths ?? null,
+            item.careTemplate.pruneDays ?? null,
+            item.careTemplate.pestCheckDays ?? 14,
+            item.careTemplate.notesTh ?? null,
+          ]
+        );
+
+        // Insert problems
+        for (let i = 0; i < item.problems.length; i++) {
+          const p = item.problems[i];
+          await client.query(
+            `INSERT INTO species_problems (species_id, symptom_th, cause_th, fix_th, severity, sort_order)
+             VALUES ($1, $2, $3, $4, $5, $6);`,
+            [speciesId, p.symptomTh, p.causeTh, p.fixTh, p.severity, i]
+          );
+        }
       }
 
-      // Insert care template
+      // Also seed default staff/admin account
       await client.query(
-        `INSERT INTO care_templates (
-          species_id, water_days_hot, water_days_rainy, water_days_cool,
-          fertilize_days, fertilize_pause_months, repot_months, prune_days,
-          pest_check_days, notes_th
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`,
-        [
-          speciesId,
-          item.careTemplate.waterDaysHot,
-          item.careTemplate.waterDaysRainy,
-          item.careTemplate.waterDaysCool,
-          item.careTemplate.fertilizeDays ?? null,
-          JSON.stringify(item.careTemplate.fertilizePauseMonths || []),
-          item.careTemplate.repotMonths ?? null,
-          item.careTemplate.pruneDays ?? null,
-          item.careTemplate.pestCheckDays ?? 14,
-          item.careTemplate.notesTh ?? null,
-        ]
+        `INSERT INTO users (id, display_name, email, role)
+         VALUES ('a0000000-0000-0000-0000-000000000001', 'ร้าน TreeForLife (Admin)', 'admin@treeforlife.shop', 'admin')
+         ON CONFLICT DO NOTHING;`
       );
 
-      // Insert problems
-      for (let i = 0; i < item.problems.length; i++) {
-        const p = item.problems[i];
-        await client.query(
-          `INSERT INTO species_problems (species_id, symptom_th, cause_th, fix_th, severity, sort_order)
-           VALUES ($1, $2, $3, $4, $5, $6);`,
-          [speciesId, p.symptomTh, p.causeTh, p.fixTh, p.severity, i]
-        );
-      }
+      await client.query("COMMIT;");
+      console.log("Database initialized and seeded successfully with 30 species!");
+    } catch (seedErr) {
+      await client.query("ROLLBACK;");
+      console.error("Database seed failed, rolled back transaction:", seedErr);
+      throw seedErr;
     }
-
-    // Also seed default staff/admin account
-    await client.query(
-      `INSERT INTO users (id, display_name, email, role)
-       VALUES ('a0000000-0000-0000-0000-000000000001', 'ร้าน TreeForLife (Admin)', 'admin@treeforlife.shop', 'admin')
-       ON CONFLICT DO NOTHING;`
-    );
-
-    console.log("Database initialized and seeded successfully with 30 species!");
   }
 }
 
