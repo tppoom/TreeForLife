@@ -231,7 +231,7 @@ export function Navbar() {
               title={t("inquiry.chat_line_title")}
             >
               <MessageCircle className="w-4 h-4 text-[#06C755]" />
-              <span className="hidden xl:inline">{t("inquiry.ask_shop")}</span>
+              <span className="hidden xl:inline">{t("nav.ask_shop_line")}</span>
               <span className="xl:hidden">LINE</span>
             </button>
 

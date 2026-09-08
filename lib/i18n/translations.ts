@@ -18,6 +18,7 @@ export interface TranslationDictionary {
     close: string;
     open_menu: string;
     close_menu: string;
+    ask_shop_line: string;
   };
   roles: {
     guest: string;
@@ -291,6 +292,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       close: "ปิด",
       open_menu: "เปิดเมนู",
       close_menu: "ปิดเมนู",
+      ask_shop_line: "ทักถามร้าน",
     },
     roles: {
       guest: "ผู้เยี่ยมชม (Guest)",
@@ -562,6 +564,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       close: "Close",
       open_menu: "Open menu",
       close_menu: "Close menu",
+      ask_shop_line: "Ask Shop",
     },
     roles: {
       guest: "Guest",

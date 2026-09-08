@@ -103,7 +103,9 @@ All 11 implementation tasks, automated tests, production build verification, and
 
 ## 4. Test Suite Coverage Summary
 
-All test suites run with Vitest (`npm run test`):
+### 4.1 Unit & Integration Tests (Vitest)
+
+All test suites run with Vitest (`npm run test` or `make test`):
 
 | Test Suite File | Tests | Focus Area |
 |---|---|---|
@@ -115,7 +117,21 @@ All test suites run with Vitest (`npm run test`):
 | `test/garden.test.tsx` | 13 | My Garden hub, 4-step wizard, care calendar preview |
 | `test/inquiry-modal.test.tsx` | 13 | LINE inquiry modal, ref code generation, QR display |
 | `test/today.test.tsx` | 12 | Today's tasks grouping, snooze limits, batch completion |
-| **Total** | **158** | **All 158 tests passing (100% green)** |
+| **Total Unit/Integration** | **158** | **All 158 tests passing (100% green)** |
+
+### 4.2 End-to-End User Flow Tests (Playwright)
+
+Official Playwright E2E test suite executed against live server (`npm run test:e2e` or `make test-e2e`):
+
+| Spec File | Tests | Validated User Flows & Assertions |
+|---|---|---|
+| `e2e/01-home-theming.spec.ts` | 3 | Hero search, 9 category shortcuts, in-stock species cards, TH/EN language toggle (zero raw keys), Light/Dark theme toggle |
+| `e2e/02-catalog-search.spec.ts` | 2 | Faceted search, pet-safe filter chip & URL query sync (`?pet=safe`), zero-results fallback state, LINE inquiry CTA |
+| `e2e/03-plant-detail-inquiry.spec.ts` | 2 | Botanical titles, "ถ่ายที่ร้าน" badge, 6-metric summary grid, troubleshooting accordion, 2-step LINE inquiry flow with ref code (`TFL-XXXX`) and desktop QR code |
+| `e2e/04-garden-wizard.spec.ts` | 1 | 4-step wizard (species, nickname, pot, placement & Thai seasonal care formula preview), saving plant, redirect to `/garden`, quick "Watered" action |
+| `e2e/05-today-tasks.spec.ts` | 1 | Daily care tasks dashboard, snooze action (+1 day), batch mark all done, clean empty state |
+| `e2e/06-admin-dashboard.spec.ts` | 1 | Guest access gate, role switch to Admin, inventory inline stock toggles, customer inquiries log with ref codes, search misses demand table |
+| **Total E2E Specs** | **10** | **All 10 tests passing across 6 spec files (100% green, 0 console/page errors)** |
 
 ---
 

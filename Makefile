@@ -15,7 +15,7 @@ MAGENTA := \033[35m
 RESET   := \033[0m
 
 .PHONY: help setup install clean clean-all dev build start typecheck lint \
-        test test-watch test-care test-services test-garden test-today \
+        test test-watch test-e2e test-care test-services test-garden test-today \
         test-admin test-catalog test-inquiry test-i18n \
         db-status db-species db-reset check verify ci status
 
@@ -102,6 +102,10 @@ test: ## Run the complete Vitest test suite (all 158 tests)
 
 test-watch: ## Run tests in interactive watch mode
 	@npm run test:watch
+
+test-e2e: ## Run Playwright end-to-end user flow test suite
+	@echo -e "$(CYAN)Running Playwright E2E test suite...$(RESET)"
+	@npx playwright test
 
 test-care: ## Run Thai 3-Season Care Schedule Engine tests
 	@npx vitest run lib/care/scheduler.test.ts

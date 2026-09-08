@@ -5,6 +5,8 @@ export default defineConfig({
   test: {
     environment: "node",
     fileParallelism: false,
+    include: ["**/*.test.ts", "**/*.test.tsx"],
+    exclude: ["**/node_modules/**", "**/tests/**", "**/e2e/**"],
   },
   resolve: {
     alias: {

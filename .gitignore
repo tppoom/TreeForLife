@@ -35,3 +35,14 @@ next-env.d.ts
 
 # local pglite db data
 /.data
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Claude CLI
+.claude/
