@@ -1,581 +1,640 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useApp } from "@/lib/context/AppContext";
 import {
+  Camera,
   Sun,
   Droplets,
   Home,
   ShieldCheck,
   AlertTriangle,
-  Award,
+  HelpCircle,
+  Sprout,
+  Maximize2,
+  Calendar,
   Layers,
   Sparkles,
-  ChevronDown,
-  ChevronUp,
   MessageCircle,
   Plus,
-  Heart,
-  Share2,
-  Check,
+  ChevronDown,
+  ChevronUp,
+  Award,
+  BookOpen,
+  ArrowRight,
+  Quote,
+  Clock,
+  ExternalLink,
 } from "lucide-react";
+import { useApp } from "@/lib/context/AppContext";
+import { LineInquiryModal } from "@/components/inquiry/LineInquiryModal";
+import type { getSpeciesBySlug, getSimilarSpecies } from "@/lib/services/speciesService";
 
-interface MediaItem {
-  id: string;
-  blobUrl: string;
-  altTh: string;
-  isPrimary: boolean;
-  credit: string;
+type PlantData = NonNullable<Awaited<ReturnType<typeof getSpeciesBySlug>>>;
+type SimilarPlant = Awaited<ReturnType<typeof getSimilarSpecies>>[number];
+
+interface PlantDetailClientProps {
+  plant: PlantData;
+  similarSpecies: SimilarPlant[];
 }
 
-interface ProblemItem {
-  id: string;
-  symptomTh: string;
-  causeTh: string;
-  fixTh: string;
-  severity: string;
-}
-
-interface CareTemplateItem {
-  waterDaysHot: number;
-  waterDaysRainy: number;
-  waterDaysCool: number;
-  fertilizeDays?: number | null;
-  fertilizePauseMonths?: number[];
-  repotMonths?: number | null;
-  notesTh?: string | null;
-}
-
-interface SimilarSpeciesItem {
-  id: string;
-  slug: string;
-  nameTh: string;
-  nameEn: string;
-  summary: string;
-  difficulty: number;
-  stockStatus: string;
-  primaryImage: string;
-}
-
-interface PlantDetailProps {
-  plant: {
-    id: string;
-    slug: string;
-    nameTh: string;
-    nameEn: string;
-    nameSci: string;
-    aliases: string[];
-    family: string;
-    summary: string;
-    light: string;
-    waterNeed: string;
-    placement: string[];
-    difficulty: number;
-    petSafe: string;
-    matureSize: string;
-    matureHeightCm?: number | null;
-    growthRate: string;
-    soilMix: string;
-    fertilizerNote?: string | null;
-    propagation?: string | null;
-    shopNote: string;
-    stockStatus: string;
-    media: MediaItem[];
-    careTemplate: CareTemplateItem | null;
-    problems: ProblemItem[];
-  };
-  similarPlants: SimilarSpeciesItem[];
-}
-
-export function PlantDetailClient({ plant, similarPlants }: PlantDetailProps) {
-  const router = useRouter();
-  const { openInquiryModal, isFavorite, toggleFavorite, showToast, t, locale } = useApp();
-
+export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientProps) {
+  const { t, locale } = useApp();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [openAccordionIndex, setOpenAccordionIndex] = useState<number | null>(0);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
+  const [expandedProblems, setExpandedProblems] = useState<Record<string, boolean>>({});
 
-  const images = plant.media.length > 0 ? plant.media : [
-    {
-      id: "default",
-      blobUrl: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=80",
-      altTh: plant.nameTh,
-      isPrimary: true,
-      credit: "ถ่ายที่ร้าน",
-    }
-  ];
-
-  const handleShare = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(window.location.href);
-      setCopiedLink(true);
-      showToast(locale === "th" ? "คัดลอกลิงก์ต้นไม้นี้แล้ว" : "Plant link copied to clipboard", "success");
-      setTimeout(() => setCopiedLink(false), 2000);
-    }
+  const toggleProblem = (id: string) => {
+    setExpandedProblems((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
   };
 
-  const getLightLabel = (light: string) => {
-    if (locale === "en") {
-      switch (light) {
-        case "full_sun": return "Full Sun (6+ hrs)";
-        case "partial": return "Partial (3–5 hrs)";
-        case "shade": return "Full Shade (Indirect)";
-        case "indoor_bright": return "Bright Indirect Light";
-        case "low_light": return "Low Light";
-        default: return light;
-      }
-    }
-    switch (light) {
-      case "full_sun": return "แดดจัดเต็มวัน";
-      case "partial": return "แดดรำไร 3–5 ชม.";
-      case "shade": return "ร่มเงา ไม่โดนแดดตรง";
-      case "indoor_bright": return "ในบ้าน สว่างทางอ้อม";
-      case "low_light": return "แสงน้อย ไฟนีออน";
-      default: return light;
-    }
-  };
+  const images =
+    plant.media && plant.media.length > 0
+      ? plant.media
+      : [
+          {
+            id: "default",
+            blobUrl:
+              "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?auto=format&fit=crop&w=1200&q=80",
+            altTh: plant.nameTh,
+            isPrimary: true,
+            sortOrder: 0,
+            credit: "ถ่ายที่ร้าน",
+          },
+        ];
 
-  const getWaterLabel = (water: string) => {
-    if (locale === "en") {
-      switch (water) {
-        case "low": return "Low (7+ days)";
-        case "medium": return "Moderate (3–7 days)";
-        case "high": return "Frequent (1–3 days)";
-        default: return water;
-      }
-    }
-    switch (water) {
-      case "low": return "รดน้ำน้อย (7+ วัน/ครั้ง)";
-      case "medium": return "รดน้ำปานกลาง (3–7 วัน)";
-      case "high": return "รดน้ำบ่อย (1–3 วัน)";
-      default: return water;
-    }
-  };
+  const currentImage = images[activeImageIndex] || images[0];
 
-  const getPlacementLabel = (p: string[]) => {
-    const mapTh: Record<string, string> = {
-      indoor: "ในบ้าน/คอนโด",
-      outdoor: "นอกบ้าน",
-      balcony: "ริมระเบียง",
-      bathroom: "ห้องน้ำ",
-    };
-    const mapEn: Record<string, string> = {
-      indoor: "Indoor/Condo",
-      outdoor: "Outdoor",
-      balcony: "Balcony",
-      bathroom: "Bathroom",
-    };
-    const map = locale === "en" ? mapEn : mapTh;
-    return p.map((item) => map[item] || item).join(", ");
+  // Helper for difficulty stars
+  const renderDifficultyStars = (level: number) => {
+    return (
+      <div className="flex items-center gap-1 text-gold-500">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`text-sm ${star <= level ? "opacity-100" : "opacity-25"}`}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+    );
   };
-
-  const getSizeLabel = (size: string, heightCm?: number | null) => {
-    const height = heightCm ? ` (~${heightCm} ${locale === "en" ? "cm" : "ซม."})` : "";
-    if (locale === "en") {
-      switch (size) {
-        case "xs": return `Extra Small${height}`;
-        case "sm": return `Small${height}`;
-        case "md": return `Medium${height}`;
-        case "lg": return `Large${height}`;
-        case "xl": return `Extra Large${height}`;
-        default: return size;
-      }
-    }
-    switch (size) {
-      case "xs": return `ขนาดเล็กมาก${height}`;
-      case "sm": return `ขนาดเล็ก${height}`;
-      case "md": return `ขนาดกลาง${height}`;
-      case "lg": return `ขนาดใหญ่${height}`;
-      case "xl": return `ขนาดใหญ่พิเศษ${height}`;
-      default: return size;
-    }
-  };
-
-  const displayName = locale === "th" ? plant.nameTh : plant.nameEn;
-  const secondaryName = locale === "th" ? plant.nameEn : plant.nameTh;
 
   return (
     <div className="pb-28">
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <nav className="flex items-center gap-2 text-xs text-stone-500 dark:text-sand-400">
-          <Link href="/" className="hover:text-forest-900 dark:hover:text-gold-400 transition-colors">
-            {t.plant.home}
+      {/* Breadcrumb Navigation */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+        <nav className="flex items-center gap-2 text-xs text-sand-500 dark:text-sand-400">
+          <Link href="/" className="hover:text-forest-800 dark:hover:text-sand-100 transition">
+            {t("nav.home")}
           </Link>
           <span>/</span>
-          <Link href="/search" className="hover:text-forest-900 dark:hover:text-gold-400 transition-colors">
-            {t.plant.plants}
+          <Link href="/search" className="hover:text-forest-800 dark:hover:text-sand-100 transition">
+            {t("nav.catalog")}
           </Link>
           <span>/</span>
-          <span className="text-stone-800 dark:text-sand-200 font-medium truncate">{displayName}</span>
+          <span className="text-forest-900 dark:text-sand-100 font-medium truncate max-w-xs">
+            {plant.nameTh}
+          </span>
         </nav>
       </div>
 
-      {/* Main Grid: Gallery on Left + Crucial Info on Right */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14">
-          {/* Left Column: Gallery (SPEC §6.3 #1) */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 sm:space-y-16">
+        {/* Top Section: Photo Gallery + Botanical Header */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+          {/* Left Column: Photo Gallery (5 cols) */}
           <div className="lg:col-span-6 space-y-4">
-            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden bg-sand-100 dark:bg-forest-950 border border-sand-300 dark:border-forest-800 shadow-soft">
-              <Image
-                src={images[activeImageIndex].blobUrl}
-                alt={images[activeImageIndex].altTh}
-                fill
-                priority
-                className="object-cover transition-all duration-300"
+            {/* Primary Main Image */}
+            <div className="relative aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden bg-sand-100 dark:bg-forest-950 border border-sand-200 dark:border-forest-800 shadow-elevated">
+              <img
+                src={currentImage.blobUrl}
+                alt={currentImage.altTh || plant.nameTh}
+                className="w-full h-full object-cover transition-transform duration-500"
               />
-              <div className="absolute top-4 left-4 flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-forest-950/80 dark:bg-forest-900/90 backdrop-blur-md text-gold-300 text-xs font-medium border border-gold-400/30">
-                  {t.plant.shotInStore100}
+
+              {/* Stock Status Badge */}
+              <div className="absolute top-4 left-4">
+                <span
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md shadow-sm ${
+                    plant.stockStatus === "in_stock"
+                      ? "bg-emerald-700/90 text-white"
+                      : plant.stockStatus === "made_to_order"
+                      ? "bg-sky-700/90 text-white"
+                      : "bg-amber-700/90 text-white"
+                  }`}
+                >
+                  {plant.stockStatus === "in_stock" && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+                  )}
+                  {t(`filters.stock_${plant.stockStatus}`)}
                 </span>
               </div>
-              <div className="absolute top-4 right-4 flex items-center gap-2">
-                <button
-                  onClick={() => toggleFavorite(plant.id)}
-                  className="p-2.5 rounded-full bg-white/80 dark:bg-forest-900/80 hover:bg-white dark:hover:bg-forest-850 backdrop-blur-md text-stone-700 dark:text-sand-200 hover:text-rose-500 dark:hover:text-rose-400 shadow-sm transition-all cursor-pointer"
-                  title={locale === "th" ? "บันทึกไว้ดูภายหลัง" : "Save to favorites"}
-                >
-                  <Heart
-                    className={`w-4 h-4 ${isFavorite(plant.id) ? "text-rose-500 fill-rose-500" : ""}`}
-                  />
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="p-2.5 rounded-full bg-white/80 dark:bg-forest-900/80 hover:bg-white dark:hover:bg-forest-850 backdrop-blur-md text-stone-700 dark:text-sand-200 shadow-sm transition-all cursor-pointer"
-                  title={locale === "th" ? "แชร์หน้านี้" : "Share this page"}
-                >
-                  {copiedLink ? <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                </button>
+
+              {/* Authentic Nursery Badge */}
+              <div className="absolute bottom-4 right-4">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-forest-950/80 text-sand-100 backdrop-blur-md shadow-sm">
+                  <Camera className="w-3.5 h-3.5 text-gold-300" />
+                  <span>{currentImage.credit || "ถ่ายที่ร้าน"}</span>
+                </span>
               </div>
             </div>
 
-            {/* Thumbnail selector if multiple images */}
+            {/* Thumbnail Gallery Strip */}
             {images.length > 1 && (
-              <div className="flex gap-3 overflow-x-auto pb-2">
+              <div className="flex items-center gap-3 overflow-x-auto pb-2">
                 {images.map((img, idx) => (
                   <button
-                    key={img.id}
+                    key={img.id || idx}
+                    type="button"
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
+                    className={`relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border-2 transition ${
                       activeImageIndex === idx
-                        ? "border-forest-800 dark:border-gold-400 ring-2 ring-forest-800/20 dark:ring-gold-400/20"
-                        : "border-sand-300 dark:border-forest-800 opacity-70 hover:opacity-100"
+                        ? "border-forest-600 dark:border-forest-400 scale-105 shadow-md"
+                        : "border-sand-200 dark:border-forest-800 opacity-70 hover:opacity-100"
                     }`}
                   >
-                    <Image src={img.blobUrl} alt={img.altTh} fill className="object-cover" />
+                    <img
+                      src={img.blobUrl}
+                      alt={img.altTh}
+                      className="w-full h-full object-cover"
+                    />
                   </button>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Right Column: Titles, Stock Status & Summary (SPEC §6.3 #2, #3, #4) */}
+          {/* Right Column: Botanical Header & Quick Info (7 cols) */}
           <div className="lg:col-span-6 space-y-6">
             <div>
-              {/* Family & Stock Badge */}
-              <div className="flex items-center justify-between gap-3 mb-2">
-                <span className="text-xs font-bold uppercase tracking-widest text-forest-700 dark:text-gold-400">
-                  {plant.family}
-                </span>
-
-                {plant.stockStatus === "in_stock" && (
-                  <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold">
-                    {t.plant.inStockReady}
-                  </span>
-                )}
-                {plant.stockStatus === "made_to_order" && (
-                  <span className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-800 text-xs font-semibold">
-                    {t.plant.madeToOrderDays}
-                  </span>
-                )}
-                {plant.stockStatus === "seasonal" && (
-                  <span className="px-3 py-1 rounded-full bg-stone-100 dark:bg-forest-900 text-stone-700 dark:text-sand-300 border border-stone-300 dark:border-forest-800 text-xs font-semibold">
-                    {t.plant.seasonal}
-                  </span>
-                )}
+              {/* Botanical Family */}
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-forest-600 dark:text-forest-400 mb-2">
+                <Sprout className="w-3.5 h-3.5" />
+                <span>{plant.family}</span>
               </div>
 
-              {/* Plant Names */}
-              <h1 className="font-serif text-3xl sm:text-4xl font-semibold text-stone-950 dark:text-sand-50 tracking-tight">
-                {displayName}
+              {/* Main Names */}
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-forest-950 dark:text-sand-50 tracking-tight leading-tight">
+                {plant.nameTh}
               </h1>
-              <p className="font-serif text-base sm:text-lg text-stone-600 dark:text-sand-400 italic mt-0.5">
-                {plant.nameSci} <span className="font-sans not-italic text-sm text-stone-400 dark:text-sand-500">({secondaryName})</span>
-              </p>
 
-              {/* Aliases Chips */}
-              {plant.aliases && plant.aliases.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 mt-3">
-                  <span className="text-xs text-stone-400 dark:text-sand-400">{t.plant.aliases}</span>
-                  {plant.aliases.map((alias) => (
-                    <span
-                      key={alias}
-                      className="px-2 py-0.5 rounded-md bg-sand-200/60 dark:bg-forest-900/60 text-stone-700 dark:text-sand-300 text-xs"
-                    >
-                      {alias}
-                    </span>
-                  ))}
-                </div>
-              )}
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
+                <span className="text-lg sm:text-xl font-medium text-sand-700 dark:text-sand-300">
+                  {plant.nameEn}
+                </span>
+                <span className="text-sm italic font-serif text-sand-500 dark:text-sand-400">
+                  ({plant.nameSci})
+                </span>
+              </div>
             </div>
 
+            {/* Aliases Chips */}
+            {plant.aliases && plant.aliases.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-xs text-sand-500 dark:text-sand-400 mr-1">
+                  {locale === "th" ? "ชื่ออื่นๆ:" : "Also known as:"}
+                </span>
+                {plant.aliases.map((alias) => (
+                  <span
+                    key={alias}
+                    className="px-2.5 py-0.5 rounded-lg text-xs bg-sand-100 dark:bg-forest-900 text-forest-800 dark:text-sand-200 border border-sand-200 dark:border-forest-800"
+                  >
+                    {alias}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {/* Summary */}
-            <p className="text-sm sm:text-base text-stone-700 dark:text-sand-300 leading-relaxed font-light">
+            <p className="text-sm sm:text-base text-forest-800 dark:text-sand-200 leading-relaxed font-light">
               {plant.summary}
             </p>
 
-            {/* 6-Grid Feature Summary Cards (SPEC §6.3 #4) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-              <div className="p-3.5 bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800/80 shadow-sm space-y-1">
-                <div className="flex items-center gap-2 text-forest-700 dark:text-gold-400">
-                  <Sun className="w-4 h-4" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-sand-400">{t.plant.lightLabel}</span>
+            {/* Prominent Authentic "Shop Note" Box */}
+            <div className="rounded-2xl border border-gold-300 dark:border-gold-800/80 bg-gradient-to-br from-gold-100/40 via-sand-50 to-sand-100/50 dark:from-forest-900/90 dark:via-forest-900/60 dark:to-forest-950 p-5 sm:p-6 shadow-soft relative overflow-hidden">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-xl bg-gold-400/20 text-gold-700 dark:text-gold-300 flex items-center justify-center shrink-0 mt-0.5">
+                  <Quote className="w-4 h-4" />
                 </div>
-                <p className="text-xs font-semibold text-stone-800 dark:text-sand-200">{getLightLabel(plant.light)}</p>
-              </div>
-
-              <div className="p-3.5 bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800/80 shadow-sm space-y-1">
-                <div className="flex items-center gap-2 text-forest-700 dark:text-gold-400">
-                  <Droplets className="w-4 h-4" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-sand-400">{t.plant.waterLabel}</span>
+                <div className="space-y-1.5">
+                  <h3 className="font-serif font-bold text-sm text-forest-950 dark:text-sand-50 flex items-center gap-2">
+                    <span>{t("care.shop_owner_tip")}</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-forest-200 dark:bg-forest-800 text-forest-800 dark:text-forest-200 font-sans font-normal">
+                      Authentic Wisdom
+                    </span>
+                  </h3>
+                  <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed italic">
+                    &quot;{plant.shopNote}&quot;
+                  </p>
                 </div>
-                <p className="text-xs font-semibold text-stone-800 dark:text-sand-200">{getWaterLabel(plant.waterNeed)}</p>
-              </div>
-
-              <div className="p-3.5 bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800/80 shadow-sm space-y-1">
-                <div className="flex items-center gap-2 text-forest-700 dark:text-gold-400">
-                  <Home className="w-4 h-4" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-sand-400">{t.plant.placementLabel}</span>
-                </div>
-                <p className="text-xs font-semibold text-stone-800 dark:text-sand-200">{getPlacementLabel(plant.placement)}</p>
-              </div>
-
-              <div className="p-3.5 bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800/80 shadow-sm space-y-1">
-                <div className="flex items-center gap-2 text-forest-700 dark:text-gold-400">
-                  <Award className="w-4 h-4" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-sand-400">{t.plant.diffLabel}</span>
-                </div>
-                <p className="text-xs font-semibold text-stone-800 dark:text-sand-200">
-                  {"★".repeat(plant.difficulty)}{"☆".repeat(5 - plant.difficulty)} ({plant.difficulty}/5)
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800/80 shadow-sm space-y-1">
-                <div className="flex items-center gap-2 text-forest-700 dark:text-gold-400">
-                  {plant.petSafe === "safe" ? (
-                    <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  )}
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-sand-400">{t.plant.petLabel}</span>
-                </div>
-                <p className="text-xs font-semibold text-stone-800 dark:text-sand-200">
-                  {plant.petSafe === "safe"
-                    ? t.plant.petSafe100
-                    : plant.petSafe === "toxic"
-                    ? t.plant.petToxic
-                    : t.plant.petUnknown}
-                </p>
-              </div>
-
-              <div className="p-3.5 bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800/80 shadow-sm space-y-1">
-                <div className="flex items-center gap-2 text-forest-700 dark:text-gold-400">
-                  <Layers className="w-4 h-4" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 dark:text-sand-400">{t.plant.sizeLabel}</span>
-                </div>
-                <p className="text-xs font-semibold text-stone-800 dark:text-sand-200">{getSizeLabel(plant.matureSize, plant.matureHeightCm)}</p>
               </div>
             </div>
 
-            {/* Actions for Desktop */}
-            <div className="hidden lg:flex items-center gap-4 pt-4">
+            {/* Desktop Action Buttons */}
+            <div className="hidden sm:flex items-center gap-3 pt-2">
               <button
-                onClick={() =>
-                  openInquiryModal({
-                    speciesId: plant.id,
-                    speciesNameTh: displayName,
-                    speciesPhoto: images[0]?.blobUrl,
-                    defaultIntent: "price",
-                  })
-                }
-                className="flex-1 py-3.5 px-6 rounded-2xl bg-[#06C755] hover:bg-[#05b34c] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+                type="button"
+                onClick={() => setInquiryModalOpen(true)}
+                className="flex-1 py-3 px-4 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white font-semibold text-sm shadow-soft transition flex items-center justify-center gap-2 min-h-[48px]"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>{t.plant.askShopViaLine}</span>
+                <span>{t("inquiry.ask_shop")}</span>
               </button>
 
               <Link
                 href={`/garden/add?speciesId=${plant.id}`}
-                className="py-3.5 px-6 rounded-2xl bg-forest-900 hover:bg-forest-800 dark:bg-forest-800 dark:hover:bg-forest-700 text-sand-50 font-medium text-sm flex items-center gap-2 border border-transparent dark:border-forest-700 transition-colors cursor-pointer"
+                className="flex-1 py-3 px-4 rounded-xl bg-forest-700 hover:bg-forest-800 text-sand-50 font-semibold text-sm shadow-soft transition flex items-center justify-center gap-2 min-h-[48px]"
               >
-                <Plus className="w-4 h-4 text-gold-400" />
-                <span>{t.plant.addToGarden}</span>
+                <Plus className="w-4 h-4" />
+                <span>{t("garden.add_plant")}</span>
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* Section: "ที่ร้านบอกว่า" — Authentic Shop Experience Note (SPEC §6.3 #6) */}
-        <section className="mt-14 p-6 sm:p-8 rounded-3xl bg-forest-950 text-sand-50 border border-gold-500/40 shadow-elevated relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 space-y-3">
-            <div className="flex items-center gap-2 text-gold-400">
-              <Sparkles className="w-4 h-4" />
-              <span className="font-serif text-sm font-semibold tracking-wider uppercase">
-                {t.plant.shopNoteHeader}
-              </span>
-            </div>
-            <p className="font-serif text-lg sm:text-xl text-sand-100 leading-relaxed italic">
-              "{plant.shopNote}"
-            </p>
-            <p className="text-xs text-sand-300 font-sans">
-              {t.plant.shopNoteBy}
-            </p>
-          </div>
         </section>
 
-        {/* Section: Detailed Care Guide (SPEC §6.3 #5) */}
-        <section className="mt-14 space-y-6">
-          <div className="border-b border-sand-200 dark:border-forest-800 pb-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-forest-700 dark:text-gold-400">
-              {t.plant.careGuideTag}
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-medium text-forest-950 dark:text-sand-50">
-              {t.plant.careGuideTitle}
-            </h2>
-          </div>
+        {/* 6-Metric Summary Cards Grid */}
+        <section className="space-y-4">
+          <h2 className="font-serif font-bold text-xl sm:text-2xl text-forest-950 dark:text-sand-50">
+            {locale === "th" ? "คุณสมบัติและสเปกพันธุ์ไม้ (Quick Specs)" : "Species Overview & Specs"}
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 3 Seasons Watering Guide */}
-            {plant.careTemplate && (
-              <div className="bg-white dark:bg-[#0e2117] p-6 rounded-2xl border border-sand-200 dark:border-forest-800 shadow-soft space-y-3">
-                <div className="flex items-center gap-2 text-forest-800 dark:text-gold-400">
-                  <Droplets className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  <h3 className="font-serif text-base font-semibold text-stone-900 dark:text-sand-50">
-                    {t.plant.threeSeasonWaterTitle}
-                  </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            {/* 1. Light */}
+            <div className="p-4 rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-gold-500/10 text-gold-600 dark:text-gold-400 flex items-center justify-center">
+                <Sun className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-sand-500 dark:text-sand-400 block">
+                  {t("filters.light")}
+                </span>
+                <span className="text-xs sm:text-sm font-semibold text-forest-950 dark:text-sand-50 capitalize">
+                  {t(`filters.light_${plant.light}`)}
+                </span>
+              </div>
+            </div>
+
+            {/* 2. Water */}
+            <div className="p-4 rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center">
+                <Droplets className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-sand-500 dark:text-sand-400 block">
+                  {t("filters.water")}
+                </span>
+                <span className="text-xs sm:text-sm font-semibold text-forest-950 dark:text-sand-50 capitalize">
+                  {t(`filters.water_${plant.waterNeed}`)}
+                </span>
+              </div>
+            </div>
+
+            {/* 3. Placement */}
+            <div className="p-4 rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Home className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-sand-500 dark:text-sand-400 block">
+                  {t("filters.placement")}
+                </span>
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {plant.placement.map((p) => (
+                    <span
+                      key={p}
+                      className="text-[11px] font-medium text-forest-900 dark:text-sand-100"
+                    >
+                      {t(`filters.placement_${p}`)}
+                    </span>
+                  ))}
                 </div>
-                <div className="space-y-2 text-xs text-stone-700 dark:text-sand-300">
-                  <div className="flex justify-between py-1 border-b border-sand-100 dark:border-forest-850">
-                    <span className="text-stone-500 dark:text-sand-400">{t.plant.hotSeason}</span>
-                    <span className="font-semibold text-stone-900 dark:text-sand-100">
-                      {t.plant.everyDays.replace("{days}", String(plant.careTemplate.waterDaysHot))}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-sand-100 dark:border-forest-850">
-                    <span className="text-stone-500 dark:text-sand-400">{t.plant.rainySeason}</span>
-                    <span className="font-semibold text-stone-900 dark:text-sand-100">
-                      {t.plant.everyDays.replace("{days}", String(plant.careTemplate.waterDaysRainy))}
-                    </span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-stone-500 dark:text-sand-400">{t.plant.coolSeason}</span>
-                    <span className="font-semibold text-stone-900 dark:text-sand-100">
-                      {t.plant.everyDays.replace("{days}", String(plant.careTemplate.waterDaysCool))}
-                    </span>
-                  </div>
+              </div>
+            </div>
+
+            {/* 4. Difficulty */}
+            <div className="p-4 rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <Award className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-sand-500 dark:text-sand-400 block">
+                  {t("filters.difficulty")}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  {renderDifficultyStars(plant.difficulty)}
                 </div>
-                {plant.careTemplate.notesTh && (
-                  <p className="text-xs text-stone-500 dark:text-sand-400 bg-sand-50 dark:bg-forest-900/40 p-2.5 rounded-xl mt-2 leading-relaxed border border-sand-100 dark:border-forest-800/50">
-                    💡 {plant.careTemplate.notesTh}
-                  </p>
+                <span className="text-[11px] text-sand-600 dark:text-sand-400">
+                  {t(`filters.difficulty_${plant.difficulty}`)}
+                </span>
+              </div>
+            </div>
+
+            {/* 5. Pet Safety */}
+            <div className="p-4 rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft space-y-2">
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+                  plant.petSafe === "safe"
+                    ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                    : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                {plant.petSafe === "safe" ? (
+                  <ShieldCheck className="w-4 h-4" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4" />
                 )}
               </div>
-            )}
-
-            {/* Soil Mix Recipe */}
-            <div className="bg-white dark:bg-[#0e2117] p-6 rounded-2xl border border-sand-200 dark:border-forest-800 shadow-soft space-y-3">
-              <div className="flex items-center gap-2 text-forest-800 dark:text-gold-400">
-                <Layers className="w-5 h-5 text-earth-600 dark:text-amber-500" />
-                <h3 className="font-serif text-base font-semibold text-stone-900 dark:text-sand-50">
-                  {t.plant.soilRecipeTitle}
-                </h3>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-sand-500 dark:text-sand-400 block">
+                  {t("filters.pet")}
+                </span>
+                <span
+                  className={`text-xs sm:text-sm font-semibold ${
+                    plant.petSafe === "safe"
+                      ? "text-emerald-700 dark:text-emerald-300"
+                      : "text-amber-700 dark:text-amber-300"
+                  }`}
+                >
+                  {t(`filters.pet_${plant.petSafe}`)}
+                </span>
               </div>
-              <p className="text-xs text-stone-700 dark:text-sand-300 leading-relaxed">
-                {plant.soilMix}
-              </p>
             </div>
 
-            {/* Fertilizer & Repotting */}
-            <div className="bg-white dark:bg-[#0e2117] p-6 rounded-2xl border border-sand-200 dark:border-forest-800 shadow-soft space-y-3">
-              <div className="flex items-center gap-2 text-forest-800 dark:text-gold-400">
-                <Sparkles className="w-5 h-5 text-gold-500" />
-                <h3 className="font-serif text-base font-semibold text-stone-900 dark:text-sand-50">
-                  {t.plant.fertRepotTitle}
-                </h3>
+            {/* 6. Mature Size */}
+            <div className="p-4 rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft space-y-2">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center">
+                <Maximize2 className="w-4 h-4" />
               </div>
-              <p className="text-xs text-stone-700 dark:text-sand-300 leading-relaxed">
-                <span className="font-semibold text-stone-900 dark:text-sand-100">{t.plant.fertilizerLabel}</span>{" "}
-                {plant.fertilizerNote || (locale === "en" ? "Apply slow-release fertilizer as appropriate." : "ใส่ปุ๋ยละลายช้าตามความเหมาะสม")}
-              </p>
-              {plant.careTemplate?.repotMonths && (
-                <p className="text-xs text-stone-700 dark:text-sand-300 leading-relaxed pt-1 border-t border-sand-100 dark:border-forest-850">
-                  <span className="font-semibold text-stone-900 dark:text-sand-100">{t.plant.repottingLabel}</span>{" "}
-                  {locale === "en"
-                    ? `Every ${plant.careTemplate.repotMonths} months or when roots become root-bound.`
-                    : `ทุก ${plant.careTemplate.repotMonths} เดือน หรือเมื่อรากเริ่มแน่น`}
-                </p>
-              )}
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-sand-500 dark:text-sand-400 block">
+                  {t("filters.size")}
+                </span>
+                <span className="text-xs sm:text-sm font-semibold text-forest-950 dark:text-sand-50">
+                  {t(`filters.size_${plant.matureSize}`)}
+                </span>
+                {plant.matureHeightCm && (
+                  <span className="text-[11px] text-sand-500 dark:text-sand-400 block">
+                    ~{plant.matureHeightCm} ซม.
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Section: Common Problems Accordion (SPEC §6.3 #7) */}
-        {plant.problems && plant.problems.length > 0 && (
-          <section className="mt-14 space-y-6">
-            <div className="border-b border-sand-200 dark:border-forest-800 pb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-forest-700 dark:text-gold-400">
-                {t.plant.diagnosisTag}
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-medium text-forest-950 dark:text-sand-50">
-                {t.plant.diagnosisTitle}
+        {/* Human-Readable Seasonal Care Instructions (care_templates) */}
+        {plant.careTemplate && (
+          <section className="rounded-3xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft p-6 sm:p-8 space-y-8">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest-600 dark:text-forest-400 uppercase tracking-wider">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Smart Care Schedule</span>
+              </div>
+              <h2 className="font-serif font-bold text-2xl sm:text-3xl text-forest-950 dark:text-sand-50">
+                {t("care.care_guide")}
               </h2>
+              <p className="text-xs sm:text-sm text-sand-600 dark:text-sand-400">
+                {t("care.schedule_explanation")}
+              </p>
+            </div>
+
+            {/* 3 Seasons Watering Grid */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400 mb-3">
+                {locale === "th" ? "รอบการรดน้ำตาม 3 ฤดูกาลไทย" : "Watering Cadence by Thai Season"}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Hot Season */}
+                <div className="p-4 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/20 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-amber-800 dark:text-amber-300">
+                    <span>{t("care.season_hot")}</span>
+                    <span>☀️</span>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-serif font-bold text-forest-950 dark:text-sand-50">
+                    {t("care.every_days", { days: plant.careTemplate.waterDaysHot })}
+                  </div>
+                  <p className="text-[11px] text-sand-600 dark:text-sand-400 leading-tight">
+                    {locale === "th"
+                      ? "อุณหภูมิสูง ดินแห้งไว เช็คผิวดินสม่ำเสมอ"
+                      : "Higher evaporation rate, verify topsoil dryness"}
+                  </p>
+                </div>
+
+                {/* Rainy Season */}
+                <div className="p-4 rounded-2xl border border-sky-200 dark:border-sky-900/50 bg-sky-50/50 dark:bg-sky-950/20 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-sky-800 dark:text-sky-300">
+                    <span>{t("care.season_rainy")}</span>
+                    <span>🌧️</span>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-serif font-bold text-forest-950 dark:text-sand-50">
+                    {t("care.every_days", { days: plant.careTemplate.waterDaysRainy })}
+                  </div>
+                  <p className="text-[11px] text-sand-600 dark:text-sand-400 leading-tight">
+                    {locale === "th"
+                      ? "ความชื้นสูง ยืดระยะห่างเพื่อป้องกันรากเน่า"
+                      : "High humidity, extended intervals to prevent root rot"}
+                  </p>
+                </div>
+
+                {/* Cool Season */}
+                <div className="p-4 rounded-2xl border border-teal-200 dark:border-teal-900/50 bg-teal-50/50 dark:bg-teal-950/20 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-semibold text-teal-800 dark:text-teal-300">
+                    <span>{t("care.season_cool")}</span>
+                    <span>🍃</span>
+                  </div>
+                  <div className="text-xl sm:text-2xl font-serif font-bold text-forest-950 dark:text-sand-50">
+                    {t("care.every_days", { days: plant.careTemplate.waterDaysCool })}
+                  </div>
+                  <p className="text-[11px] text-sand-600 dark:text-sand-400 leading-tight">
+                    {locale === "th"
+                      ? "การเจริญเติบโตชะลอตัว ดินแห้งปานกลาง"
+                      : "Milder weather, steady moisture balance"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Other Care Tasks: Fertilize, Repot, Pest Check */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              {plant.careTemplate.fertilizeDays && (
+                <div className="p-4 rounded-2xl bg-sand-50/70 dark:bg-forest-950/40 border border-sand-200 dark:border-forest-800 space-y-1">
+                  <span className="text-[11px] font-semibold text-sand-500 uppercase tracking-wider">
+                    {t("care.fertilize")}
+                  </span>
+                  <div className="text-base font-bold text-forest-950 dark:text-sand-100">
+                    {t("care.every_days", { days: plant.careTemplate.fertilizeDays })}
+                  </div>
+                  {plant.careTemplate.fertilizePauseMonths &&
+                    plant.careTemplate.fertilizePauseMonths.length > 0 && (
+                      <span className="text-[11px] text-sand-500 italic block">
+                        {locale === "th"
+                          ? `(พักปุ๋ยเดือน ${plant.careTemplate.fertilizePauseMonths.join(", ")})`
+                          : `(Pause months: ${plant.careTemplate.fertilizePauseMonths.join(", ")})`}
+                      </span>
+                    )}
+                </div>
+              )}
+
+              {plant.careTemplate.repotMonths && (
+                <div className="p-4 rounded-2xl bg-sand-50/70 dark:bg-forest-950/40 border border-sand-200 dark:border-forest-800 space-y-1">
+                  <span className="text-[11px] font-semibold text-sand-500 uppercase tracking-wider">
+                    {t("care.repot")}
+                  </span>
+                  <div className="text-base font-bold text-forest-950 dark:text-sand-100">
+                    {t("care.every_months", { months: plant.careTemplate.repotMonths })}
+                  </div>
+                  <span className="text-[11px] text-sand-500 block">
+                    {locale === "th" ? "เปลี่ยนกระถางเมื่อรากเริ่มแน่น" : "When rootbound"}
+                  </span>
+                </div>
+              )}
+
+              <div className="p-4 rounded-2xl bg-sand-50/70 dark:bg-forest-950/40 border border-sand-200 dark:border-forest-800 space-y-1">
+                <span className="text-[11px] font-semibold text-sand-500 uppercase tracking-wider">
+                  {t("care.pest_check")}
+                </span>
+                <div className="text-base font-bold text-forest-950 dark:text-sand-100">
+                  {t("care.every_days", { days: plant.careTemplate.pestCheckDays || 14 })}
+                </div>
+                <span className="text-[11px] text-sand-500 block">
+                  {locale === "th" ? "ตรวจหลังใบและโคนต้น" : "Inspect undersides of leaves"}
+                </span>
+              </div>
+            </div>
+
+            {/* Detailed Care Attributes: Soil Mix, Fertilizer, Propagation, Notes */}
+            <div className="space-y-4 pt-2 border-t border-sand-200 dark:border-forest-800">
+              {plant.soilMix && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
+                    🌱 {t("care.soil_mix")}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
+                    {plant.soilMix}
+                  </p>
+                </div>
+              )}
+
+              {plant.fertilizerNote && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
+                    💊 {t("care.fertilizer_note")}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
+                    {plant.fertilizerNote}
+                  </p>
+                </div>
+              )}
+
+              {plant.propagation && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
+                    ✂️ {t("care.propagation")}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
+                    {plant.propagation}
+                  </p>
+                </div>
+              )}
+
+              {plant.careTemplate.notesTh && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
+                    📝 {locale === "th" ? "คำแนะนำเพิ่มเติม" : "Care Notes"}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
+                    {plant.careTemplate.notesTh}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Common Problems & Troubleshooting Accordion (species_problems) */}
+        {plant.problems && plant.problems.length > 0 && (
+          <section className="space-y-4">
+            <div className="space-y-1">
+              <h2 className="font-serif font-bold text-2xl sm:text-3xl text-forest-950 dark:text-sand-50">
+                {t("care.common_problems")}
+              </h2>
+              <p className="text-xs sm:text-sm text-sand-600 dark:text-sand-400">
+                {locale === "th"
+                  ? "วิธีสังเกตอาการผิดปกติ สาเหตุ และวิธีแก้ปัญหาที่พบบ่อย"
+                  : "Common symptoms, causes, and remedy guidelines diagnosed by our plant clinic."}
+              </p>
             </div>
 
             <div className="space-y-3">
-              {plant.problems.map((prob, idx) => {
-                const isOpen = openAccordionIndex === idx;
+              {plant.problems.map((prob) => {
+                const isOpen = expandedProblems[prob.id] ?? true; // Open by default for instant readability
                 return (
                   <div
                     key={prob.id}
-                    className="bg-white dark:bg-[#0e2117] rounded-2xl border border-sand-200 dark:border-forest-800 overflow-hidden shadow-soft transition-all"
+                    className="rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/60 shadow-soft overflow-hidden transition"
                   >
                     <button
-                      onClick={() => setOpenAccordionIndex(isOpen ? null : idx)}
-                      className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-sand-50 dark:hover:bg-forest-900/30 transition-colors"
+                      type="button"
+                      onClick={() => toggleProblem(prob.id)}
+                      className="w-full px-5 py-4 text-left flex items-center justify-between gap-3 hover:bg-sand-50/50 dark:hover:bg-forest-800/40 transition"
+                      aria-expanded={isOpen}
                     >
                       <div className="flex items-center gap-3">
-                        <AlertTriangle
-                          className={`w-4 h-4 shrink-0 ${
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 ${
                             prob.severity === "high"
-                              ? "text-rose-600 dark:text-rose-400"
+                              ? "bg-rose-500"
                               : prob.severity === "medium"
-                              ? "text-amber-600 dark:text-amber-400"
-                              : "text-stone-500 dark:text-sand-400"
+                              ? "bg-amber-500"
+                              : "bg-emerald-500"
                           }`}
                         />
-                        <span className="font-serif text-sm sm:text-base font-medium text-stone-900 dark:text-sand-100">
+                        <span className="font-serif font-bold text-sm sm:text-base text-forest-950 dark:text-sand-100">
                           {prob.symptomTh}
                         </span>
                       </div>
-                      {isOpen ? (
-                        <ChevronUp className="w-4 h-4 text-stone-400 dark:text-sand-400" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-stone-400 dark:text-sand-400" />
-                      )}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-medium uppercase ${
+                            prob.severity === "high"
+                              ? "bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300"
+                              : prob.severity === "medium"
+                              ? "bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300"
+                              : "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
+                          }`}
+                        >
+                          {prob.severity}
+                        </span>
+                        {isOpen ? (
+                          <ChevronUp className="w-4 h-4 text-sand-500" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4 text-sand-500" />
+                        )}
+                      </div>
                     </button>
 
                     {isOpen && (
-                      <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-stone-700 dark:text-sand-300 border-t border-sand-100 dark:border-forest-800 space-y-2 bg-sand-50/50 dark:bg-forest-900/20">
-                        <p>
-                          <span className="font-semibold text-stone-900 dark:text-sand-100">{t.plant.causeLabel}</span> {prob.causeTh}
-                        </p>
-                        <p className="text-forest-900 dark:text-emerald-200 bg-emerald-50/80 dark:bg-emerald-950/40 p-3 rounded-xl border border-emerald-200 dark:border-emerald-800/60">
-                          <span className="font-semibold text-emerald-950 dark:text-emerald-300">{t.plant.fixLabel}</span> {prob.fixTh}
-                        </p>
+                      <div className="px-5 pb-5 pt-1 space-y-3 text-xs sm:text-sm border-t border-sand-100 dark:border-forest-800/80 bg-sand-50/40 dark:bg-forest-950/30">
+                        <div>
+                          <span className="font-semibold text-sand-600 dark:text-sand-400 block mb-1">
+                            🔍 {locale === "th" ? "สาเหตุหลัก:" : "Cause:"}
+                          </span>
+                          <p className="text-forest-900 dark:text-sand-200 leading-relaxed">
+                            {prob.causeTh}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="font-semibold text-forest-700 dark:text-emerald-400 block mb-1">
+                            🌿 {locale === "th" ? "วิธีแก้ไขและฟื้นฟู:" : "Treatment & Fix:"}
+                          </span>
+                          <p className="text-forest-900 dark:text-sand-100 leading-relaxed bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                            {prob.fixTh}
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -585,86 +644,130 @@ export function PlantDetailClient({ plant, similarPlants }: PlantDetailProps) {
           </section>
         )}
 
-        {/* Section: Similar Species (SPEC §6.3 #8) */}
-        {similarPlants.length > 0 && (
-          <section className="mt-14 space-y-6">
-            <div className="border-b border-sand-200 dark:border-forest-800 pb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-forest-700 dark:text-gold-400">
-                {t.plant.similarTag}
-              </span>
-              <h2 className="font-serif text-2xl sm:text-3xl font-medium text-forest-950 dark:text-sand-50">
-                {t.plant.similarTitle}
-              </h2>
+        {/* 4 Similar Species Recommendations */}
+        {similarSpecies && similarSpecies.length > 0 && (
+          <section className="space-y-6 pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-serif font-bold text-2xl sm:text-3xl text-forest-950 dark:text-sand-50">
+                  {t("care.similar_plants")}
+                </h2>
+                <p className="text-xs sm:text-sm text-sand-600 dark:text-sand-400 mt-1">
+                  {locale === "th"
+                    ? "พันธุ์ไม้ที่มีความต้องการแสงและน้ำใกล้เคียงกัน"
+                    : "Curated species with comparable lighting and watering characteristics."}
+                </p>
+              </div>
+              <Link
+                href="/search"
+                className="text-xs sm:text-sm font-semibold text-forest-700 dark:text-forest-400 hover:underline flex items-center gap-1"
+              >
+                <span>{t("search.view_all")}</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {similarPlants.map((item) => {
-                const itemTitle = locale === "th" ? item.nameTh : item.nameEn;
-                const itemSub = locale === "th" ? item.nameEn : item.nameTh;
-                return (
-                  <Link
-                    key={item.id}
-                    href={`/plants/${item.slug}`}
-                    className="group bg-white dark:bg-[#0e2117] rounded-2xl overflow-hidden border border-sand-200 dark:border-forest-800 shadow-soft hover:shadow-card card-hover-effect flex flex-col"
-                  >
-                    <div className="relative aspect-square bg-sand-100 dark:bg-forest-950 overflow-hidden">
-                      <Image
-                        src={item.primaryImage}
-                        alt={item.nameTh}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {similarSpecies.map((sim) => (
+                <Link
+                  key={sim.id}
+                  href={`/plants/${sim.slug}`}
+                  className="group flex flex-col rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/80 shadow-soft hover:shadow-card hover:-translate-y-1 transition-all overflow-hidden"
+                >
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-sand-100 dark:bg-forest-950">
+                    <img
+                      src={sim.primaryImage}
+                      alt={sim.nameTh}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                    <div className="absolute top-2.5 left-2.5">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-700/90 text-white backdrop-blur-md">
+                        {t(`filters.stock_${sim.stockStatus}`)}
+                      </span>
                     </div>
-                    <div className="p-3">
-                      <h4 className="font-serif text-sm font-semibold text-stone-900 dark:text-sand-100 group-hover:text-forest-800 dark:group-hover:text-gold-400 transition-colors truncate">
-                        {itemTitle}
-                      </h4>
-                      <p className="text-[11px] text-stone-500 dark:text-sand-400 italic truncate font-serif">{itemSub}</p>
+                  </div>
+                  <div className="p-4 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-serif font-bold text-sm sm:text-base text-forest-950 dark:text-sand-50 group-hover:text-forest-600 dark:group-hover:text-forest-400 transition line-clamp-1">
+                        {sim.nameTh}
+                      </h3>
+                      <p className="text-xs text-sand-500 dark:text-sand-400 italic line-clamp-1 mb-1">
+                        {sim.nameEn}
+                      </p>
+                      <p className="text-xs text-forest-700 dark:text-sand-300 line-clamp-2 leading-relaxed">
+                        {sim.summary}
+                      </p>
                     </div>
-                  </Link>
-                );
-              })}
+                    <div className="mt-3 pt-2 border-t border-sand-100 dark:border-forest-800/80 flex items-center justify-between text-[11px] text-sand-500">
+                      <span>{sim.difficulty}/5 ★</span>
+                      <span className="text-forest-600 dark:text-forest-400 font-medium group-hover:underline">
+                        {locale === "th" ? "ดูข้อมูล" : "View"} →
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </section>
         )}
       </div>
 
-      {/* Floating Bottom Bar for Mobile & Quick Action (SPEC §6.3 #9) */}
-      <div className="fixed bottom-14 md:bottom-0 left-0 right-0 z-30 bg-sand-50/95 dark:bg-[#0b1a13]/95 backdrop-blur-lg border-t border-sand-300 dark:border-forest-800 p-3 sm:p-4 shadow-elevated">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
-          <div className="hidden sm:flex items-center gap-3">
-            <span className="font-serif text-sm font-semibold text-stone-900 dark:text-sand-100 truncate">
-              {displayName}
-            </span>
-            <span className="text-xs text-stone-500 dark:text-sand-400 italic">({plant.nameSci})</span>
-          </div>
+      {/* Sticky Bottom Action Bar (Mobile & Desktop) */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-sand-200 dark:border-forest-800 bg-sand-50/95 dark:bg-forest-950/95 backdrop-blur-md shadow-elevated transition-colors">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-4">
+            {/* Left side: Plant preview name */}
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-sand-100 dark:bg-forest-900 shrink-0 border border-sand-200 dark:border-forest-800">
+                <img
+                  src={currentImage.blobUrl}
+                  alt={plant.nameTh}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div>
+                <span className="font-serif font-bold text-sm text-forest-950 dark:text-sand-50 line-clamp-1">
+                  {plant.nameTh}
+                </span>
+                <span className="text-xs text-sand-500 dark:text-sand-400 line-clamp-1 italic">
+                  {plant.nameSci}
+                </span>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-            <button
-              onClick={() =>
-                openInquiryModal({
-                  speciesId: plant.id,
-                  speciesNameTh: displayName,
-                  speciesPhoto: images[0]?.blobUrl,
-                  defaultIntent: "price",
-                })
-              }
-              className="flex-1 sm:flex-initial py-3 px-5 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>{t.plant.askShopThisPlant}</span>
-            </button>
+            {/* Right side: Action Buttons */}
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setInquiryModalOpen(true)}
+                className="flex-1 sm:flex-initial px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white font-semibold text-xs sm:text-sm shadow-soft transition flex items-center justify-center gap-2 min-h-[44px]"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>{t("inquiry.ask_shop")}</span>
+              </button>
 
-            <Link
-              href={`/garden/add?speciesId=${plant.id}`}
-              className="flex-1 sm:flex-initial py-3 px-5 rounded-xl bg-forest-900 hover:bg-forest-800 dark:bg-forest-800 dark:hover:bg-forest-700 text-sand-50 font-medium text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-transparent dark:border-forest-700 transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4 text-gold-400" />
-              <span>{t.plant.addToGarden}</span>
-            </Link>
+              <Link
+                href={`/garden/add?speciesId=${plant.id}`}
+                className="flex-1 sm:flex-initial px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl bg-forest-700 hover:bg-forest-800 text-sand-50 font-semibold text-xs sm:text-sm shadow-soft transition flex items-center justify-center gap-2 min-h-[44px]"
+              >
+                <Plus className="w-4 h-4" />
+                <span>{t("garden.add_plant")}</span>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* LINE Inquiry Modal */}
+      <LineInquiryModal
+        isOpen={inquiryModalOpen}
+        onClose={() => setInquiryModalOpen(false)}
+        speciesId={plant.id}
+        speciesNameTh={plant.nameTh}
+        sourcePage={`/plants/${plant.slug}`}
+        defaultIntent="care_help"
+      />
     </div>
   );
 }
