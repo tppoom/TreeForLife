@@ -57,7 +57,7 @@ const config: Config = {
           700: "#8e4f3a",
           800: "#754233",
           900: "#61392d",
-        }
+        },
       },
       fontFamily: {
         serif: ["var(--font-serif)", "Georgia", "Cambria", "serif"],
@@ -65,11 +65,11 @@ const config: Config = {
         thai: ["var(--font-thai)", "sans-serif"],
       },
       boxShadow: {
-        'soft': '0 2px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)',
-        'card': '0 4px 20px -2px rgba(15, 41, 30, 0.06), 0 2px 6px -1px rgba(15, 41, 30, 0.03)',
-        'elevated': '0 20px 30px -10px rgba(15, 41, 30, 0.12), 0 8px 15px -4px rgba(15, 41, 30, 0.06)',
-        'gold': '0 4px 20px -2px rgba(212, 169, 44, 0.25)',
-      }
+        soft: "0 2px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)",
+        card: "0 4px 20px -2px rgba(15, 41, 30, 0.06), 0 2px 6px -1px rgba(15, 41, 30, 0.03)",
+        elevated: "0 20px 30px -10px rgba(15, 41, 30, 0.12), 0 8px 15px -4px rgba(15, 41, 30, 0.06)",
+        gold: "0 4px 20px -2px rgba(212, 169, 44, 0.25)",
+      },
     },
   },
   plugins: [],
