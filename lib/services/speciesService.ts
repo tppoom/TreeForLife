@@ -15,7 +15,7 @@ export interface SpeciesFilterParams {
   limit?: number;
 }
 
-export async function getSpeciesList(params: SpeciesFilterParams = {}) {
+export async function getAllSpecies(params: SpeciesFilterParams = {}) {
   const db = await getDb();
   const conditions = [];
 
@@ -143,6 +143,9 @@ export async function getSpeciesList(params: SpeciesFilterParams = {}) {
     imageAlt: mediaMap.get(item.id)?.altTh || item.nameTh,
   }));
 }
+
+// Alias for compatibility
+export const getSpeciesList = getAllSpecies;
 
 export async function getSpeciesBySlug(slug: string) {
   const db = await getDb();

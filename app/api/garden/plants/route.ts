@@ -9,9 +9,10 @@ export async function GET(req: Request) {
 
     const plants = await getUserPlants(userId, guestToken);
     return NextResponse.json({ plants });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to fetch plants";
     console.error("Error fetching plants:", error);
-    return NextResponse.json({ error: error.message || "Failed to fetch plants" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -23,9 +24,10 @@ export async function POST(req: Request) {
     }
 
     const plant = await addUserPlant(body);
-    return NextResponse.json({ plant, success: true });
-  } catch (error: any) {
+    return NextResponse.json({ plant, success: true }, { status: 201 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to add plant";
     console.error("Error adding plant:", error);
-    return NextResponse.json({ error: error.message || "Failed to add plant" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

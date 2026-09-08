@@ -1,6 +1,38 @@
 import { getDb } from "@/lib/db";
-import { species, inquiries, searchMisses, userPlants, speciesMedia, careTemplates, speciesProblems } from "@/db/schema";
+import { species, inquiries, searchMisses, userPlants } from "@/db/schema";
 import { desc, sql, eq } from "drizzle-orm";
+import { getInquiries } from "./inquiryService";
+
+export type StockStatus = "in_stock" | "made_to_order" | "seasonal" | "hidden";
+
+export async function updateStockStatus(
+  speciesId: string,
+  status: StockStatus
+) {
+  const db = await getDb();
+  const [updated] = await db
+    .update(species)
+    .set({ stockStatus: status, updatedAt: new Date() })
+    .where(eq(species.id, speciesId))
+    .returning();
+
+  return updated;
+}
+
+export async function getSearchMisses(limit = 50) {
+  const db = await getDb();
+
+  const rows = await db
+    .select()
+    .from(searchMisses)
+    .orderBy(desc(searchMisses.count), desc(searchMisses.lastSeenAt))
+    .limit(limit);
+
+  return rows;
+}
+
+// Alias for compatibility
+export const getAdminSearchMisses = getSearchMisses;
 
 export async function getAdminStats() {
   const db = await getDb();
@@ -47,36 +79,5 @@ export async function getAdminStats() {
 }
 
 export async function getAdminInquiriesList(limit = 50) {
-  const db = await getDb();
-
-  const rows = await db
-    .select({
-      id: inquiries.id,
-      refCode: inquiries.refCode,
-      intent: inquiries.intent,
-      sourcePage: inquiries.sourcePage,
-      payload: inquiries.payload,
-      createdAt: inquiries.createdAt,
-      speciesNameTh: species.nameTh,
-      speciesNameEn: species.nameEn,
-      speciesSlug: species.slug,
-    })
-    .from(inquiries)
-    .leftJoin(species, eq(inquiries.speciesId, species.id))
-    .orderBy(desc(inquiries.createdAt))
-    .limit(limit);
-
-  return rows;
-}
-
-export async function getAdminSearchMisses(limit = 50) {
-  const db = await getDb();
-
-  const rows = await db
-    .select()
-    .from(searchMisses)
-    .orderBy(desc(searchMisses.count), desc(searchMisses.lastSeenAt))
-    .limit(limit);
-
-  return rows;
+  return getInquiries({ limit });
 }

@@ -1,9 +1,12 @@
 import { getDb } from "@/lib/db";
 import { userPlants, species, speciesMedia, careTemplates, careTasks, careLogs, favorites } from "@/db/schema";
-import { eq, and, desc, asc, sql, or } from "drizzle-orm";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
 import {
+  calculateCareInterval,
   calculateWateringInterval,
-  calculateNextDueDate,
+  explainCareSchedule,
+  generateNextTaskDue,
+  calculateSnoozeDueDate,
   checkAdaptiveIntervalSuggestion,
   PotMaterial,
   Placement,
@@ -17,8 +20,8 @@ export interface AddUserPlantInput {
   nickname: string;
   photoUrl?: string | null;
   acquiredAt: string; // YYYY-MM-DD
-  acquiredFrom: "shop" | "elsewhere" | "gift" | "propagated";
-  potSizeInch: number;
+  acquiredFrom?: "shop" | "elsewhere" | "gift" | "propagated";
+  potSizeInch: number | string;
   potMaterial: PotMaterial;
   placement: Placement;
   customWaterDays?: number | null;
@@ -200,11 +203,14 @@ export async function getUserPlantById(id: string) {
     template = tmpl;
 
     if (tmpl) {
-      calculation = calculateWateringInterval(tmpl, {
-        potSizeInch: Number(plant.potSizeInch),
-        potMaterial: plant.potMaterial as PotMaterial,
-        placement: plant.placement as Placement,
-        customWaterDays: plant.customWaterDays,
+      calculation = explainCareSchedule({
+        template: tmpl,
+        plantConfig: {
+          potSizeInch: Number(plant.potSizeInch),
+          potMaterial: plant.potMaterial as PotMaterial,
+          placement: plant.placement as Placement,
+          customWaterDays: plant.customWaterDays,
+        },
       });
     }
   }
@@ -246,7 +252,7 @@ export async function addUserPlant(input: AddUserPlantInput) {
       nickname: input.nickname,
       photoUrl: input.photoUrl || null,
       acquiredAt: input.acquiredAt,
-      acquiredFrom: input.acquiredFrom,
+      acquiredFrom: input.acquiredFrom || "shop",
       potSizeInch: String(input.potSizeInch),
       potMaterial: input.potMaterial,
       placement: input.placement,
@@ -257,30 +263,33 @@ export async function addUserPlant(input: AddUserPlantInput) {
     })
     .returning();
 
-  // Determine care schedule
+  // Determine care schedule using scheduler
   let intervalDays = 3;
+  let tmpl: typeof careTemplates.$inferSelect | null = null;
+
   if (input.customWaterDays) {
     intervalDays = input.customWaterDays;
   } else if (input.speciesId) {
-    const [tmpl] = await db
+    const [foundTmpl] = await db
       .select()
       .from(careTemplates)
       .where(eq(careTemplates.speciesId, input.speciesId))
       .limit(1);
+    tmpl = foundTmpl || null;
+
     if (tmpl) {
-      const calc = calculateWateringInterval(tmpl, {
+      intervalDays = calculateCareInterval({
+        template: tmpl,
         potSizeInch: input.potSizeInch,
         potMaterial: input.potMaterial,
         placement: input.placement,
       });
-      intervalDays = calc.finalDays;
     }
   }
 
-  // Calculate first due date: today + intervalDays
+  // Seed upcoming care tasks (water, and optionally fertilize/pest_check if configured)
   const today = new Date();
-  const firstDueDate = calculateNextDueDate(today, intervalDays);
-  const firstDueDateStr = firstDueDate.toISOString().split("T")[0];
+  const firstDueDateStr = generateNextTaskDue(today, intervalDays);
 
   await db.insert(careTasks).values({
     userPlantId: plant.id,
@@ -290,18 +299,69 @@ export async function addUserPlant(input: AddUserPlantInput) {
     createdAt: new Date(),
   });
 
+  if (tmpl?.fertilizeDays) {
+    const firstFertilizeDate = generateNextTaskDue(today, tmpl.fertilizeDays);
+    await db
+      .insert(careTasks)
+      .values({
+        userPlantId: plant.id,
+        type: "fertilize",
+        dueDate: firstFertilizeDate,
+        status: "pending",
+        createdAt: new Date(),
+      })
+      .onConflictDoNothing();
+  }
+
   return plant;
 }
 
-export interface TaskActionInput {
-  userPlantId: string;
-  taskId: string;
-  action: "done" | "snooze" | "skip";
-  note?: string;
-  photoUrl?: string;
+export async function updateUserPlant(id: string, input: Partial<AddUserPlantInput>) {
+  const db = await getDb();
+
+  const updateData: Record<string, unknown> = {
+    updatedAt: new Date(),
+  };
+
+  if (input.nickname !== undefined) updateData.nickname = input.nickname;
+  if (input.photoUrl !== undefined) updateData.photoUrl = input.photoUrl;
+  if (input.acquiredAt !== undefined) updateData.acquiredAt = input.acquiredAt;
+  if (input.acquiredFrom !== undefined) updateData.acquiredFrom = input.acquiredFrom;
+  if (input.potSizeInch !== undefined) updateData.potSizeInch = String(input.potSizeInch);
+  if (input.potMaterial !== undefined) updateData.potMaterial = input.potMaterial;
+  if (input.placement !== undefined) updateData.placement = input.placement;
+  if (input.customWaterDays !== undefined) updateData.customWaterDays = input.customWaterDays;
+  if (input.customSpeciesName !== undefined) updateData.customSpeciesName = input.customSpeciesName;
+  if (input.notes !== undefined) updateData.notes = input.notes;
+
+  const [updated] = await db
+    .update(userPlants)
+    .set(updateData)
+    .where(eq(userPlants.id, id))
+    .returning();
+
+  return updated;
 }
 
-export async function recordTaskAction(input: TaskActionInput) {
+export async function archiveUserPlant(id: string) {
+  const db = await getDb();
+  await db
+    .update(userPlants)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(eq(userPlants.id, id));
+
+  return { success: true };
+}
+
+export interface CompleteTaskInput {
+  taskId: string;
+  userPlantId: string;
+  note?: string;
+  photoUrl?: string;
+  source?: "app" | "line" | "backfill";
+}
+
+export async function completeTask(input: CompleteTaskInput) {
   const db = await getDb();
 
   const [task] = await db
@@ -324,27 +384,27 @@ export async function recordTaskAction(input: TaskActionInput) {
     throw new Error("Plant not found");
   }
 
-  if (input.action === "done") {
-    const performedAt = new Date();
+  const performedAt = new Date();
 
-    // Mark current task done
-    await db
-      .update(careTasks)
-      .set({ status: "done", doneAt: performedAt })
-      .where(eq(careTasks.id, task.id));
+  // Mark current task done
+  await db
+    .update(careTasks)
+    .set({ status: "done", doneAt: performedAt })
+    .where(eq(careTasks.id, task.id));
 
-    // Create care log
-    await db.insert(careLogs).values({
-      userPlantId: plant.id,
-      type: task.type,
-      performedAt,
-      note: input.note || null,
-      photoUrl: input.photoUrl || null,
-      source: "app",
-    });
+  // Create care log
+  await db.insert(careLogs).values({
+    userPlantId: plant.id,
+    type: task.type,
+    performedAt,
+    note: input.note || null,
+    photoUrl: input.photoUrl || null,
+    source: input.source || "app",
+  });
 
-    // Calculate next interval
-    let intervalDays = 3;
+  // Calculate next interval using scheduler
+  let intervalDays = 3;
+  if (task.type === "water") {
     if (plant.customWaterDays) {
       intervalDays = plant.customWaterDays;
     } else if (plant.speciesId) {
@@ -354,128 +414,228 @@ export async function recordTaskAction(input: TaskActionInput) {
         .where(eq(careTemplates.speciesId, plant.speciesId))
         .limit(1);
       if (tmpl) {
-        const calc = calculateWateringInterval(tmpl, {
+        intervalDays = calculateCareInterval({
+          template: tmpl,
           potSizeInch: Number(plant.potSizeInch),
           potMaterial: plant.potMaterial as PotMaterial,
           placement: plant.placement as Placement,
         });
-        intervalDays = calc.finalDays;
       }
     }
+  } else if (task.type === "fertilize") {
+    if (plant.speciesId) {
+      const [tmpl] = await db
+        .select()
+        .from(careTemplates)
+        .where(eq(careTemplates.speciesId, plant.speciesId))
+        .limit(1);
+      intervalDays = tmpl?.fertilizeDays || 30;
+    } else {
+      intervalDays = 30;
+    }
+  } else if (task.type === "pest_check") {
+    if (plant.speciesId) {
+      const [tmpl] = await db
+        .select()
+        .from(careTemplates)
+        .where(eq(careTemplates.speciesId, plant.speciesId))
+        .limit(1);
+      intervalDays = tmpl?.pestCheckDays || 14;
+    } else {
+      intervalDays = 14;
+    }
+  } else {
+    intervalDays = 30;
+  }
 
-    const nextDueDate = calculateNextDueDate(performedAt, intervalDays);
-    const nextDueDateStr = nextDueDate.toISOString().split("T")[0];
+  const nextDueDateStr = generateNextTaskDue(performedAt, intervalDays);
 
-    // Create next task
-    await db.insert(careTasks).values({
+  // Create next task
+  await db
+    .insert(careTasks)
+    .values({
       userPlantId: plant.id,
       type: task.type,
       dueDate: nextDueDateStr,
       status: "pending",
       createdAt: new Date(),
+    })
+    .onConflictDoNothing();
+
+  // Check for adaptive suggestion
+  const scheduled = new Date(task.dueDate);
+  const adaptiveSuggestion =
+    task.type === "water"
+      ? checkAdaptiveIntervalSuggestion(scheduled, performedAt, intervalDays)
+      : { shouldSuggest: false };
+
+  return {
+    success: true,
+    action: "complete",
+    nextDueDate: nextDueDateStr,
+    adaptiveSuggestion,
+  };
+}
+
+export interface SnoozeTaskInput {
+  taskId: string;
+  userPlantId: string;
+}
+
+export async function snoozeTask(input: SnoozeTaskInput) {
+  const db = await getDb();
+
+  const [task] = await db
+    .select()
+    .from(careTasks)
+    .where(and(eq(careTasks.id, input.taskId), eq(careTasks.userPlantId, input.userPlantId)))
+    .limit(1);
+
+  if (!task) {
+    throw new Error("Task not found");
+  }
+
+  if (task.snoozeCount >= 3) {
+    throw new Error("เลื่อนได้สูงสุด 3 ครั้งติดต่อกัน กรุณาเลือก 'รดแล้ว' หรือ 'ข้ามรอบนี้'");
+  }
+
+  const snoozeResult = calculateSnoozeDueDate(task.dueDate, task.snoozeCount);
+
+  await db
+    .update(careTasks)
+    .set({
+      dueDate: snoozeResult.nextDueDate,
+      snoozeCount: snoozeResult.newSnoozeCount,
+      status: "pending",
+    })
+    .where(eq(careTasks.id, task.id));
+
+  return {
+    success: true,
+    action: "snooze",
+    newDueDate: snoozeResult.nextDueDate,
+    snoozeCount: snoozeResult.newSnoozeCount,
+  };
+}
+
+export interface SkipTaskInput {
+  taskId: string;
+  userPlantId: string;
+}
+
+export async function skipTask(input: SkipTaskInput) {
+  const db = await getDb();
+
+  const [task] = await db
+    .select()
+    .from(careTasks)
+    .where(and(eq(careTasks.id, input.taskId), eq(careTasks.userPlantId, input.userPlantId)))
+    .limit(1);
+
+  if (!task) {
+    throw new Error("Task not found");
+  }
+
+  const [plant] = await db
+    .select()
+    .from(userPlants)
+    .where(eq(userPlants.id, input.userPlantId))
+    .limit(1);
+
+  if (!plant) {
+    throw new Error("Plant not found");
+  }
+
+  await db
+    .update(careTasks)
+    .set({ status: "skipped" })
+    .where(eq(careTasks.id, task.id));
+
+  // Calculate next due date from scheduled due date
+  let intervalDays = 3;
+  if (task.type === "water") {
+    if (plant.customWaterDays) {
+      intervalDays = plant.customWaterDays;
+    } else if (plant.speciesId) {
+      const [tmpl] = await db
+        .select()
+        .from(careTemplates)
+        .where(eq(careTemplates.speciesId, plant.speciesId))
+        .limit(1);
+      if (tmpl) {
+        intervalDays = calculateCareInterval({
+          template: tmpl,
+          potSizeInch: Number(plant.potSizeInch),
+          potMaterial: plant.potMaterial as PotMaterial,
+          placement: plant.placement as Placement,
+        });
+      }
+    }
+  }
+
+  const nextDueDateStr = generateNextTaskDue(task.dueDate, intervalDays);
+
+  await db
+    .insert(careTasks)
+    .values({
+      userPlantId: plant.id,
+      type: task.type,
+      dueDate: nextDueDateStr,
+      status: "pending",
+      createdAt: new Date(),
+    })
+    .onConflictDoNothing();
+
+  return {
+    success: true,
+    action: "skip",
+    nextDueDate: nextDueDateStr,
+  };
+}
+
+export interface TaskActionInput {
+  userPlantId: string;
+  taskId: string;
+  action: "done" | "complete" | "snooze" | "skip";
+  note?: string;
+  photoUrl?: string;
+}
+
+export async function recordTaskAction(input: TaskActionInput) {
+  if (input.action === "done" || input.action === "complete") {
+    return completeTask({
+      taskId: input.taskId,
+      userPlantId: input.userPlantId,
+      note: input.note,
+      photoUrl: input.photoUrl,
     });
-
-    // Check for adaptive suggestion
-    const scheduled = new Date(task.dueDate);
-    const adaptiveSuggestion = checkAdaptiveIntervalSuggestion(scheduled, performedAt, intervalDays);
-
-    return {
-      success: true,
-      action: "done",
-      nextDueDate: nextDueDateStr,
-      adaptiveSuggestion,
-    };
   }
 
   if (input.action === "snooze") {
-    if (task.snoozeCount >= 3) {
-      throw new Error("เลื่อนได้สูงสุด 3 ครั้งติดต่อกัน กรุณาเลือก 'รดแล้ว' หรือ 'ข้ามรอบนี้'");
-    }
-
-    const currentDue = new Date(task.dueDate);
-    currentDue.setDate(currentDue.getDate() + 1);
-    const newDueDateStr = currentDue.toISOString().split("T")[0];
-
-    await db
-      .update(careTasks)
-      .set({
-        dueDate: newDueDateStr,
-        snoozeCount: task.snoozeCount + 1,
-      })
-      .where(eq(careTasks.id, task.id));
-
-    return {
-      success: true,
-      action: "snooze",
-      newDueDate: newDueDateStr,
-      snoozeCount: task.snoozeCount + 1,
-    };
+    return snoozeTask({
+      taskId: input.taskId,
+      userPlantId: input.userPlantId,
+    });
   }
 
   if (input.action === "skip") {
-    await db
-      .update(careTasks)
-      .set({ status: "skipped" })
-      .where(eq(careTasks.id, task.id));
-
-    // Calculate next due date from original due date
-    let intervalDays = 3;
-    if (plant.customWaterDays) {
-      intervalDays = plant.customWaterDays;
-    } else if (plant.speciesId) {
-      const [tmpl] = await db
-        .select()
-        .from(careTemplates)
-        .where(eq(careTemplates.speciesId, plant.speciesId))
-        .limit(1);
-      if (tmpl) {
-        const calc = calculateWateringInterval(tmpl, {
-          potSizeInch: Number(plant.potSizeInch),
-          potMaterial: plant.potMaterial as PotMaterial,
-          placement: plant.placement as Placement,
-        });
-        intervalDays = calc.finalDays;
-      }
-    }
-
-    const originalDue = new Date(task.dueDate);
-    const nextDueDate = calculateNextDueDate(originalDue, intervalDays);
-    const nextDueDateStr = nextDueDate.toISOString().split("T")[0];
-
-    await db.insert(careTasks).values({
-      userPlantId: plant.id,
-      type: task.type,
-      dueDate: nextDueDateStr,
-      status: "pending",
-      createdAt: new Date(),
+    return skipTask({
+      taskId: input.taskId,
+      userPlantId: input.userPlantId,
     });
-
-    return {
-      success: true,
-      action: "skip",
-      nextDueDate: nextDueDateStr,
-    };
   }
 
-  throw new Error("Invalid action");
+  throw new Error(`Invalid task action: ${input.action}`);
 }
 
-export async function archiveUserPlant(id: string) {
-  const db = await getDb();
-  await db
-    .update(userPlants)
-    .set({ isActive: false, updatedAt: new Date() })
-    .where(eq(userPlants.id, id));
-}
-
-export async function mergeGuestData(guestToken: string, userId: string) {
+export async function mergeGuestPlants(guestToken: string, userId: string) {
   if (!guestToken || !userId) return { plantCount: 0, favoriteCount: 0 };
   const db = await getDb();
 
   // Merge plants
   const plantRes = await db
     .update(userPlants)
-    .set({ userId, guestToken: null })
+    .set({ userId, guestToken: null, updatedAt: new Date() })
     .where(eq(userPlants.guestToken, guestToken))
     .returning();
 
@@ -491,3 +651,5 @@ export async function mergeGuestData(guestToken: string, userId: string) {
     favoriteCount: favRes.length,
   };
 }
+
+export const mergeGuestData = mergeGuestPlants;

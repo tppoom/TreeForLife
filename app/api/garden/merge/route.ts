@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { mergeGuestData } from "@/lib/services/gardenService";
+import { mergeGuestPlants } from "@/lib/services/gardenService";
 
 export async function POST(req: Request) {
   try {
@@ -8,10 +8,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing guestToken or userId" }, { status: 400 });
     }
 
-    const result = await mergeGuestData(guestToken, userId);
-    return NextResponse.json(result);
-  } catch (error: any) {
+    const result = await mergeGuestPlants(guestToken, userId);
+    return NextResponse.json({
+      success: true,
+      plantCount: result.plantCount,
+      favoriteCount: result.favoriteCount,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to merge data";
     console.error("Error merging guest data:", error);
-    return NextResponse.json({ error: error.message || "Failed to merge data" }, { status: 500 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

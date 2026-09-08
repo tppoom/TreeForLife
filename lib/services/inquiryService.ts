@@ -1,12 +1,13 @@
 import { getDb } from "@/lib/db";
-import { inquiries } from "@/db/schema";
+import { inquiries, species } from "@/db/schema";
+import { eq, desc, and } from "drizzle-orm";
 
 export type InquiryIntent = "price" | "availability" | "care_help" | "design_quote";
 
 export const LINE_OA_ID = process.env.NEXT_PUBLIC_LINE_OA_ID || "treeforlife";
 
 /**
- * Generates a short, readable 6-character reference code like TFL-4K9P
+ * Generates a short, readable reference code like TFL-4K9P
  */
 export function generateRefCode(): string {
   const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // Remove ambiguous characters 0, 1, O, I
@@ -88,4 +89,56 @@ export async function createInquiry(input: CreateInquiryInput) {
     lineUrl,
     lineOaId: LINE_OA_ID,
   };
+}
+
+export interface GetInquiriesParams {
+  userId?: string | null;
+  guestToken?: string | null;
+  refCode?: string | null;
+  limit?: number;
+}
+
+export async function getInquiries(params: GetInquiriesParams = {}) {
+  const db = await getDb();
+  const conditions = [];
+
+  if (params.userId) {
+    conditions.push(eq(inquiries.userId, params.userId));
+  }
+  if (params.guestToken) {
+    conditions.push(eq(inquiries.guestToken, params.guestToken));
+  }
+  if (params.refCode) {
+    conditions.push(eq(inquiries.refCode, params.refCode));
+  }
+
+  const query = db
+    .select({
+      id: inquiries.id,
+      refCode: inquiries.refCode,
+      intent: inquiries.intent,
+      sourcePage: inquiries.sourcePage,
+      payload: inquiries.payload,
+      createdAt: inquiries.createdAt,
+      userId: inquiries.userId,
+      guestToken: inquiries.guestToken,
+      speciesId: inquiries.speciesId,
+      speciesNameTh: species.nameTh,
+      speciesNameEn: species.nameEn,
+      speciesSlug: species.slug,
+    })
+    .from(inquiries)
+    .leftJoin(species, eq(inquiries.speciesId, species.id))
+    .orderBy(desc(inquiries.createdAt));
+
+  if (conditions.length > 0) {
+    query.where(and(...conditions));
+  }
+
+  if (params.limit) {
+    query.limit(params.limit);
+  }
+
+  const rows = await query;
+  return rows;
 }
