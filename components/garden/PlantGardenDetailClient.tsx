@@ -7,6 +7,7 @@ import { useApp } from "@/lib/context/AppContext";
 import { InquiryModal } from "@/components/ui/InquiryModal";
 import {
   explainCareSchedule,
+  formatDate,
   PotMaterial,
   Placement,
   POT_MATERIAL_FACTORS,
@@ -74,7 +75,7 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
   const [editNotes, setEditNotes] = useState(plant.notes || "");
 
   // 30-Day Calendar State
-  const todayStr = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const todayStr = useMemo(() => formatDate(new Date()), []);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(todayStr);
 
   // Live recalculation based on edit form values
@@ -275,12 +276,12 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
 
     for (let step = 1; step <= 10; step++) {
       const projDate = new Date(startDue.getTime() + step * cycleInterval * 24 * 60 * 60 * 1000);
-      projectedWaterDates.add(projDate.toISOString().split("T")[0]);
+      projectedWaterDates.add(formatDate(projDate));
     }
 
     for (let i = 0; i < 30; i++) {
       const d = new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000);
-      const dateStr = d.toISOString().split("T")[0];
+      const dateStr = formatDate(d);
       const dayNumber = d.getDate();
       const monthNumber = d.getMonth() + 1;
 

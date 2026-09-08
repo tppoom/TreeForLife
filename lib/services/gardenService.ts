@@ -8,6 +8,7 @@ import {
   generateNextTaskDue,
   calculateSnoozeDueDate,
   checkAdaptiveIntervalSuggestion,
+  formatDate,
   PotMaterial,
   Placement,
 } from "@/lib/care/scheduler";
@@ -98,7 +99,7 @@ export async function getUserPlants(userId?: string | null, guestToken?: string 
     }
   }
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = formatDate(new Date());
   const today = new Date(todayStr);
 
   const result = plants.map((plant) => {

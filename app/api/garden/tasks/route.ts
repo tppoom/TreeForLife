@@ -121,14 +121,30 @@ export async function POST(req: Request) {
 
     // Support batch completion if batch is true and tasks array is provided
     if (body.batch && Array.isArray(body.tasks)) {
-      const results = [];
+      const succeeded: unknown[] = [];
+      const failed: { item: unknown; error: string }[] = [];
+
       for (const item of body.tasks) {
         if (item.userPlantId && item.taskId && item.action) {
-          const res = await recordTaskAction(item);
-          results.push(res);
+          try {
+            const res = await recordTaskAction(item);
+            succeeded.push(res);
+          } catch (itemErr: unknown) {
+            const message = itemErr instanceof Error ? itemErr.message : "Task action failed";
+            failed.push({ item, error: message });
+          }
+        } else {
+          failed.push({ item, error: "Missing required fields" });
         }
       }
-      return NextResponse.json({ success: true, count: results.length, results });
+
+      return NextResponse.json({
+        success: true,
+        count: succeeded.length,
+        results: succeeded,
+        succeeded,
+        failed,
+      });
     }
 
     const singleInput: TaskActionInput = body;

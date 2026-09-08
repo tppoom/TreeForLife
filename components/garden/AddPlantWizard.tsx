@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useApp } from "@/lib/context/AppContext";
 import {
   explainCareSchedule,
+  formatDate,
   PotMaterial,
   Placement,
   POT_MATERIAL_FACTORS,
@@ -70,7 +71,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
   // Step 2: Nickname, Acquisition Date, Source, Notes
   const [nickname, setNickname] = useState("");
   const [acquiredAt, setAcquiredAt] = useState(() => {
-    return new Date().toISOString().split("T")[0];
+    return formatDate(new Date());
   });
   const [acquiredFrom, setAcquiredFrom] = useState<
     "shop" | "elsewhere" | "gift" | "propagated"

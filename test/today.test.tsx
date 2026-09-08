@@ -379,6 +379,55 @@ describe("Task 9: Today's Tasks Dashboard Integration Tests", () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.count).toBe(1);
+      expect(data.succeeded).toHaveLength(1);
+      expect(data.failed).toHaveLength(0);
+    });
+
+    it("POST /api/garden/tasks batch handles failing items safely without aborting succeeding items", async () => {
+      const db = await getDb();
+      const resilientGuestToken = `test-resilient-${Date.now()}`;
+      const plant = await addUserPlant({
+        guestToken: resilientGuestToken,
+        speciesId: testSpeciesId,
+        nickname: "ต้นไม้ทดสอบกลุ่มทนทาน",
+        acquiredAt: "2026-09-01",
+        potSizeInch: 6,
+        potMaterial: "plastic",
+        placement: "indoor_window",
+      });
+
+      const [validTask] = await db
+        .select()
+        .from(careTasks)
+        .where(and(eq(careTasks.userPlantId, plant.id), eq(careTasks.status, "pending")));
+
+      const req = new Request("http://localhost/api/garden/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          batch: true,
+          tasks: [
+            {
+              userPlantId: plant.id,
+              taskId: "00000000-0000-0000-0000-000000000999",
+              action: "complete",
+            },
+            {
+              userPlantId: plant.id,
+              taskId: validTask.id,
+              action: "complete",
+            },
+          ],
+        }),
+      });
+
+      const res = await postTasksRoute(req);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
+      expect(data.succeeded).toHaveLength(1);
+      expect(data.failed).toHaveLength(1);
+      expect(data.failed[0].error).toBe("Task not found");
     });
   });
 });

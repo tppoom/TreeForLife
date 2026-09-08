@@ -8,7 +8,7 @@ import {
 import { getSearchMisses } from "@/lib/services/adminService";
 import sitemap from "@/app/sitemap";
 import robots from "@/app/robots";
-import { generateMetadata as generatePlantMetadata } from "@/app/plants/[slug]/page";
+import PlantDetailPage, { generateMetadata as generatePlantMetadata } from "@/app/plants/[slug]/page";
 import HomePage from "@/app/page";
 import SearchPage from "@/app/search/page";
 
@@ -209,6 +209,18 @@ describe("Task 6: Public Catalog, Faceted Search & Plant Detail Integration", ()
       expect(meta.title).toContain("มอนสเตอร่าด่าง อัลโบ");
       expect(meta.openGraph?.title).toContain("มอนสเตอร่าด่าง อัลโบ");
       expect(meta.openGraph?.siteName).toBe("TreeForLife");
+    });
+
+    it("renders PlantDetailPage with properly escaped JSON-LD script tag", async () => {
+      const page = await PlantDetailPage({
+        params: Promise.resolve({ slug: "monstera-albo-variegata" }),
+      });
+      expect(page).toBeDefined();
+      const children = (page as any).props.children;
+      const scriptElement = children[0];
+      expect(scriptElement.type).toBe("script");
+      expect(scriptElement.props.type).toBe("application/ld+json");
+      expect(scriptElement.props.dangerouslySetInnerHTML.__html).not.toContain("<");
     });
   });
 

@@ -363,6 +363,7 @@ export function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center justify-between px-3 py-3 rounded-xl text-base font-medium min-h-[48px] ${
                     isActive
                       ? "bg-forest-100 dark:bg-forest-900/80 text-forest-900 dark:text-sand-50 font-semibold"

@@ -108,7 +108,9 @@ export default async function PlantDetailPage({ params }: PlantDetailPageProps) 
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLdData).replace(/</g, "\\u003c"),
+        }}
       />
       <PlantDetailClient plant={plant} similarSpecies={similarSpecies} />
     </>
