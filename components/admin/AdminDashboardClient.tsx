@@ -21,7 +21,7 @@ import {
   Inbox,
   UserCheck,
 } from "lucide-react";
-import { formatLineMessage, type InquiryIntent } from "@/lib/services/inquiryService";
+import { formatLineMessage, type InquiryIntent } from "@/lib/line/formatters";
 
 export interface AdminSpeciesItem {
   id: string;
