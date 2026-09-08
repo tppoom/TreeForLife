@@ -104,7 +104,8 @@ CREATE TABLE IF NOT EXISTS care_tasks (
   snooze_count INTEGER NOT NULL DEFAULT 0,
   done_at TIMESTAMPTZ,
   notified_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT care_tasks_plant_type_due_unique UNIQUE (user_plant_id, type, due_date)
 );
 
 CREATE TABLE IF NOT EXISTS care_logs (

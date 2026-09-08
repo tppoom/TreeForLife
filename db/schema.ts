@@ -1,4 +1,17 @@
-import { pgTable, text, timestamp, boolean, integer, numeric, uuid, jsonb, date, pgEnum } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+  numeric,
+  uuid,
+  jsonb,
+  date,
+  pgEnum,
+  unique,
+} from "drizzle-orm/pg-core";
+import { relations, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
 
 // Enums
 export const roleEnum = pgEnum("role", ["customer", "staff", "admin"]);
@@ -14,6 +27,8 @@ export const acquiredFromEnum = pgEnum("acquired_from", ["shop", "elsewhere", "g
 export const taskTypeEnum = pgEnum("task_type", ["water", "fertilize", "repot", "prune", "pest_check"]);
 export const taskStatusEnum = pgEnum("task_status", ["pending", "done", "skipped", "snoozed"]);
 export const inquiryIntentEnum = pgEnum("inquiry_intent", ["price", "availability", "care_help", "design_quote"]);
+export const problemSeverityEnum = pgEnum("problem_severity", ["low", "medium", "high"]);
+export const careLogSourceEnum = pgEnum("care_log_source", ["app", "line", "backfill"]);
 
 // Users table
 export const users = pgTable("users", {
@@ -128,7 +143,9 @@ export const careTasks = pgTable("care_tasks", {
   doneAt: timestamp("done_at", { withTimezone: true }),
   notifiedAt: timestamp("notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  unique("care_tasks_plant_type_due_unique").on(table.userPlantId, table.type, table.dueDate),
+]);
 
 // Care Logs (Timeline History)
 export const careLogs = pgTable("care_logs", {
@@ -170,3 +187,126 @@ export const searchMisses = pgTable("search_misses", {
   count: integer("count").notNull().default(1),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Relations
+export const usersRelations = relations(users, ({ many }) => ({
+  userPlants: many(userPlants),
+  favorites: many(favorites),
+  inquiries: many(inquiries),
+}));
+
+export const speciesRelations = relations(species, ({ one, many }) => ({
+  media: many(speciesMedia),
+  problems: many(speciesProblems),
+  careTemplate: one(careTemplates, {
+    fields: [species.id],
+    references: [careTemplates.speciesId],
+  }),
+  userPlants: many(userPlants),
+  favorites: many(favorites),
+  inquiries: many(inquiries),
+}));
+
+export const speciesMediaRelations = relations(speciesMedia, ({ one }) => ({
+  species: one(species, {
+    fields: [speciesMedia.speciesId],
+    references: [species.id],
+  }),
+}));
+
+export const speciesProblemsRelations = relations(speciesProblems, ({ one }) => ({
+  species: one(species, {
+    fields: [speciesProblems.speciesId],
+    references: [species.id],
+  }),
+}));
+
+export const careTemplatesRelations = relations(careTemplates, ({ one }) => ({
+  species: one(species, {
+    fields: [careTemplates.speciesId],
+    references: [species.id],
+  }),
+}));
+
+export const userPlantsRelations = relations(userPlants, ({ one, many }) => ({
+  user: one(users, {
+    fields: [userPlants.userId],
+    references: [users.id],
+  }),
+  species: one(species, {
+    fields: [userPlants.speciesId],
+    references: [species.id],
+  }),
+  careTasks: many(careTasks),
+  careLogs: many(careLogs),
+}));
+
+export const careTasksRelations = relations(careTasks, ({ one }) => ({
+  userPlant: one(userPlants, {
+    fields: [careTasks.userPlantId],
+    references: [userPlants.id],
+  }),
+}));
+
+export const careLogsRelations = relations(careLogs, ({ one }) => ({
+  userPlant: one(userPlants, {
+    fields: [careLogs.userPlantId],
+    references: [userPlants.id],
+  }),
+}));
+
+export const favoritesRelations = relations(favorites, ({ one }) => ({
+  user: one(users, {
+    fields: [favorites.userId],
+    references: [users.id],
+  }),
+  species: one(species, {
+    fields: [favorites.speciesId],
+    references: [species.id],
+  }),
+}));
+
+export const inquiriesRelations = relations(inquiries, ({ one }) => ({
+  species: one(species, {
+    fields: [inquiries.speciesId],
+    references: [species.id],
+  }),
+  user: one(users, {
+    fields: [inquiries.userId],
+    references: [users.id],
+  }),
+}));
+
+// Inferred model types
+export type User = InferSelectModel<typeof users>;
+export type NewUser = InferInsertModel<typeof users>;
+
+export type Species = InferSelectModel<typeof species>;
+export type NewSpecies = InferInsertModel<typeof species>;
+
+export type SpeciesMedia = InferSelectModel<typeof speciesMedia>;
+export type NewSpeciesMedia = InferInsertModel<typeof speciesMedia>;
+
+export type SpeciesProblem = InferSelectModel<typeof speciesProblems>;
+export type NewSpeciesProblem = InferInsertModel<typeof speciesProblems>;
+
+export type CareTemplate = InferSelectModel<typeof careTemplates>;
+export type NewCareTemplate = InferInsertModel<typeof careTemplates>;
+
+export type UserPlant = InferSelectModel<typeof userPlants>;
+export type NewUserPlant = InferInsertModel<typeof userPlants>;
+
+export type CareTask = InferSelectModel<typeof careTasks>;
+export type NewCareTask = InferInsertModel<typeof careTasks>;
+
+export type CareLog = InferSelectModel<typeof careLogs>;
+export type NewCareLog = InferInsertModel<typeof careLogs>;
+
+export type Favorite = InferSelectModel<typeof favorites>;
+export type NewFavorite = InferInsertModel<typeof favorites>;
+
+export type Inquiry = InferSelectModel<typeof inquiries>;
+export type NewInquiry = InferInsertModel<typeof inquiries>;
+
+export type SearchMiss = InferSelectModel<typeof searchMisses>;
+export type NewSearchMiss = InferInsertModel<typeof searchMisses>;

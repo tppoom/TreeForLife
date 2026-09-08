@@ -1,54 +1,90 @@
 import { PGlite } from "@electric-sql/pglite";
-import { drizzle } from "drizzle-orm/pglite";
+import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
+import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import * as schema from "@/db/schema";
 import { SCHEMA_DDL } from "./schema-ddl";
 import { SEED_SPECIES } from "./seed-data";
 import path from "path";
 import fs from "fs";
 
-let dbInstance: ReturnType<typeof drizzle<typeof schema>> | null = null;
-let pgliteInstance: PGlite | null = null;
-let isInitialized = false;
+export type DbClient =
+  | ReturnType<typeof drizzlePglite<typeof schema>>
+  | ReturnType<typeof drizzleNodePg<typeof schema>>;
 
-export async function getDb() {
+let dbInstance: DbClient | null = null;
+let pgliteInstance: PGlite | null = null;
+let pgPoolInstance: Pool | null = null;
+let isInitialized = false;
+let initPromise: Promise<DbClient> | null = null;
+
+interface QueryableClient {
+  query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, unknown>[] }>;
+  exec?: (sql: string) => Promise<unknown>;
+}
+
+export async function getDb(): Promise<DbClient> {
   if (dbInstance && isInitialized) {
     return dbInstance;
   }
 
-  // Ensure data directory exists for local persistence
-  const dataDir = path.join(process.cwd(), ".data", "pglite");
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
+  if (initPromise) {
+    return initPromise;
   }
 
-  if (!pgliteInstance) {
-    pgliteInstance = new PGlite(dataDir);
-    await pgliteInstance.waitReady;
-  }
+  initPromise = (async () => {
+    const databaseUrl = process.env.DATABASE_URL;
 
-  dbInstance = drizzle(pgliteInstance, { schema });
+    if (databaseUrl) {
+      if (!pgPoolInstance) {
+        pgPoolInstance = new Pool({
+          connectionString: databaseUrl,
+          ssl: databaseUrl.includes("localhost") || databaseUrl.includes("127.0.0.1")
+            ? false
+            : { rejectUnauthorized: false },
+        });
+      }
+      dbInstance = drizzleNodePg(pgPoolInstance, { schema });
+      await initDatabase(pgPoolInstance);
+    } else {
+      const dataDir = path.join(process.cwd(), ".data", "pglite");
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
 
-  if (!isInitialized) {
-    await initDatabase(pgliteInstance);
+      if (!pgliteInstance) {
+        pgliteInstance = new PGlite(dataDir);
+        await pgliteInstance.waitReady;
+      }
+
+      dbInstance = drizzlePglite(pgliteInstance, { schema });
+      await initDatabase(pgliteInstance);
+    }
+
     isInitialized = true;
-  }
+    return dbInstance;
+  })();
 
-  return dbInstance;
+  return initPromise;
 }
 
-async function initDatabase(client: PGlite) {
+export async function initDatabase(client: QueryableClient) {
   // Execute DDL schema
-  await client.exec(SCHEMA_DDL);
+  if (client.exec) {
+    await client.exec(SCHEMA_DDL);
+  } else {
+    await client.query(SCHEMA_DDL);
+  }
 
   // Check if species exist
-  const existingRes = await client.query<{ count: string | number }>("SELECT COUNT(*) as count FROM species;");
+  const existingRes = await client.query("SELECT COUNT(*) as count FROM species;");
   const count = Number(existingRes.rows[0]?.count || 0);
 
   if (count === 0) {
     console.log("Seeding initial 30 curated Thai plant species into TreeForLife database...");
 
     for (const item of SEED_SPECIES) {
-      const speciesRes = await client.query<{ id: string }>(
+      const speciesRes = await client.query(
         `INSERT INTO species (
           slug, name_th, name_en, name_sci, aliases, family, summary,
           light, water_need, placement, difficulty, pet_safe, mature_size,
@@ -71,17 +107,17 @@ async function initDatabase(client: PGlite) {
           item.difficulty,
           item.petSafe,
           item.matureSize,
-          item.matureHeightCm,
+          item.matureHeightCm ?? null,
           item.growthRate,
           item.soilMix,
-          item.fertilizerNote,
-          item.propagation,
+          item.fertilizerNote ?? null,
+          item.propagation ?? null,
           item.shopNote,
           item.stockStatus,
         ]
       );
 
-      const speciesId = speciesRes.rows[0]?.id;
+      const speciesId = speciesRes.rows[0]?.id as string | undefined;
       if (!speciesId) continue;
 
       // Insert media
@@ -106,12 +142,12 @@ async function initDatabase(client: PGlite) {
           item.careTemplate.waterDaysHot,
           item.careTemplate.waterDaysRainy,
           item.careTemplate.waterDaysCool,
-          item.careTemplate.fertilizeDays,
-          JSON.stringify(item.careTemplate.fertilizePauseMonths),
-          item.careTemplate.repotMonths,
-          item.careTemplate.pruneDays || null,
-          item.careTemplate.pestCheckDays,
-          item.careTemplate.notesTh,
+          item.careTemplate.fertilizeDays ?? null,
+          JSON.stringify(item.careTemplate.fertilizePauseMonths || []),
+          item.careTemplate.repotMonths ?? null,
+          item.careTemplate.pruneDays ?? null,
+          item.careTemplate.pestCheckDays ?? 14,
+          item.careTemplate.notesTh ?? null,
         ]
       );
 
@@ -136,3 +172,13 @@ async function initDatabase(client: PGlite) {
     console.log("Database initialized and seeded successfully with 30 species!");
   }
 }
+
+// Convenient db export that proxies to initialized instance
+export const db = new Proxy({} as DbClient, {
+  get(_target, prop) {
+    if (!dbInstance) {
+      throw new Error("Database not initialized yet. Await getDb() before accessing db properties.");
+    }
+    return (dbInstance as unknown as Record<string | symbol, unknown>)[prop];
+  },
+});
