@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useApp } from "@/lib/context/AppContext";
-import { LineInquiryModal } from "@/components/inquiry/LineInquiryModal";
+import { InquiryModal } from "@/components/ui/InquiryModal";
 import type { getSpeciesBySlug, getSimilarSpecies } from "@/lib/services/speciesService";
 
 type PlantData = NonNullable<Awaited<ReturnType<typeof getSpeciesBySlug>>>;
@@ -760,11 +760,15 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
       </div>
 
       {/* LINE Inquiry Modal */}
-      <LineInquiryModal
+      <InquiryModal
         isOpen={inquiryModalOpen}
         onClose={() => setInquiryModalOpen(false)}
-        speciesId={plant.id}
-        speciesNameTh={plant.nameTh}
+        species={{
+          id: plant.id,
+          nameTh: plant.nameTh,
+          nameEn: plant.nameEn,
+          slug: plant.slug,
+        }}
         sourcePage={`/plants/${plant.slug}`}
         defaultIntent="care_help"
       />

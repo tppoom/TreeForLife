@@ -16,8 +16,23 @@ import {
   X,
   ChevronDown,
   UserCheck,
+  MessageCircle,
 } from "lucide-react";
 import { useApp, type UserRole } from "@/lib/context/AppContext";
+import {
+  InquiryModal,
+  type InquiryIntent,
+  type InquiryModalSpecies,
+} from "@/components/ui/InquiryModal";
+
+export function triggerInquiry(options?: {
+  species?: InquiryModalSpecies;
+  intent?: InquiryIntent;
+}) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("open-tfl-inquiry", { detail: options }));
+  }
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -35,6 +50,33 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
   const roleDropdownRef = useRef<HTMLDivElement>(null);
+
+  // LINE Inquiry Modal state
+  const [inquiryOpen, setInquiryOpen] = useState(false);
+  const [inquirySpecies, setInquirySpecies] = useState<InquiryModalSpecies | null>(null);
+  const [inquiryIntent, setInquiryIntent] = useState<InquiryIntent | undefined>(undefined);
+
+  // Listen to global trigger event
+  useEffect(() => {
+    const handleGlobalInquiry = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        species?: InquiryModalSpecies;
+        intent?: InquiryIntent;
+      }>;
+      if (customEvent.detail) {
+        if (customEvent.detail.species) {
+          setInquirySpecies(customEvent.detail.species);
+        }
+        if (customEvent.detail.intent) {
+          setInquiryIntent(customEvent.detail.intent);
+        }
+      }
+      setInquiryOpen(true);
+    };
+
+    window.addEventListener("open-tfl-inquiry", handleGlobalInquiry);
+    return () => window.removeEventListener("open-tfl-inquiry", handleGlobalInquiry);
+  }, []);
 
   // Close role dropdown when clicking outside
   useEffect(() => {
@@ -174,8 +216,25 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Desktop Right Actions: Role Selector, Locale, Theme */}
+          {/* Desktop Right Actions: Inquiry, Role Selector, Locale, Theme */}
           <div className="hidden md:flex items-center gap-2 lg:gap-3">
+            {/* LINE OA Inquiry Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setInquirySpecies(null);
+                setInquiryIntent(undefined);
+                setInquiryOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#06C755]/40 bg-[#06C755]/10 text-emerald-800 dark:text-emerald-300 hover:bg-[#06C755]/20 transition text-xs font-semibold min-h-[44px]"
+              aria-label={t("inquiry.chat_line_title")}
+              title={t("inquiry.chat_line_title")}
+            >
+              <MessageCircle className="w-4 h-4 text-[#06C755]" />
+              <span className="hidden xl:inline">{t("inquiry.ask_shop")}</span>
+              <span className="xl:hidden">LINE</span>
+            </button>
+
             {/* Demo Role Switcher Dropdown */}
             <div className="relative" ref={roleDropdownRef}>
               <button
@@ -324,6 +383,28 @@ export function Navbar() {
             })}
           </div>
 
+          {/* LINE Inquiry Button in Mobile Drawer */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setInquirySpecies(null);
+                setInquiryIntent(undefined);
+                setInquiryOpen(true);
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium min-h-[48px] bg-[#06C755]/10 border border-[#06C755]/30 text-emerald-900 dark:text-emerald-200 hover:bg-[#06C755]/20 transition"
+            >
+              <div className="flex items-center gap-3">
+                <MessageCircle className="w-5 h-5 text-[#06C755]" />
+                <span className="font-semibold">{t("inquiry.chat_line_title")}</span>
+              </div>
+              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-[#06C755]/20 text-emerald-800 dark:text-emerald-300">
+                LINE OA
+              </span>
+            </button>
+          </div>
+
           {/* Role Switcher in Mobile Menu */}
           <div className="pt-3 border-t border-sand-200 dark:border-forest-800">
             <div className="text-xs font-semibold text-sand-600 dark:text-sand-400 uppercase tracking-wider mb-2">
@@ -355,6 +436,15 @@ export function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Global LINE Inquiry Modal */}
+      <InquiryModal
+        isOpen={inquiryOpen}
+        onClose={() => setInquiryOpen(false)}
+        species={inquirySpecies}
+        intent={inquiryIntent}
+        sourcePage={pathname}
+      />
     </header>
   );
 }

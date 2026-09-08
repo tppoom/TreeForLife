@@ -20,7 +20,7 @@ import {
   Sprout,
 } from "lucide-react";
 import { useApp } from "@/lib/context/AppContext";
-import { LineInquiryModal } from "@/components/inquiry/LineInquiryModal";
+import { InquiryModal } from "@/components/ui/InquiryModal";
 import type { getAllSpecies } from "@/lib/services/speciesService";
 
 export interface FilterState {
@@ -567,7 +567,7 @@ export function SearchClient({ initialSpecies, initialFilters }: SearchClientPro
       </div>
 
       {/* LINE Inquiry Modal for zero-results or general catalog inquiries */}
-      <LineInquiryModal
+      <InquiryModal
         isOpen={inquiryModalOpen}
         onClose={() => setInquiryModalOpen(false)}
         sourcePage="/search"

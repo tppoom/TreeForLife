@@ -86,6 +86,7 @@ export async function createInquiry(input: CreateInquiryInput) {
     inquiry: row,
     refCode,
     message,
+    messageText: message,
     lineUrl,
     lineOaId: LINE_OA_ID,
   };
