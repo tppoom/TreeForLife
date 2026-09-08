@@ -342,6 +342,18 @@ describe("Care Schedule Engine", () => {
     it("should handle year boundaries correctly", () => {
       expect(generateNextTaskDue("2026-12-28", 7)).toBe("2027-01-04");
     });
+
+    it("should handle ISO 8601 timestamp strings with time components without producing NaN", () => {
+      const result = generateNextTaskDue("2026-03-01T14:00:00.000Z", 5);
+      expect(result).toBe("2026-03-06");
+      expect(result).not.toContain("NaN");
+
+      const snoozeResult = calculateSnoozeDueDate("2026-03-01T14:00:00.000Z", 0);
+      expect(snoozeResult.nextDueDate).toBe("2026-03-02");
+      expect(snoozeResult.nextDueDate).not.toContain("NaN");
+
+      expect(getThaiSeason("2026-03-01T14:00:00.000Z")).toBe("hot");
+    });
   });
 
   describe("6. Task Rollover Transitions", () => {

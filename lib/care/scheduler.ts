@@ -260,10 +260,12 @@ export function getThaiSeason(dateInput?: Date | string | number | null): ThaiSe
     return getSeasonFromMonth(month);
   }
 
-  if (typeof dateInput === "string" && /^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
-    const parts = dateInput.split("-");
-    const month = parseInt(parts[1], 10);
-    return getSeasonFromMonth(month);
+  if (typeof dateInput === "string") {
+    const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const month = parseInt(match[2], 10);
+      return getSeasonFromMonth(month);
+    }
   }
 
   const d = new Date(dateInput);
@@ -747,9 +749,14 @@ export function parseDateSafe(dateInput: Date | string): Date {
   if (dateInput instanceof Date) {
     return new Date(dateInput.getTime());
   }
-  if (typeof dateInput === "string" && /^\d{4}-\d{2}-\d{2}/.test(dateInput)) {
-    const [y, m, d] = dateInput.split("-").map(Number);
-    return new Date(y, m - 1, d);
+  if (typeof dateInput === "string") {
+    const match = dateInput.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const y = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const d = parseInt(match[3], 10);
+      return new Date(y, m - 1, d);
+    }
   }
   return new Date(dateInput);
 }
