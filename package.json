@@ -5,11 +5,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:standalone": "OUTPUT_STANDALONE=true next build",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "db:setup": "npx tsx scripts/db-setup.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.14",

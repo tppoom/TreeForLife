@@ -132,8 +132,11 @@ test-i18n: ## Run Bilingual Translation Dictionary completeness tests
 	@npx vitest run lib/i18n/translations.test.ts
 
 # ------------------------------------------------------------------------------
-# 5. DATABASE UTILITIES (PGLITE)
+# 5. DATABASE UTILITIES (PGLITE & POSTGRESQL)
 # ------------------------------------------------------------------------------
+
+db-setup: ## Setup and verify database (runs migrations and seeds 30 species)
+	@npm run db:setup
 
 db-status: ## Check row counts across all embedded PGlite tables
 	@node -e ' \

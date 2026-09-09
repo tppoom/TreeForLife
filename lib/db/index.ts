@@ -43,6 +43,9 @@ export async function getDb(): Promise<DbClient> {
             ssl: databaseUrl.includes("localhost") || databaseUrl.includes("127.0.0.1")
               ? false
               : { rejectUnauthorized: false },
+            max: process.env.DB_POOL_MAX ? parseInt(process.env.DB_POOL_MAX, 10) : 10,
+            idleTimeoutMillis: 30000,
+            connectionTimeoutMillis: 10000,
           });
         }
         dbInstance = drizzleNodePg(pgPoolInstance, { schema });
@@ -91,12 +94,22 @@ export async function initDatabase(client: QueryableClient) {
     await client.query(SCHEMA_DDL);
   }
 
-  // Check if species exist
-  const existingRes = await client.query("SELECT COUNT(*) as count FROM species;");
-  const count = Number(existingRes.rows[0]?.count || 0);
+  // Use advisory lock in Postgres to prevent multi-lambda race during auto-seeding
+  let hasLock = false;
+  try {
+    const lockRes = await client.query("SELECT pg_try_advisory_lock(743326) as acquired;");
+    hasLock = lockRes.rows[0]?.acquired === true || lockRes.rows[0]?.acquired === "t";
+  } catch {
+    hasLock = true;
+  }
 
-  if (count === 0) {
-    console.log("Seeding initial 30 curated Thai plant species into TreeForLife database...");
+  try {
+    // Check if species exist
+    const existingRes = await client.query("SELECT COUNT(*) as count FROM species;");
+    const count = Number(existingRes.rows[0]?.count || 0);
+
+    if (count === 0 && hasLock) {
+      console.log("Seeding initial 30 curated Thai plant species into TreeForLife database...");
 
     await client.query("BEGIN;");
     try {
@@ -195,6 +208,15 @@ export async function initDatabase(client: QueryableClient) {
       throw seedErr;
     }
   }
+} finally {
+  if (hasLock) {
+    try {
+      await client.query("SELECT pg_advisory_unlock(743326);");
+    } catch {
+      // PGlite or already unlocked
+    }
+  }
+}
 }
 
 // Convenient db export that proxies to initialized instance
