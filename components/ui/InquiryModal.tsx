@@ -311,11 +311,11 @@ export function InquiryModal({
                     <div className="w-2.5 h-2.5 rounded-full bg-forest-500 flex-shrink-0" />
                     <div className="truncate">
                       <span className="text-sm font-semibold text-forest-900 dark:text-sand-100">
-                        {targetSpeciesNameTh}
+                        {locale === "th" ? (targetSpeciesNameTh || targetSpeciesNameEn) : (targetSpeciesNameEn || targetSpeciesNameTh)}
                       </span>
-                      {targetSpeciesNameEn && (
+                      {(targetSpeciesNameEn && targetSpeciesNameTh) && (
                         <span className="text-xs text-sand-600 dark:text-sand-400 ml-2 italic">
-                          ({targetSpeciesNameEn})
+                          ({locale === "th" ? targetSpeciesNameEn : targetSpeciesNameTh})
                         </span>
                       )}
                     </div>

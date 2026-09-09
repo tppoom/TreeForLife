@@ -350,17 +350,17 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <h4 className="text-sm font-semibold text-forest-900 dark:text-sand-100 truncate">
-                              {sp.nameTh}
+                              {locale === "th" ? sp.nameTh : sp.nameEn}
                             </h4>
                             {isSelected && (
                               <CheckCircle2 className="w-4 h-4 text-forest-700 dark:text-forest-400 shrink-0" />
                             )}
                           </div>
                           <p className="text-xs text-sand-500 dark:text-sand-400 truncate">
-                            {sp.nameEn}
+                            {locale === "th" ? sp.nameEn : sp.nameSci}
                           </p>
                           <span className="text-[11px] text-forest-700 dark:text-forest-300 mt-1 inline-block">
-                            💧 {sp.careTemplate.waterDaysRainy} วัน (ฤดูฝน)
+                            💧 {sp.careTemplate.waterDaysRainy} {locale === "th" ? "วัน (ฤดูฝน)" : "days (Rainy season)"}
                           </span>
                         </div>
                       </div>
@@ -782,10 +782,10 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest-700/80 text-sand-100 text-xs font-semibold backdrop-blur-sm self-start sm:self-auto">
                     <span>
                       {currentSeason === "hot"
-                        ? "☀️ ฤดูร้อน (มี.ค.–พ.ค.)"
+                        ? (locale === "th" ? "☀️ ฤดูร้อน (มี.ค.–พ.ค.)" : "☀️ Hot Season (Mar–May)")
                         : currentSeason === "rainy"
-                        ? "🌧️ ฤดูฝน (มิ.ย.–ต.ค.)"
-                        : "❄️ ฤดูหนาว/แล้ง (พ.ย.–ก.พ.)"}
+                        ? (locale === "th" ? "🌧️ ฤดูฝน (มิ.ย.–ต.ค.)" : "🌧️ Rainy Season (Jun–Oct)")
+                        : (locale === "th" ? "❄️ ฤดูหนาว/แล้ง (พ.ย.–ก.พ.)" : "❄️ Cool Season (Nov–Feb)")}
                     </span>
                   </div>
                 </div>
@@ -797,7 +797,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                       {locale === "th" ? "รอบพื้นฐาน" : "Base Interval"}
                     </span>
                     <span className="text-lg font-bold text-sand-100">
-                      {calculationPreview.baseDays} วัน
+                      {calculationPreview.baseDays} {locale === "th" ? "วัน" : "days"}
                     </span>
                   </div>
                   <div className="bg-forest-700/40 rounded-2xl p-3 border border-forest-600/40">
@@ -855,7 +855,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                       {locale === "th" ? "รอบรดน้ำแนะนำ" : "Recommended"}
                     </span>
                     <span className="text-3xl sm:text-4xl font-serif font-bold text-sand-50 block mt-1">
-                      ทุก {calculationPreview.finalIntervalDays} วัน
+                      {locale === "th" ? `ทุก ${calculationPreview.finalIntervalDays} วัน` : `Every ${calculationPreview.finalIntervalDays} days`}
                     </span>
                   </div>
                 </div>

@@ -364,7 +364,7 @@ export function GardenListClient() {
                         {badge.type === "overdue" && (
                           <div
                             role="status"
-                            aria-label={`สถานะเลยกำหนด ${Math.abs(badge.days)} วัน`}
+                            aria-label={locale === "th" ? `สถานะเลยกำหนด ${Math.abs(badge.days)} วัน` : `Overdue ${Math.abs(badge.days)} days`}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-700 text-rose-800 dark:text-rose-200 text-xs font-bold shadow-sm backdrop-blur-sm"
                           >
                             <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
@@ -379,7 +379,7 @@ export function GardenListClient() {
                         {badge.type === "today" && (
                           <div
                             role="status"
-                            aria-label="สถานะต้องรดน้ำวันนี้"
+                            aria-label={locale === "th" ? "สถานะต้องรดน้ำวันนี้" : "Water today"}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-xs font-bold shadow-sm backdrop-blur-sm"
                           >
                             <span
@@ -393,7 +393,7 @@ export function GardenListClient() {
                         {badge.type === "upcoming" && (
                           <div
                             role="status"
-                            aria-label={`สถานะรดน้ำอีก ${badge.days} วัน`}
+                            aria-label={locale === "th" ? `สถานะรดน้ำอีก ${badge.days} วัน` : `Water in ${badge.days} days`}
                             className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200 text-xs font-medium shadow-sm backdrop-blur-sm"
                           >
                             <span
@@ -428,8 +428,14 @@ export function GardenListClient() {
                               {plant.nickname}
                             </h3>
                             <p className="text-xs text-sand-500 dark:text-sand-400">
-                              {plant.speciesNameTh || plant.customSpeciesName || plant.speciesNameEn}
-                              {plant.speciesNameEn && plant.speciesNameTh ? ` (${plant.speciesNameEn})` : ""}
+                              {locale === "th" ? (
+                                <>
+                                  {plant.speciesNameTh || plant.customSpeciesName || plant.speciesNameEn}
+                                  {plant.speciesNameEn && plant.speciesNameTh ? ` (${plant.speciesNameEn})` : ""}
+                                </>
+                              ) : (
+                                plant.speciesNameEn || plant.customSpeciesName || plant.speciesNameTh
+                              )}
                             </p>
                           </div>
                         </div>

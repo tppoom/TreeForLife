@@ -34,32 +34,62 @@ export interface Toast {
   duration?: number;
 }
 
-export const DEMO_USERS: Record<UserRole, DemoUser> = {
-  guest: {
-    id: null,
-    displayName: "ผู้เยี่ยมชม (Guest)",
-    role: "guest",
-    email: null,
+export const DEMO_USERS_BY_LOCALE: Record<Locale, Record<UserRole, DemoUser>> = {
+  th: {
+    guest: {
+      id: null,
+      displayName: "ผู้เยี่ยมชม (Guest)",
+      role: "guest",
+      email: null,
+    },
+    customer: {
+      id: "11111111-1111-4111-a111-111111111111",
+      displayName: "คุณนุ่น (Customer)",
+      role: "customer",
+      email: "noon@example.com",
+    },
+    staff: {
+      id: "22222222-2222-4222-a222-222222222222",
+      displayName: "สมชาย พนักงานร้าน (Staff)",
+      role: "staff",
+      email: "staff@treeforlife.shop",
+    },
+    admin: {
+      id: "33333333-3333-4333-a333-333333333333",
+      displayName: "เจ้าของร้าน (Admin)",
+      role: "admin",
+      email: "admin@treeforlife.shop",
+    },
   },
-  customer: {
-    id: "11111111-1111-4111-a111-111111111111",
-    displayName: "คุณนุ่น (Customer)",
-    role: "customer",
-    email: "noon@example.com",
-  },
-  staff: {
-    id: "22222222-2222-4222-a222-222222222222",
-    displayName: "สมชาย พนักงานร้าน (Staff)",
-    role: "staff",
-    email: "staff@treeforlife.shop",
-  },
-  admin: {
-    id: "33333333-3333-4333-a333-333333333333",
-    displayName: "เจ้าของร้าน (Admin)",
-    role: "admin",
-    email: "admin@treeforlife.shop",
+  en: {
+    guest: {
+      id: null,
+      displayName: "Guest",
+      role: "guest",
+      email: null,
+    },
+    customer: {
+      id: "11111111-1111-4111-a111-111111111111",
+      displayName: "Noon (Customer)",
+      role: "customer",
+      email: "noon@example.com",
+    },
+    staff: {
+      id: "22222222-2222-4222-a222-222222222222",
+      displayName: "Somchai (Shop Staff)",
+      role: "staff",
+      email: "staff@treeforlife.shop",
+    },
+    admin: {
+      id: "33333333-3333-4333-a333-333333333333",
+      displayName: "Shop Owner (Admin)",
+      role: "admin",
+      email: "admin@treeforlife.shop",
+    },
   },
 };
+
+export const DEMO_USERS: Record<UserRole, DemoUser> = DEMO_USERS_BY_LOCALE.th;
 
 export interface AppContextValue {
   // Locale & i18n
@@ -110,7 +140,9 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
 
   // 4. Role & User state
   const [role, setRoleState] = useState<UserRole>("guest");
-  const [user, setUser] = useState<DemoUser>(DEMO_USERS.guest);
+  const user = useMemo<DemoUser>(() => {
+    return DEMO_USERS_BY_LOCALE[locale]?.[role] || DEMO_USERS_BY_LOCALE.th[role] || DEMO_USERS.guest;
+  }, [locale, role]);
 
   // 5. Toasts state
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -154,9 +186,6 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
       const savedRole = localStorage.getItem("tfl_demo_role") as UserRole | null;
       if (savedRole && DEMO_USERS[savedRole]) {
         setRoleState(savedRole);
-        setUser(DEMO_USERS[savedRole]);
-      } else {
-        setUser(DEMO_USERS.guest);
       }
     } catch {
       // Safe fallback if localStorage is blocked (private browsing/iframes)
@@ -221,8 +250,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     (newRole: UserRole) => {
       const previousRole = role;
       setRoleState(newRole);
-      const targetUser = DEMO_USERS[newRole] || DEMO_USERS.guest;
-      setUser(targetUser);
+      const targetUser = DEMO_USERS_BY_LOCALE[locale]?.[newRole] || DEMO_USERS[newRole] || DEMO_USERS.guest;
 
       try {
         localStorage.setItem("tfl_demo_role", newRole);

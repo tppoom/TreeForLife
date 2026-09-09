@@ -29,6 +29,7 @@ import {
 import { useApp } from "@/lib/context/AppContext";
 import { InquiryModal } from "@/components/ui/InquiryModal";
 import type { getSpeciesBySlug, getSimilarSpecies } from "@/lib/services/speciesService";
+import { getLocalizedSpeciesData } from "@/lib/i18n/species-en";
 
 type PlantData = NonNullable<Awaited<ReturnType<typeof getSpeciesBySlug>>>;
 type SimilarPlant = Awaited<ReturnType<typeof getSimilarSpecies>>[number];
@@ -43,6 +44,16 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
   const [expandedProblems, setExpandedProblems] = useState<Record<string, boolean>>({});
+
+  const localized = getLocalizedSpeciesData(plant.slug, locale, {
+    summary: plant.summary,
+    shopNote: plant.shopNote,
+    soilMix: plant.soilMix,
+    fertilizerNote: plant.fertilizerNote,
+    propagation: plant.propagation,
+    notes: plant.careTemplate?.notesTh,
+    problems: plant.problems,
+  });
 
   const toggleProblem = (id: string) => {
     setExpandedProblems((prev) => ({
@@ -98,7 +109,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
           </Link>
           <span>/</span>
           <span className="text-forest-900 dark:text-sand-100 font-medium truncate max-w-xs">
-            {plant.nameTh}
+            {locale === "th" ? plant.nameTh : plant.nameEn}
           </span>
         </nav>
       </div>
@@ -112,7 +123,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
             <div className="relative aspect-square sm:aspect-[4/3] rounded-3xl overflow-hidden bg-sand-100 dark:bg-forest-950 border border-sand-200 dark:border-forest-800 shadow-elevated">
               <img
                 src={currentImage.blobUrl}
-                alt={currentImage.altTh || plant.nameTh}
+                alt={currentImage.altTh || (locale === "th" ? plant.nameTh : plant.nameEn)}
                 className="w-full h-full object-cover transition-transform duration-500"
               />
 
@@ -138,7 +149,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
               <div className="absolute bottom-4 right-4">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium bg-forest-950/80 text-sand-100 backdrop-blur-md shadow-sm">
                   <Camera className="w-3.5 h-3.5 text-gold-300" />
-                  <span>{currentImage.credit || "ถ่ายที่ร้าน"}</span>
+                  <span>{currentImage.credit === "ถ่ายที่ร้าน" || !currentImage.credit ? t("care.taken_at_shop") : currentImage.credit}</span>
                 </span>
               </div>
             </div>
@@ -174,29 +185,37 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
               {/* Botanical Family */}
               <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-forest-600 dark:text-forest-400 mb-2">
                 <Sprout className="w-3.5 h-3.5" />
-                <span>{plant.family}</span>
+                <span>{locale === "th" ? plant.family : (plant.family ? plant.family.split("(")[0].trim() : plant.family)}</span>
               </div>
 
               {/* Main Names */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-forest-950 dark:text-sand-50 tracking-tight leading-tight">
-                {plant.nameTh}
+                {locale === "th" ? plant.nameTh : plant.nameEn}
               </h1>
 
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1">
-                <span className="text-lg sm:text-xl font-medium text-sand-700 dark:text-sand-300">
-                  {plant.nameEn}
-                </span>
-                <span className="text-sm italic font-serif text-sand-500 dark:text-sand-400">
-                  ({plant.nameSci})
-                </span>
+                {locale === "th" ? (
+                  <>
+                    <span className="text-lg sm:text-xl font-medium text-sand-700 dark:text-sand-300">
+                      {plant.nameEn}
+                    </span>
+                    <span className="text-sm italic font-serif text-sand-500 dark:text-sand-400">
+                      ({plant.nameSci})
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-base sm:text-lg italic font-serif text-sand-600 dark:text-sand-300">
+                    {plant.nameSci}
+                  </span>
+                )}
               </div>
             </div>
 
             {/* Aliases Chips */}
-            {plant.aliases && plant.aliases.length > 0 && (
+            {locale === "th" && plant.aliases && plant.aliases.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs text-sand-500 dark:text-sand-400 mr-1">
-                  {locale === "th" ? "ชื่ออื่นๆ:" : "Also known as:"}
+                  ชื่ออื่นๆ:
                 </span>
                 {plant.aliases.map((alias) => (
                   <span
@@ -211,7 +230,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
 
             {/* Summary */}
             <p className="text-sm sm:text-base text-forest-800 dark:text-sand-200 leading-relaxed font-light">
-              {plant.summary}
+              {localized.summary}
             </p>
 
             {/* Prominent Authentic "Shop Note" Box */}
@@ -224,11 +243,11 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
                   <h3 className="font-serif font-bold text-sm text-forest-950 dark:text-sand-50 flex items-center gap-2">
                     <span>{t("care.shop_owner_tip")}</span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-forest-200 dark:bg-forest-800 text-forest-800 dark:text-forest-200 font-sans font-normal">
-                      Authentic Wisdom
+                      {t("care.authentic_wisdom")}
                     </span>
                   </h3>
                   <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed italic">
-                    &quot;{plant.shopNote}&quot;
+                    &quot;{localized.shopNote}&quot;
                   </p>
                 </div>
               </div>
@@ -259,7 +278,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
         {/* 6-Metric Summary Cards Grid */}
         <section className="space-y-4">
           <h2 className="font-serif font-bold text-xl sm:text-2xl text-forest-950 dark:text-sand-50">
-            {locale === "th" ? "คุณสมบัติและสเปกพันธุ์ไม้ (Quick Specs)" : "Species Overview & Specs"}
+            {t("care.quick_specs_title")}
           </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
@@ -378,7 +397,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
                 </span>
                 {plant.matureHeightCm && (
                   <span className="text-[11px] text-sand-500 dark:text-sand-400 block">
-                    ~{plant.matureHeightCm} ซม.
+                    ~{plant.matureHeightCm} {locale === "th" ? "ซม." : "cm"}
                   </span>
                 )}
               </div>
@@ -392,7 +411,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-forest-600 dark:text-forest-400 uppercase tracking-wider">
                 <Calendar className="w-3.5 h-3.5" />
-                <span>Smart Care Schedule</span>
+                <span>{t("care.smart_schedule")}</span>
               </div>
               <h2 className="font-serif font-bold text-2xl sm:text-3xl text-forest-950 dark:text-sand-50">
                 {t("care.care_guide")}
@@ -508,46 +527,46 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
 
             {/* Detailed Care Attributes: Soil Mix, Fertilizer, Propagation, Notes */}
             <div className="space-y-4 pt-2 border-t border-sand-200 dark:border-forest-800">
-              {plant.soilMix && (
+              {localized.soilMix && (
                 <div className="space-y-1">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
                     🌱 {t("care.soil_mix")}
                   </h4>
                   <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
-                    {plant.soilMix}
+                    {localized.soilMix}
                   </p>
                 </div>
               )}
 
-              {plant.fertilizerNote && (
+              {localized.fertilizerNote && (
                 <div className="space-y-1">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
                     💊 {t("care.fertilizer_note")}
                   </h4>
                   <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
-                    {plant.fertilizerNote}
+                    {localized.fertilizerNote}
                   </p>
                 </div>
               )}
 
-              {plant.propagation && (
+              {localized.propagation && (
                 <div className="space-y-1">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
                     ✂️ {t("care.propagation")}
                   </h4>
                   <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
-                    {plant.propagation}
+                    {localized.propagation}
                   </p>
                 </div>
               )}
 
-              {plant.careTemplate.notesTh && (
+              {localized.notes && (
                 <div className="space-y-1">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-sand-400">
                     📝 {locale === "th" ? "คำแนะนำเพิ่มเติม" : "Care Notes"}
                   </h4>
                   <p className="text-xs sm:text-sm text-forest-900 dark:text-sand-200 leading-relaxed bg-sand-50/80 dark:bg-forest-950/50 p-3.5 rounded-xl border border-sand-200 dark:border-forest-800">
-                    {plant.careTemplate.notesTh}
+                    {localized.notes}
                   </p>
                 </div>
               )}
@@ -556,7 +575,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
         )}
 
         {/* Common Problems & Troubleshooting Accordion (species_problems) */}
-        {plant.problems && plant.problems.length > 0 && (
+        {localized.problems && localized.problems.length > 0 && (
           <section className="space-y-4">
             <div className="space-y-1">
               <h2 className="font-serif font-bold text-2xl sm:text-3xl text-forest-950 dark:text-sand-50">
@@ -570,7 +589,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
             </div>
 
             <div className="space-y-3">
-              {plant.problems.map((prob) => {
+              {localized.problems.map((prob) => {
                 const isOpen = expandedProblems[prob.id] ?? true; // Open by default for instant readability
                 return (
                   <div
@@ -594,7 +613,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
                           }`}
                         />
                         <span className="font-serif font-bold text-sm sm:text-base text-forest-950 dark:text-sand-100">
-                          {prob.symptomTh}
+                          {prob.symptom}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -624,7 +643,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
                             🔍 {locale === "th" ? "สาเหตุหลัก:" : "Cause:"}
                           </span>
                           <p className="text-forest-900 dark:text-sand-200 leading-relaxed">
-                            {prob.causeTh}
+                            {prob.cause}
                           </p>
                         </div>
                         <div>
@@ -632,7 +651,7 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
                             🌿 {locale === "th" ? "วิธีแก้ไขและฟื้นฟู:" : "Treatment & Fix:"}
                           </span>
                           <p className="text-forest-900 dark:text-sand-100 leading-relaxed bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
-                            {prob.fixTh}
+                            {prob.fix}
                           </p>
                         </div>
                       </div>
@@ -668,46 +687,51 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {similarSpecies.map((sim) => (
-                <Link
-                  key={sim.id}
-                  href={`/plants/${sim.slug}`}
-                  className="group flex flex-col rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/80 shadow-soft hover:shadow-card hover:-translate-y-1 transition-all overflow-hidden"
-                >
-                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-sand-100 dark:bg-forest-950">
-                    <img
-                      src={sim.primaryImage}
-                      alt={sim.nameTh}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                    <div className="absolute top-2.5 left-2.5">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-700/90 text-white backdrop-blur-md">
-                        {t(`filters.stock_${sim.stockStatus}`)}
-                      </span>
+              {similarSpecies.map((sim) => {
+                const simLocalized = getLocalizedSpeciesData(sim.slug, locale, { summary: sim.summary });
+                return (
+                  <Link
+                    key={sim.id}
+                    href={`/plants/${sim.slug}`}
+                    className="group flex flex-col rounded-2xl border border-sand-200 dark:border-forest-800 bg-white dark:bg-forest-900/80 shadow-soft hover:shadow-card hover:-translate-y-1 transition-all overflow-hidden"
+                  >
+                    <div className="relative aspect-[4/3] w-full overflow-hidden bg-sand-100 dark:bg-forest-950">
+                      <img
+                        src={sim.primaryImage}
+                        alt={locale === "th" ? sim.nameTh : sim.nameEn}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                      />
+                      <div className="absolute top-2.5 left-2.5">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-700/90 text-white backdrop-blur-md">
+                          {t(`filters.stock_${sim.stockStatus}`)}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-4 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h3 className="font-serif font-bold text-sm sm:text-base text-forest-950 dark:text-sand-50 group-hover:text-forest-600 dark:group-hover:text-forest-400 transition line-clamp-1">
-                        {sim.nameTh}
-                      </h3>
-                      <p className="text-xs text-sand-500 dark:text-sand-400 italic line-clamp-1 mb-1">
-                        {sim.nameEn}
-                      </p>
-                      <p className="text-xs text-forest-700 dark:text-sand-300 line-clamp-2 leading-relaxed">
-                        {sim.summary}
-                      </p>
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-serif font-bold text-sm sm:text-base text-forest-950 dark:text-sand-50 group-hover:text-forest-600 dark:group-hover:text-forest-400 transition line-clamp-1">
+                          {locale === "th" ? sim.nameTh : sim.nameEn}
+                        </h3>
+                        {locale === "th" && (
+                          <p className="text-xs text-sand-500 dark:text-sand-400 italic line-clamp-1 mb-1">
+                            {sim.nameEn}
+                          </p>
+                        )}
+                        <p className="text-xs text-forest-700 dark:text-sand-300 line-clamp-2 leading-relaxed">
+                          {simLocalized.summary}
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2 border-t border-sand-100 dark:border-forest-800/80 flex items-center justify-between text-[11px] text-sand-500">
+                        <span>{sim.difficulty}/5 ★</span>
+                        <span className="text-forest-600 dark:text-forest-400 font-medium group-hover:underline">
+                          {locale === "th" ? "ดูข้อมูล" : "View"} →
+                        </span>
+                      </div>
                     </div>
-                    <div className="mt-3 pt-2 border-t border-sand-100 dark:border-forest-800/80 flex items-center justify-between text-[11px] text-sand-500">
-                      <span>{sim.difficulty}/5 ★</span>
-                      <span className="text-forest-600 dark:text-forest-400 font-medium group-hover:underline">
-                        {locale === "th" ? "ดูข้อมูล" : "View"} →
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </section>
         )}
@@ -722,13 +746,13 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
               <div className="w-10 h-10 rounded-xl overflow-hidden bg-sand-100 dark:bg-forest-900 shrink-0 border border-sand-200 dark:border-forest-800">
                 <img
                   src={currentImage.blobUrl}
-                  alt={plant.nameTh}
+                  alt={locale === "th" ? plant.nameTh : plant.nameEn}
                   className="w-full h-full object-cover"
                 />
               </div>
               <div>
                 <span className="font-serif font-bold text-sm text-forest-950 dark:text-sand-50 line-clamp-1">
-                  {plant.nameTh}
+                  {locale === "th" ? plant.nameTh : plant.nameEn}
                 </span>
                 <span className="text-xs text-sand-500 dark:text-sand-400 line-clamp-1 italic">
                   {plant.nameSci}

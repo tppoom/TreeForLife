@@ -19,12 +19,17 @@ export interface TranslationDictionary {
     open_menu: string;
     close_menu: string;
     ask_shop_line: string;
+    brand_tagline: string;
   };
   roles: {
     guest: string;
     customer: string;
     staff: string;
     admin: string;
+    short_guest: string;
+    short_customer: string;
+    short_staff: string;
+    short_admin: string;
     switch_role: string;
     current_role: string;
     guest_desc: string;
@@ -135,6 +140,10 @@ export interface TranslationDictionary {
     soil_mix: string;
     fertilizer_note: string;
     propagation: string;
+    taken_at_shop: string;
+    authentic_wisdom: string;
+    smart_schedule: string;
+    quick_specs_title: string;
   };
   garden: {
     title: string;
@@ -293,12 +302,17 @@ export const translations: Record<Locale, TranslationDictionary> = {
       open_menu: "เปิดเมนู",
       close_menu: "ปิดเมนู",
       ask_shop_line: "ทักถามร้าน",
+      brand_tagline: "ร้านคัดพิเศษ & ผู้ช่วยดูแล",
     },
     roles: {
       guest: "ผู้เยี่ยมชม (Guest)",
       customer: "ลูกค้า (Customer)",
       staff: "พนักงานร้าน (Staff)",
       admin: "ผู้ดูแลระบบ (Admin)",
+      short_guest: "ผู้เยี่ยมชม",
+      short_customer: "ลูกค้า",
+      short_staff: "พนักงาน",
+      short_admin: "เจ้าของร้าน",
       switch_role: "สลับบทบาทเดโม",
       current_role: "บทบาทปัจจุบัน",
       guest_desc: "ผู้ใช้งานทั่วไป ไม่ต้องเข้าสู่ระบบ บันทึกข้อมูลในเครื่อง",
@@ -409,6 +423,10 @@ export const translations: Record<Locale, TranslationDictionary> = {
       soil_mix: "สูตรผสมดิน",
       fertilizer_note: "คำแนะนำการให้ปุ๋ย",
       propagation: "การขยายพันธุ์",
+      taken_at_shop: "ถ่ายที่ร้าน",
+      authentic_wisdom: "คำแนะนำจากร้าน",
+      smart_schedule: "ตารางดูแลตามสภาพอากาศ",
+      quick_specs_title: "คุณสมบัติและสเปกพันธุ์ไม้",
     },
     garden: {
       title: "สวนของฉัน",
@@ -543,7 +561,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       line_id: "LINE OA: @treeforlife",
       quick_links: "เมนูลัด",
       copyright: "© {year} TreeForLife. สงวนลิขสิทธิ์ทั้งหมด",
-      nurtured_note: "ดูแลด้วยใจ ปลูกด้วยรัก · Nurtured with care",
+      nurtured_note: "ดูแลด้วยใจ ปลูกด้วยรัก · ร้านต้นไม้กรุงเทพฯ",
     },
   },
   en: {
@@ -565,12 +583,17 @@ export const translations: Record<Locale, TranslationDictionary> = {
       open_menu: "Open menu",
       close_menu: "Close menu",
       ask_shop_line: "Ask Shop",
+      brand_tagline: "Boutique & Care",
     },
     roles: {
       guest: "Guest",
       customer: "Customer",
       staff: "Shop Staff",
       admin: "Administrator",
+      short_guest: "Guest",
+      short_customer: "Customer",
+      short_staff: "Staff",
+      short_admin: "Admin",
       switch_role: "Switch Demo Role",
       current_role: "Current Role",
       guest_desc: "Anonymous user, data stored locally in your browser",
@@ -681,6 +704,10 @@ export const translations: Record<Locale, TranslationDictionary> = {
       soil_mix: "Soil Mix Formula",
       fertilizer_note: "Fertilizer Recommendation",
       propagation: "Propagation",
+      taken_at_shop: "Taken at Shop",
+      authentic_wisdom: "Authentic Wisdom",
+      smart_schedule: "Smart Care Schedule",
+      quick_specs_title: "Species Overview & Specs",
     },
     garden: {
       title: "My Garden",
@@ -815,7 +842,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       line_id: "LINE OA: @treeforlife",
       quick_links: "Quick Links",
       copyright: "© {year} TreeForLife. All rights reserved.",
-      nurtured_note: "Nurtured with care · ดูแลด้วยใจ ปลูกด้วยรัก",
+      nurtured_note: "Nurtured with care · Grown with passion",
     },
   },
 };

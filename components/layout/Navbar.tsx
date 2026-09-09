@@ -180,7 +180,7 @@ export function Navbar() {
                 TreeForLife
               </span>
               <span className="text-[10px] sm:text-[11px] font-medium tracking-wide uppercase text-forest-600 dark:text-forest-400">
-                Boutique & Care
+                {t("nav.brand_tagline")}
               </span>
             </div>
           </Link>
@@ -245,7 +245,7 @@ export function Navbar() {
                 aria-label={t("roles.switch_role")}
               >
                 <UserCheck className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
-                <span className="capitalize">{role}</span>
+                <span>{t(`roles.short_${role}`)}</span>
                 <ChevronDown className="w-3 h-3 text-sand-600 dark:text-sand-400" />
               </button>
 
@@ -424,7 +424,7 @@ export function Navbar() {
                         : "border-sand-200 dark:border-forest-800 bg-white/50 dark:bg-forest-900/20 text-forest-700 dark:text-sand-300"
                     }`}
                   >
-                    <span>{r.label.split(" ")[0]}</span>
+                    <span>{t(`roles.short_${r.id}`)}</span>
                     {isSelected && <span className="text-forest-600 dark:text-forest-400">✓</span>}
                   </button>
                 );

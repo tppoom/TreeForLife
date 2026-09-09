@@ -731,12 +731,14 @@ export function AdminDashboardClient({
                                   className="font-medium text-zinc-900 dark:text-zinc-100 hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-1.5 transition"
                                   target="_blank"
                                 >
-                                  <span className="truncate">{plant.nameTh}</span>
+                                  <span className="truncate">{locale === "th" ? plant.nameTh : plant.nameEn}</span>
                                   <ExternalLink className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-emerald-600" />
                                 </Link>
-                                <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                                  {plant.nameEn}
-                                </div>
+                                {locale === "th" && (
+                                  <div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                                    {plant.nameEn}
+                                  </div>
+                                )}
                                 <div className="text-xs italic text-zinc-400 dark:text-zinc-500 font-mono truncate">
                                   {plant.nameSci}
                                 </div>
@@ -746,7 +748,7 @@ export function AdminDashboardClient({
 
                           {/* 2. Family & Placement */}
                           <td className="py-3.5 px-4 hidden md:table-cell text-xs text-zinc-600 dark:text-zinc-400">
-                            <div>{plant.family || "-"}</div>
+                            <div>{locale === "th" ? (plant.family || "-") : (plant.family ? plant.family.split("(")[0].trim() : "-")}</div>
                             <div className="text-zinc-400 dark:text-zinc-500 mt-0.5">
                               {plant.light ? t(`filters.light_${plant.light}`) : ""}
                             </div>
@@ -964,15 +966,15 @@ export function AdminDashboardClient({
                           target="_blank"
                           className="font-medium text-emerald-700 dark:text-emerald-400 hover:underline inline-flex items-center gap-1 text-sm"
                         >
-                          <span>{inq.speciesNameTh || inq.speciesNameEn}</span>
+                          <span>{locale === "th" ? (inq.speciesNameTh || inq.speciesNameEn) : (inq.speciesNameEn || inq.speciesNameTh)}</span>
                           {inq.speciesNameEn && inq.speciesNameTh && (
-                            <span className="text-xs text-zinc-400">({inq.speciesNameEn})</span>
+                            <span className="text-xs text-zinc-400">({locale === "th" ? inq.speciesNameEn : inq.speciesNameTh})</span>
                           )}
                           <ExternalLink className="w-3 h-3" />
                         </Link>
                       ) : (
                         <span className="font-medium text-zinc-700 dark:text-zinc-300 text-sm">
-                          {inq.speciesNameTh || inq.speciesNameEn || (locale === "th" ? "คำถามทั่วไป" : "General Inquiry")}
+                          {locale === "th" ? (inq.speciesNameTh || inq.speciesNameEn || "คำถามทั่วไป") : (inq.speciesNameEn || inq.speciesNameTh || "General Inquiry")}
                         </span>
                       )}
                     </div>

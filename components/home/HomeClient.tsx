@@ -22,6 +22,7 @@ import {
   HeartHandshake,
 } from "lucide-react";
 import { useApp } from "@/lib/context/AppContext";
+import { getLocalizedSpeciesData } from "@/lib/i18n/species-en";
 import type { getAllSpecies } from "@/lib/services/speciesService";
 
 interface HomeClientProps {
@@ -227,7 +228,7 @@ export function HomeClient({ featuredPlants }: HomeClientProps) {
               <span>{locale === "th" ? "คัดพิเศษพร้อมส่งทันที" : "Ready For Delivery"}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-forest-950 dark:text-sand-50">
-              {locale === "th" ? "ต้นไม้ที่มีหน้าร้าน (In Stock)" : "In Stock at Nursery"}
+              {locale === "th" ? "ต้นไม้พร้อมจำหน่ายที่ร้าน" : "In Stock at Nursery"}
             </h2>
             <p className="text-xs sm:text-sm text-sand-600 dark:text-sand-400 mt-1">
               {locale === "th"
@@ -248,6 +249,7 @@ export function HomeClient({ featuredPlants }: HomeClientProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6">
           {featuredPlants.slice(0, 8).map((plant) => {
             const hasTakenAtShop = true; // By design requirement, authentic shop badge
+            const plantLocalized = getLocalizedSpeciesData(plant.slug, locale, { summary: plant.summary });
             return (
               <Link
                 key={plant.id}
@@ -259,7 +261,7 @@ export function HomeClient({ featuredPlants }: HomeClientProps) {
                   {plant.primaryImage && (
                     <img
                       src={plant.primaryImage}
-                      alt={plant.imageAlt || plant.nameTh}
+                      alt={locale === "th" ? (plant.imageAlt || plant.nameTh) : (plant.nameEn || plant.imageAlt || plant.nameTh)}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                     />
@@ -278,7 +280,7 @@ export function HomeClient({ featuredPlants }: HomeClientProps) {
                     <div className="absolute bottom-2.5 right-2.5">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-forest-950/75 text-sand-100 backdrop-blur-md">
                         <Camera className="w-3 h-3 text-gold-300" />
-                        <span>ถ่ายที่ร้าน</span>
+                        <span>{t("care.taken_at_shop")}</span>
                       </span>
                     </div>
                   )}
@@ -289,17 +291,17 @@ export function HomeClient({ featuredPlants }: HomeClientProps) {
                   <div>
                     <div className="flex items-baseline justify-between gap-2 mb-1">
                       <h3 className="font-serif font-bold text-base sm:text-lg text-forest-950 dark:text-sand-50 group-hover:text-forest-600 dark:group-hover:text-forest-400 transition-colors line-clamp-1">
-                        {plant.nameTh}
+                        {locale === "th" ? plant.nameTh : plant.nameEn}
                       </h3>
                       <span className="text-[11px] font-medium text-sand-600 dark:text-sand-400 shrink-0">
                         {plant.difficulty}/5 ★
                       </span>
                     </div>
                     <p className="text-xs text-sand-500 dark:text-sand-400 font-sans italic line-clamp-1 mb-2">
-                      {plant.nameEn}
+                      {locale === "th" ? plant.nameEn : plant.nameSci}
                     </p>
                     <p className="text-xs text-forest-700 dark:text-sand-300 line-clamp-2 leading-relaxed">
-                      {plant.summary}
+                      {plantLocalized.summary}
                     </p>
                   </div>
 
@@ -398,7 +400,7 @@ export function HomeClient({ featuredPlants }: HomeClientProps) {
                 className="px-6 py-3.5 rounded-xl bg-gold-400 hover:bg-gold-500 text-forest-950 font-bold text-sm shadow-gold transition flex items-center gap-2 min-h-[48px]"
               >
                 <Sprout className="w-4 h-4" />
-                <span>{locale === "th" ? "เริ่มต้นสวนของฉัน (Start My Garden)" : "Start My Garden"}</span>
+                <span>{locale === "th" ? "เริ่มต้นสวนของฉัน" : "Start My Garden"}</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
 

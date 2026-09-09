@@ -411,8 +411,14 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
                     {plant.nickname}
                   </h1>
                   <p className="text-sm text-sand-500 dark:text-sand-400 mt-0.5">
-                    {plant.speciesNameTh || plant.customSpeciesName || plant.speciesNameEn}
-                    {plant.speciesNameEn && plant.speciesNameTh ? ` (${plant.speciesNameEn})` : ""}
+                    {locale === "th" ? (
+                      <>
+                        {plant.speciesNameTh || plant.customSpeciesName || plant.speciesNameEn}
+                        {plant.speciesNameEn && plant.speciesNameTh ? ` (${plant.speciesNameEn})` : ""}
+                      </>
+                    ) : (
+                      plant.speciesNameEn || plant.customSpeciesName || plant.speciesNameTh
+                    )}
                     {plant.speciesNameSci ? ` • ${plant.speciesNameSci}` : ""}
                   </p>
                 </div>
@@ -423,14 +429,18 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
                     <Layers className="w-3.5 h-3.5 text-forest-600" />
                     <span>
                       {plant.potSizeInch}&quot; (
-                      {POT_MATERIAL_FACTORS[plant.potMaterial as PotMaterial]?.labelTh || plant.potMaterial}
+                      {locale === "th"
+                        ? (POT_MATERIAL_FACTORS[plant.potMaterial as PotMaterial]?.labelTh || plant.potMaterial)
+                        : (POT_MATERIAL_FACTORS[plant.potMaterial as PotMaterial]?.labelEn || plant.potMaterial)}
                       )
                     </span>
                   </span>
                   <span className="px-3 py-1.5 rounded-xl bg-sand-100 dark:bg-forest-800 text-forest-900 dark:text-sand-100 flex items-center gap-1.5 font-medium">
                     <Sun className="w-3.5 h-3.5 text-forest-600" />
                     <span>
-                      {PLACEMENT_FACTORS[plant.placement as Placement]?.labelTh || plant.placement}
+                      {locale === "th"
+                        ? (PLACEMENT_FACTORS[plant.placement as Placement]?.labelTh || plant.placement)
+                        : (PLACEMENT_FACTORS[plant.placement as Placement]?.labelEn || plant.placement)}
                     </span>
                   </span>
                   <span className="px-3 py-1.5 rounded-xl bg-sand-100 dark:bg-forest-800 text-forest-900 dark:text-sand-100 flex items-center gap-1.5 font-medium">
