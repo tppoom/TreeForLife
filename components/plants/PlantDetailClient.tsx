@@ -58,7 +58,8 @@ export function PlantDetailClient({ plant, similarSpecies }: PlantDetailClientPr
   const toggleProblem = (id: string) => {
     setExpandedProblems((prev) => ({
       ...prev,
-      [id]: !prev[id],
+      // Problems render open by default (undefined => open), so the first click must close
+      [id]: !(prev[id] ?? true),
     }));
   };
 

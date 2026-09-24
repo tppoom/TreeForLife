@@ -6,7 +6,7 @@ import { eq, asc, desc, sql } from "drizzle-orm";
 import { AddPlantWizard, AvailableSpeciesOption } from "@/components/garden/AddPlantWizard";
 
 export const metadata: Metadata = {
-  title: "เพิ่มต้นไม้ใหม่ (Add Plant Wizard) | TreeForLife",
+  title: "เพิ่มต้นไม้ใหม่ (Add Plant Wizard)",
   description:
     "เพิ่มต้นไม้เข้าสู่สวนของคุณ พร้อมสูตรคำนวณรอบรดน้ำแบบเรียลไทม์ตาม 3 ฤดูกาลไทยและสภาพแวดล้อมกระถางจริง",
 };

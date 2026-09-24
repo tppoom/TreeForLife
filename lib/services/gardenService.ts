@@ -12,6 +12,7 @@ import {
   PotMaterial,
   Placement,
 } from "@/lib/care/scheduler";
+import { recordSearchMiss } from "@/lib/services/speciesService";
 
 export interface AddUserPlantInput {
   userId?: string | null;
@@ -157,7 +158,11 @@ export async function getUserPlants(userId?: string | null, guestToken?: string 
   return result;
 }
 
+// user_plants.id is a Postgres uuid; a malformed id would make the query throw (500) instead of "not found".
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function getUserPlantById(id: string) {
+  if (!UUID_RE.test(id)) return null;
   const db = await getDb();
 
   const [plant] = await db
@@ -201,20 +206,19 @@ export async function getUserPlantById(id: string) {
       .from(careTemplates)
       .where(eq(careTemplates.speciesId, plant.speciesId))
       .limit(1);
-    template = tmpl;
-
-    if (tmpl) {
-      calculation = explainCareSchedule({
-        template: tmpl,
-        plantConfig: {
-          potSizeInch: Number(plant.potSizeInch),
-          potMaterial: plant.potMaterial as PotMaterial,
-          placement: plant.placement as Placement,
-          customWaterDays: plant.customWaterDays,
-        },
-      });
-    }
+    template = tmpl || null;
   }
+
+  // Custom species (no template) use the scheduler's default 3/5/7 base, same as addUserPlant
+  calculation = explainCareSchedule({
+    template: template || undefined,
+    plantConfig: {
+      potSizeInch: Number(plant.potSizeInch),
+      potMaterial: plant.potMaterial as PotMaterial,
+      placement: plant.placement as Placement,
+      customWaterDays: plant.customWaterDays,
+    },
+  });
 
   const [tasks, logs] = await Promise.all([
     db
@@ -296,6 +300,19 @@ export async function addUserPlant(input: AddUserPlantInput) {
         placement: input.placement,
       });
     }
+  } else {
+    // Custom (non-catalog) species: default 3/5/7 template + pot/placement multipliers,
+    // matching the live preview the wizard shows before saving.
+    intervalDays = calculateCareInterval({
+      potSizeInch: input.potSizeInch,
+      potMaterial: input.potMaterial,
+      placement: input.placement,
+    });
+  }
+
+  // SPEC §6.6: a species typed by hand is demand signal for the shop
+  if (!input.speciesId && input.customSpeciesName?.trim()) {
+    await recordSearchMiss(input.customSpeciesName);
   }
 
   // Seed upcoming care tasks (water, and optionally fertilize/pest_check if configured)
@@ -328,6 +345,7 @@ export async function addUserPlant(input: AddUserPlantInput) {
 }
 
 export async function updateUserPlant(id: string, input: Partial<AddUserPlantInput>) {
+  if (!UUID_RE.test(id)) return undefined;
   const db = await getDb();
 
   const updateData: Record<string, unknown> = {
@@ -405,7 +423,11 @@ async function calculateNextIntervalForTask(
         });
       }
     }
-    return 3;
+    return calculateCareInterval({
+      potSizeInch: Number(plant.potSizeInch),
+      potMaterial: plant.potMaterial as PotMaterial,
+      placement: plant.placement as Placement,
+    });
   }
 
   if (taskType === "fertilize") {
@@ -433,6 +455,35 @@ async function calculateNextIntervalForTask(
   }
 
   return 30;
+}
+
+/**
+ * Schedules the next pending task. care_tasks is unique on (plant, type, due_date), so when the
+ * next due date lands on a date that already has a done/skipped row (e.g. watering a plant on the
+ * day it was added: today + interval == the task just completed), that row is re-opened instead of
+ * silently dropping the next task and leaving the plant with no schedule. An existing pending row
+ * on that date is left untouched.
+ */
+async function insertNextPendingTask(
+  db: Awaited<ReturnType<typeof getDb>>,
+  userPlantId: string,
+  type: string,
+  dueDate: string
+) {
+  await db
+    .insert(careTasks)
+    .values({
+      userPlantId,
+      type,
+      dueDate,
+      status: "pending",
+      createdAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: [careTasks.userPlantId, careTasks.type, careTasks.dueDate],
+      set: { status: "pending", snoozeCount: 0, doneAt: null },
+      setWhere: sql`${careTasks.status} <> 'pending'`,
+    });
 }
 
 export async function completeTask(input: CompleteTaskInput) {
@@ -485,16 +536,7 @@ export async function completeTask(input: CompleteTaskInput) {
   const nextDueDateStr = generateNextTaskDue(performedAt, intervalDays);
 
   // Create next task
-  await db
-    .insert(careTasks)
-    .values({
-      userPlantId: plant.id,
-      type: task.type,
-      dueDate: nextDueDateStr,
-      status: "pending",
-      createdAt: new Date(),
-    })
-    .onConflictDoNothing();
+  await insertNextPendingTask(db, plant.id, task.type, nextDueDateStr);
 
   // Check for adaptive suggestion
   const scheduled = new Date(task.dueDate);
@@ -597,16 +639,7 @@ export async function skipTask(input: SkipTaskInput) {
   const intervalDays = await calculateNextIntervalForTask(db, task.type, plant);
   const nextDueDateStr = generateNextTaskDue(task.dueDate, intervalDays);
 
-  await db
-    .insert(careTasks)
-    .values({
-      userPlantId: plant.id,
-      type: task.type,
-      dueDate: nextDueDateStr,
-      status: "pending",
-      createdAt: new Date(),
-    })
-    .onConflictDoNothing();
+  await insertNextPendingTask(db, plant.id, task.type, nextDueDateStr);
 
   return {
     success: true,

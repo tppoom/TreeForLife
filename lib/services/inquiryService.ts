@@ -36,7 +36,11 @@ export async function createInquiry(input: CreateInquiryInput) {
       sourcePage: input.sourcePage,
       refCode,
       intent: input.intent,
-      payload: input.payload || {},
+      // Persist the customer's note so the admin inquiries tab (which reads payload.customNote) can show it
+      payload: {
+        ...(input.payload || {}),
+        ...(input.customNote?.trim() ? { customNote: input.customNote.trim() } : {}),
+      },
       createdAt: new Date(),
     })
     .returning();

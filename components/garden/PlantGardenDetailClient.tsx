@@ -219,6 +219,11 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
           : "Saved environmental settings successfully",
         "success"
       );
+      const previousInterval = plant.calculation?.finalIntervalDays;
+      const newInterval = data.plant?.calculation?.finalIntervalDays ?? liveCalculation.finalIntervalDays;
+      if (previousInterval && newInterval && previousInterval !== newInterval) {
+        addToast(t("garden.interval_changed", { from: previousInterval, to: newInterval }), "info");
+      }
       setIsEditingEnv(false);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error updating plant";
@@ -287,8 +292,8 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
 
       const dayTasks = tasks.filter((t) => t.dueDate === dateStr);
       const dayLogs = logs.filter((l) => {
-        const perf = l.performedAt instanceof Date ? l.performedAt.toISOString() : String(l.performedAt);
-        return perf.startsWith(dateStr);
+        // Local calendar day (UTC+7), never toISOString() which rolls back before 07:00
+        return formatDate(new Date(l.performedAt)) === dateStr;
       });
 
       const isToday = dateStr === todayStr;
@@ -530,7 +535,7 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
             {calendarDays.map((day) => {
               const isSelected = selectedCalendarDate === day.dateStr;
               const hasPending = day.tasks.some((t) => t.status === "pending");
-              const hasCompleted = day.logs.length > 0 || day.tasks.some((t) => t.status === "completed");
+              const hasCompleted = day.logs.length > 0 || day.tasks.some((t) => t.status === "done");
 
               return (
                 <button
@@ -780,11 +785,11 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
                   <span>{locale === "th" ? "รอบรดน้ำคำนวณสด" : "Live Interval Calculation"}</span>
                 </span>
                 <span className="font-serif font-bold text-base text-forest-800 dark:text-forest-300">
-                  ทุก {liveCalculation.finalIntervalDays} วัน
+                  {t("care.every_days", { days: liveCalculation.finalIntervalDays })}
                 </span>
               </div>
               <code className="text-xs text-sand-600 dark:text-sand-400 font-mono block">
-                {liveCalculation.formula}
+                {locale === "th" ? liveCalculation.formula : liveCalculation.formulaEn}
               </code>
               <p className="text-[11px] text-sand-500 leading-relaxed">
                 {locale === "th" ? liveCalculation.descriptionTh : liveCalculation.descriptionEn}
@@ -831,11 +836,11 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
                     onChange={(e) => setEditPotMaterial(e.target.value as PotMaterial)}
                     className="w-full px-3 py-2 rounded-xl border border-sand-300 dark:border-forest-700 bg-white dark:bg-forest-900 text-xs text-forest-900 dark:text-sand-100"
                   >
-                    <option value="terracotta">ดินเผา (×0.80)</option>
-                    <option value="plastic">พลาสติก (×1.00)</option>
-                    <option value="ceramic_glazed">เซรามิกเคลือบ (×1.15)</option>
-                    <option value="cement">ปูน/คอนกรีต (×1.15)</option>
-                    <option value="hanging">กระถางแขวน (×1.00)</option>
+                    {(Object.keys(POT_MATERIAL_FACTORS) as PotMaterial[]).map((m) => (
+                      <option key={m} value={m}>
+                        {locale === "th" ? POT_MATERIAL_FACTORS[m].labelTh : POT_MATERIAL_FACTORS[m].labelEn} (×{POT_MATERIAL_FACTORS[m].factor.toFixed(2)})
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -850,11 +855,11 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
                   onChange={(e) => setEditPlacement(e.target.value as Placement)}
                   className="w-full px-3 py-2 rounded-xl border border-sand-300 dark:border-forest-700 bg-white dark:bg-forest-900 text-xs text-forest-900 dark:text-sand-100"
                 >
-                  <option value="outdoor_sun">กลางแจ้งแดดเต็มวัน (×0.70)</option>
-                  <option value="balcony_shade">ระเบียง/มีร่มรำไร (×0.90)</option>
-                  <option value="indoor_window">ในบ้านใกล้หน้าต่าง (×1.00)</option>
-                  <option value="indoor_far">ในบ้านห่างหน้าต่าง (×1.25)</option>
-                  <option value="air_con">ห้องแอร์ (×1.20)</option>
+                  {(Object.keys(PLACEMENT_FACTORS) as Placement[]).map((p) => (
+                    <option key={p} value={p}>
+                      {locale === "th" ? PLACEMENT_FACTORS[p].labelTh : PLACEMENT_FACTORS[p].labelEn} (×{PLACEMENT_FACTORS[p].factor.toFixed(2)})
+                    </option>
+                  ))}
                 </select>
               </div>
 

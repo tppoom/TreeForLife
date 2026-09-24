@@ -13,6 +13,7 @@ import {
   PLACEMENT_FACTORS,
   getThaiSeason,
   getThaiSeasonInfo,
+  getPotSizeDetail,
 } from "@/lib/care/scheduler";
 import {
   ArrowLeft,
@@ -70,6 +71,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
 
   // Step 2: Nickname, Acquisition Date, Source, Notes
   const [nickname, setNickname] = useState("");
+  const [nicknameEdited, setNicknameEdited] = useState(false);
   const [acquiredAt, setAcquiredAt] = useState(() => {
     return formatDate(new Date());
   });
@@ -93,15 +95,16 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
     [availableSpecies, selectedSpeciesId]
   );
 
+  // Follow the chosen species until the user types their own nickname
+  // (previously a cleared field was instantly refilled, and switching species kept the old name).
   useEffect(() => {
-    if (!nickname) {
-      if (isCustomSpecies && customSpeciesName) {
-        setNickname(customSpeciesName);
-      } else if (selectedSpecies) {
-        setNickname(selectedSpecies.nameTh);
-      }
+    if (nicknameEdited) return;
+    if (isCustomSpecies) {
+      setNickname(customSpeciesName);
+    } else if (selectedSpecies) {
+      setNickname(selectedSpecies.nameTh);
     }
-  }, [selectedSpecies, isCustomSpecies, customSpeciesName, nickname]);
+  }, [selectedSpecies, isCustomSpecies, customSpeciesName, nicknameEdited]);
 
   // Filtered species search
   const filteredSpecies = useMemo(() => {
@@ -117,7 +120,9 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
 
   // Real-time calculation preview
   const calculationPreview = useMemo(() => {
-    const template = selectedSpecies?.careTemplate || {
+    // Custom species are saved without a speciesId, so the server uses the default template;
+    // never preview with the (still selected) catalog species' template.
+    const template = (!isCustomSpecies && selectedSpecies?.careTemplate) || {
       waterDaysHot: 3,
       waterDaysRainy: 5,
       waterDaysCool: 7,
@@ -132,7 +137,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
         customWaterDays: useCustomWater && customWaterDays ? Number(customWaterDays) : undefined,
       },
     });
-  }, [selectedSpecies, potSizeInch, potMaterial, placement, useCustomWater, customWaterDays]);
+  }, [selectedSpecies, isCustomSpecies, potSizeInch, potMaterial, placement, useCustomWater, customWaterDays]);
 
   // Validation
   const isStep1Valid = isCustomSpecies ? customSpeciesName.trim().length > 0 : !!selectedSpeciesId;
@@ -408,7 +413,10 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                 <input
                   type="text"
                   value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  onChange={(e) => {
+                    setNickname(e.target.value);
+                    setNicknameEdited(true);
+                  }}
                   placeholder={t("garden.nickname_placeholder")}
                   className="w-full px-4 py-2.5 rounded-xl border border-sand-300 dark:border-forest-700 bg-white dark:bg-forest-900 text-forest-900 dark:text-sand-100 text-sm focus:outline-none focus:ring-2 focus:ring-forest-600"
                 />
@@ -520,13 +528,9 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                     {t("garden.pot_size_label")} <span className="text-rose-500">*</span>
                   </label>
                   <span className="text-xs font-bold text-forest-800 dark:text-forest-300">
-                    {potSizeInch} {t("care.inches")} (
-                    {potSizeInch < 6
-                      ? "แห้งเร็วกว่า ×0.85"
-                      : potSizeInch <= 10
-                      ? "ขนาดมาตรฐาน ×1.00"
-                      : "อุ้มน้ำนานกว่า ×1.20"}
-                    )
+                    {t("care.inches", { inches: potSizeInch })} (
+                    {locale === "th" ? getPotSizeDetail(potSizeInch).descTh : getPotSizeDetail(potSizeInch).descEn} ×
+                    {getPotSizeDetail(potSizeInch).factor.toFixed(2)})
                   </span>
                 </div>
 
@@ -554,7 +558,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                       onChange={(e) => setPotSizeInch(Math.max(1, Number(e.target.value)))}
                       className="w-20 px-3 py-1.5 rounded-xl border border-sand-300 dark:border-forest-700 bg-white dark:bg-forest-900 text-sm text-center text-forest-900 dark:text-sand-100"
                     />
-                    <span className="text-xs text-sand-500">{t("care.inches")}</span>
+                    <span className="text-xs text-sand-500">{t("care.inches", { inches: "" }).trim()}</span>
                   </div>
                 </div>
               </div>
@@ -619,7 +623,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                       {locale === "th" ? "รอบรดน้ำที่คำนวณได้ ณ ตอนนี้" : "Computed Interval"}
                     </span>
                     <span className="text-xs text-sand-600 dark:text-sand-400">
-                      {calculationPreview.formula}
+                      {locale === "th" ? calculationPreview.formula : calculationPreview.formulaEn}
                     </span>
                   </div>
                 </div>
@@ -627,7 +631,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                   <span className="text-xl font-serif font-bold text-forest-800 dark:text-forest-300">
                     {calculationPreview.finalIntervalDays}
                   </span>
-                  <span className="text-xs text-sand-500 ml-1">{t("care.days_unit")}</span>
+                  <span className="text-xs text-sand-500 ml-1">{t("care.days_unit", { days: "" }).trim()}</span>
                 </div>
               </div>
             </div>
@@ -833,7 +837,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
                     <span>{locale === "th" ? "ปัดเศษและคุมกรอบ 1–30 วัน" : "Clamped 1–30 days"}</span>
                   </div>
                   <code className="text-sm sm:text-base text-forest-200 font-mono block">
-                    {calculationPreview.formula}
+                    {locale === "th" ? calculationPreview.formula : calculationPreview.formulaEn}
                   </code>
                 </div>
 

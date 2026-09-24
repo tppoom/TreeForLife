@@ -9,7 +9,7 @@ import {
 import { AdminDashboardClient } from "@/components/admin/AdminDashboardClient";
 
 export const metadata: Metadata = {
-  title: "ระบบจัดการร้าน (Shop Admin Dashboard) | TreeForLife",
+  title: "ระบบจัดการร้าน (Shop Admin Dashboard)",
   description:
     "ระบบจัดการหลังร้านสำหรับทีมงาน TreeForLife จัดการสต็อกสินค้า ตรวจสอบคำถามลูกค้า และวิเคราะห์สถิติความต้องการ",
 };

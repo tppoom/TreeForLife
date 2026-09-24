@@ -63,6 +63,9 @@ export function GardenListClient() {
   const [filterTab, setFilterTab] = useState<"all" | "due" | "upcoming">("all");
 
   const fetchPlants = useCallback(async () => {
+    // Guest token is restored from localStorage after mount; querying before that
+    // returns nothing and flashes the empty state for guests who do have plants.
+    if (!user.id && !guestToken) return;
     try {
       setLoading(true);
       const queryParam = user.id ? `userId=${user.id}` : `guestToken=${guestToken}`;
@@ -474,8 +477,8 @@ export function GardenListClient() {
                             type="button"
                             onClick={(e) => handleQuickWater(plant, e)}
                             disabled={isWatering}
-                            aria-label={`บันทึกการรดน้ำสำหรับ ${plant.nickname}`}
-                            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs transition shadow-sm ${
+                            aria-label={t("garden.water_plant_aria", { name: plant.nickname })}
+                            className={`min-h-[44px] inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs transition shadow-sm ${
                               badge.type === "overdue"
                                 ? "bg-rose-600 hover:bg-rose-700 text-white"
                                 : badge.type === "today"
