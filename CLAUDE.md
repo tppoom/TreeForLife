@@ -7,10 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) and other Claude-bas
 TreeForLife is a bilingual (Thai/English) boutique plant shop + plant-care web app.
 - **Specification:** [`docs/SPEC.md`](./docs/SPEC.md) (Full Thai product/technical spec)
 - **Engineering Conventions:** [`docs/CONVENTIONS.md`](./docs/CONVENTIONS.md) (Code conventions, UI rules, design tokens)
-- **Project Progress:** [`docs/PROGRESS.md`](./docs/PROGRESS.md) (Phase 1 completion, test metrics, Phase 2/3 roadmap)
+- **Project Progress:** [`docs/PROGRESS.md`](./docs/PROGRESS.md) (Phase 1 demo completion, test metrics)
+- **Roadmap & Feature Specs:** [`docs/ROADMAP.md`](./docs/ROADMAP.md) (gap analysis, priorities, costs, ADRs) and [`docs/features/`](./docs/features/README.md) (one implementation-ready spec per feature, F00–F13)
+- **Deployment:** [`docs/DEPLOYMENT.md`](./docs/DEPLOYMENT.md) (Vercel + Supabase)
 - **Agent Guide:** [`AGENT.md`](./AGENT.md) (Boilerplates and golden rules for autonomous AI agents)
 
-**Current Status:** Phase 1 is **100% complete and verified** (Catalog, faceted search, plant detail, My Garden tracking, 4-step wizard, Thai 3-season care scheduler, Today tasks dashboard, LINE inquiry handoff with ref codes, and Shop Admin inventory/inquiry/search-misses dashboard).
+**Current Status:** Phase 1 **demo scope** is complete and verified (Catalog, faceted search, plant detail, My Garden tracking, 4-step wizard, Thai 3-season care scheduler, Today tasks dashboard, LINE inquiry handoff with ref codes, and Shop Admin inventory/inquiry/search-misses dashboard).
 
 **Stack:** Next.js 15 (App Router), React 19, TypeScript, Drizzle ORM, Tailwind CSS (class dark mode), Vitest.
 
@@ -46,6 +48,8 @@ TreeForLife has **two schema sources that must stay strictly in sync**:
 2. `lib/db/schema-ddl.ts` — Hand-written raw SQL `CREATE TABLE` string (`SCHEMA_DDL`), executed directly against embedded PGlite on boot (`lib/db/index.ts`).
 
 > **CRITICAL RULE:** Any change to a table in `db/schema.ts` (new column, constraint, or enum value) **must be mirrored by hand in `lib/db/schema-ddl.ts`**. Drizzle migrations are not used for local dev.
+>
+> **Production is live on Postgres:** `CREATE TABLE IF NOT EXISTS` never alters an existing table, so schema changes must be additive and appended to `SCHEMA_DDL` as `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS` (ROADMAP ADR-03).
 
 - **Local dev:** Uses embedded PGlite (`.data/pglite`, gitignored) that self-seeds 30 boutique Thai species on first launch if empty.
 - **Production / Cloud:** Setting `DATABASE_URL` switches to a pooled Neon Postgres instance with SSL via `pg.Pool`. Always acquire dedicated client connections for transaction blocks (`BEGIN` / `COMMIT`).
@@ -78,7 +82,7 @@ TreeForLife has **two schema sources that must stay strictly in sync**:
 - Persistent `guestToken` is stored in browser `localStorage('tfl_guest_token')`.
 - Roles: `'guest' | 'customer' | 'staff' | 'admin'`.
 - Switching from guest to customer automatically calls `POST /api/garden/merge` to migrate plants.
-- Admin dashboard (`/admin`) is gated to `staff` and `admin`.
+- Admin dashboard (`/admin`) is gated to `staff` and `admin` in the UI, but the client role is a demo switch — the real server-side gate is `middleware.ts` (HTTP Basic Auth via `ADMIN_PASSWORD`) until LINE Login lands (F02).
 
 ---
 

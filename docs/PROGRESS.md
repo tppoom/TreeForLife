@@ -1,7 +1,7 @@
 # TreeForLife — Project Progress & Status Report
 
-> **Current Phase:** Phase 1 (100% Complete & Verified)  
-> **Last Updated:** 2026-09-08  
+> **Current Phase:** Phase 1 demo scope complete · Phase 1 launch scope in progress (see [`ROADMAP.md`](./ROADMAP.md))  
+> **Last Updated:** 2026-09-24  
 > **Reference Spec:** [`docs/SPEC.md`](./SPEC.md)  
 > **Design Document:** [`docs/superpowers/specs/2026-09-08-phase1-implementation-design.md`](./superpowers/specs/2026-09-08-phase1-implementation-design.md)  
 > **Implementation Plan:** [`docs/superpowers/plans/2026-09-08-phase1-implementation.md`](./superpowers/plans/2026-09-08-phase1-implementation.md)
@@ -148,20 +148,10 @@ Official Playwright E2E test suite executed against live server (`npm run test:e
 
 ## 6. Next Steps & Roadmap
 
-### Phase 2: AI Plant Assistant & Enhanced LINE Experience (Planned)
-- [ ] **AI Plant Doctor (Gemini 2.0 Flash):**
-  - Photo upload for disease/pest diagnosis.
-  - Symptom checklist and recovery plan generation.
-  - Daily cost ceiling and rate-limiting quota per user.
-- [ ] **Room Corner Garden Simulator (Imagen 3):**
-  - Upload room photo, select shop plants, and generate realistic photorealistic placement previews.
-- [ ] **Real LINE Messaging API & Webhook:**
-  - Automated LINE webhook to handle inquiries with ref code lookup.
-  - Daily care push notifications via LINE Notify or LINE Messaging API.
-- [ ] **Real Authentication (LINE LIFF / Google OAuth):**
-  - Upgrade demo `AppContext` to Supabase Auth or NextAuth with LINE provider.
+> **Superseded (2026-09-24):** the plan below is replaced by [`docs/ROADMAP.md`](./ROADMAP.md) and the implementation-ready specs in [`docs/features/`](./features/README.md).
 
-### Phase 3: PWA, Store Operations & Predictive Analytics (Planned)
-- [ ] **LINE LIFF PWA Integration:** Offline-first caching for My Garden.
-- [ ] **Search Misses Sourcing Automation:** Automated supplier alerts when unstocked plant inquiries exceed threshold.
-- [ ] **Seasonal Weather API Integration:** Real-time rainfall and humidity adjustments for care schedules.
+The demo scope above passed all tests, but a gap review against `SPEC.md` §6 and the launch criteria in §11.3 found items still required before real customers use it: LINE Login, reminders (Web Push + LINE + cron), full admin CMS with real shop photos, ownership checks and rate limiting on garden APIs, fuzzy Thai search, and PDPA pages. See `ROADMAP.md` §1 for the full table.
+
+### 2026-09-24 changes
+- Added `middleware.ts`: HTTP Basic Auth on `/admin` and `/api/admin/*` via `ADMIN_PASSWORD`; locked in production when unset.
+- Production deploy target: Vercel (`sin1`) + Supabase Postgres (Singapore) — see `DEPLOYMENT.md`.

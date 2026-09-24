@@ -1,143 +1,135 @@
-# 🚀 TreeForLife — Production Deployment Guide (Phase 1)
-คู่มือการ Deploy แพลตฟอร์ม TreeForLife สู่ Production แบบฟรี 100% ตลอดชีพ (Free Forever)
+# TreeForLife — Deployment Guide
+
+> Production stack: **Vercel (Next.js, region `sin1`) + Supabase Postgres (Singapore)**
+> ทางเลือกอื่น (Neon, Docker) อยู่ท้ายเอกสาร · ภาพรวมการตัดสินใจอยู่ใน [`ROADMAP.md` §5](./ROADMAP.md)
 
 ---
 
-## 1. ภาพรวมสถาปัตยกรรม (Architecture Overview)
-
-TreeForLife ถูกออกแบบมาให้พร้อมสำหรับการทำงานทั้งแบบ **Local Standalone** และ **Cloud Serverless**:
+## 1. สถาปัตยกรรม
 
 ```
-[ ผู้ใช้งาน / Mobile / Desktop ]
-              │
-              ▼ (HTTPS / Custom Domain)
-    ┌───────────────────┐
-    │  Vercel Edge/App  │ ── Next.js 15 App Router (Singapore: sin1)
-    │  Serverless Lambdas│ ── Drizzle ORM + Connection Pooling
-    └───────────────────┘
-              │
-              ▼ (DATABASE_URL with SSL)
-    ┌───────────────────┐
-    │  Neon PostgreSQL  │ ── Serverless Postgres (Scale-to-Zero, 500MB Free)
-    │  (or Supabase)    │ ── Auto DDL Migration + 30 Curated Species Auto-Seed
-    └───────────────────┘
+ผู้ใช้ ──HTTPS──▶ Vercel (Next.js 15, sin1)
+                    │  middleware.ts ── Basic Auth ป้องกัน /admin, /api/admin (ADMIN_PASSWORD)
+                    │  lib/db/index.ts ── DATABASE_URL มี → pg.Pool + Drizzle
+                    ▼
+               Supabase Postgres (ap-southeast-1) ผ่าน Supavisor pooler
+                    └─ บูตครั้งแรก: รัน SCHEMA_DDL (CREATE ... IF NOT EXISTS) + seed 30 พันธุ์
+                       (advisory lock กัน function หลายตัว seed พร้อมกัน)
 ```
 
-### จุดเด่นด้านความพร้อมขึ้น Production:
-1. **Dual Database Engine**:
-   - ถ้าไม่มี `DATABASE_URL`: ใช้ Local PGlite (WASM) ใน `.data/pglite/` อัตโนมัติ (เหมาะสำหรับการพัฒนาในเครื่อง)
-   - ถ้ามี `DATABASE_URL`: สลับไปใช้ `pg` (node-postgres) + Drizzle ORM ทันที พร้อม Connection Pooling
-2. **Advisory Lock Concurrency Guard**:
-   - ป้องกันปัญหา Serverless Lambdas หลายตัวแย่งกัน Seed ข้อมูลตอนเปิดเว็บครั้งแรกด้วย `pg_try_advisory_lock`
-3. **100% Free Tier Compliant**:
-   - ไม่เกินโควต้าฟรีของ Vercel (100GB Bandwidth/เดือน)
-   - ไม่เกินโควต้าฟรีของ Neon/Supabase (500MB Storage ฟรีตลอดชีพ)
-   - ไม่ต้องผูกบัตรเครดิต
+- ไม่มี `DATABASE_URL` → ใช้ PGlite ใน `.data/pglite` (**ใช้ได้เฉพาะเครื่อง dev** — บน Vercel filesystem เป็น read-only/ชั่วคราว ข้อมูลจะหาย)
+- Schema เปลี่ยนได้แบบ **additive เท่านั้น** (ADR-03): คอลัมน์ใหม่ต้องใช้ `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` ต่อท้าย `SCHEMA_DDL` เพราะ `CREATE TABLE IF NOT EXISTS` ไม่แก้ตารางที่มีอยู่แล้วใน production
 
 ---
 
-## 2. วิธีที่ 1: Deploy บน Vercel + Neon PostgreSQL (แนะนำที่สุด) ⭐
+## 2. Environment variables
 
-ใช้เวลาติดตั้งไม่เกิน **5 นาที** และดูแลรักษาง่ายที่สุด
+| ตัวแปร | จำเป็น | ใช้ที่ | รายละเอียด |
+|---|:---:|---|---|
+| `DATABASE_URL` | ✅ prod | server | Supabase **Transaction pooler** (port `6543`) — ดู §3 |
+| `DB_POOL_MAX` | แนะนำ | server | ตั้ง `3` บน Vercel (serverless หลาย instance × pool เล็ก) |
+| `ADMIN_PASSWORD` | ✅ prod | middleware | รหัสเข้า `/admin` (username อะไรก็ได้) · **ไม่ตั้ง = หลังบ้านถูกปิดใน production** |
+| `NEXT_PUBLIC_SITE_URL` | ✅ | sitemap, robots, OG | เช่น `https://tree-for-life.vercel.app` หรือโดเมนจริง |
+| `NEXT_PUBLIC_LINE_OA_ID` | ✅ | ปุ่มถามร้าน | ID ของ LINE OA **ไม่ต้องมี `@`** (โค้ดเติมให้ในลิงก์) |
+| ตัวแปรของ F02/F03 (LINE Login, VAPID, CRON_SECRET, …) | ภายหลัง | | ดูไฟล์ฟีเจอร์นั้น ๆ |
 
-### ขั้นตอนที่ 1: สร้าง Database บน Neon
-1. เข้าไปที่ [https://neon.tech](https://neon.tech) และล็อกอินผ่าน GitHub
-2. กด **Create Project**
-   - **Project Name:** `treeforlife`
-   - **Region:** `Asia Pacific (Singapore)` (`ap-southeast-1`) — เพื่อให้เชื่อมต่อได้เร็วที่สุดจากไทย
-3. ในหน้า Dashboard ให้เลือก Connection Type เป็น **Pooled connection**
-4. ก๊อปปี้ **Connection string** เก็บไว้ เช่น:
-   ```env
-   postgresql://neondb_owner:npg_xxxx@ep-cool-forest-123456-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+> ตัวแปร `NEXT_PUBLIC_*` ถูกฝังตอน build — แก้แล้วต้อง redeploy
+
+---
+
+## 3. ตั้งค่า Supabase
+
+1. สร้าง project region **Southeast Asia (Singapore)** · ตั้ง database password แล้วเก็บไว้ใน password manager
+2. **Project Settings → Data API**: ปิด (หรือไม่ expose schema `public`) — แอปต่อ Postgres ตรง ไม่ใช้ PostgREST และตารางไม่มี RLS (ADR-06)
+3. **Connect → Transaction pooler** คัดลอก URI:
    ```
-
-### ขั้นตอนที่ 2: Deploy ขึ้น Vercel
-1. Push โค้ดโปรเจกต์นี้ขึ้น GitHub Repository ของคุณ
-2. เข้าไปที่ [https://vercel.com](https://vercel.com) แล้วกด **Add New... > Project**
-3. เลือก Repository `TreeForLife` ที่เพิ่ง Push ขึ้นไป
-4. ในส่วน **Environment Variables** ให้เพิ่ม 2 ค่า:
-   - `DATABASE_URL` = *(Connection String ที่ได้จาก Neon)*
-   - `NEXT_PUBLIC_SITE_URL` = `https://your-project-name.vercel.app` *(หรือใส่โดเมนจริงของคุณ)*
-5. กดปุ่ม **Deploy**
-6. รอประมาณ 60–90 วินาที ระบบจะ Build และ Deploy สำเร็จทันที!
-
-> 💡 **หมายเหตุ:** ในการเปิดเว็บครั้งแรก ระบบจะตรวจพบว่า Database ยังว่างอยู่ และจะทำการรัน DDL Schema พร้อมบรรจุข้อมูลต้นไม้ทั้ง 30 ชนิดพร้อมระบบดูแลเข้าฐานข้อมูลให้โดยอัตโนมัติ 100%
+   postgresql://postgres.<project-ref>:<PASSWORD>@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
+   ```
+   - ใช้ **transaction pooler (6543)** สำหรับ serverless · `sslmode` ไม่ต้องใส่ (โค้ดเปิด SSL ให้เองเมื่อ host ไม่ใช่ localhost)
+   - โค้ดใช้ query แบบมี parameter ธรรมดา (ไม่มี prepared statement ชื่อ) จึงใช้กับ transaction mode ได้
+4. **ใช้ project แยกสำหรับ TreeForLife** — ตารางชื่อ `users`, `species` ชนกับแอปอื่นได้ง่าย และ `CREATE TABLE IF NOT EXISTS` จะข้ามตารางเดิมที่โครงสร้างไม่ตรง ทำให้ seed ล้มหรือเขียนทับข้อมูลแอปอื่น
+5. Free plan จะ **pause project เมื่อไม่มีการใช้งาน ~7 วัน** — ก่อนมี cron (F03) ให้ตั้ง uptime monitor ฟรี (เช่น UptimeRobot) ยิงหน้าแรกวันละครั้ง
 
 ---
 
-## 3. วิธีที่ 2: Deploy บน Vercel + Supabase
-
-หากคุณมีบัญชี [Supabase](https://supabase.com) อยู่แล้ว:
-1. สร้างโปรเจกต์ใหม่บน Supabase เลือก Region เป็น **Singapore**
-2. ไปที่ **Project Settings > Database > Connection string**
-3. เลือกโหมด **Transaction Pooler (Port 6543)** หรือ **Session Pooler (Port 5432)**
-4. นำ Connection URI มาใส่ใน Environment Variable `DATABASE_URL` บน Vercel เช่นเดียวกับวิธีที่ 1
-
----
-
-## 4. วิธีที่ 3: Deploy ด้วย Docker Container (Self-hosted / VPS / Cloud Run)
-
-หากต้องการรันบน VPS ส่วนตัว (เช่น DigitalOcean, Hetzner, AWS EC2) หรือบริการ Container:
-
-### รัน Full-Stack ด้วย Docker Compose (Next.js + PostgreSQL 16)
-```bash
-# สั่งสตาร์ททั้ง App และ PostgreSQL
-docker compose up -d --build
-
-# ดู Log การทำงาน
-docker compose logs -f app
-```
-ระบบจะเปิดใช้งานที่ `http://localhost:3000` โดยมี PostgreSQL แยก Volume พร้อมใช้งานทันที
-
-### Build Docker Image เดี่ยว
-```bash
-docker build -t tree-for-life:latest .
-docker run -p 3000:3000 -e DATABASE_URL="postgres://..." tree-for-life:latest
-```
-
----
-
-## 5. ตรวจสอบความพร้อมก่อน Deploy (Pre-flight Checklist)
-
-ก่อนกด Deploy คุณสามารถรันคำสั่งตรวจสอบความสมบูรณ์ทั้งหมดได้ในคำสั่งเดียว:
+## 4. Deploy ด้วย Vercel CLI
 
 ```bash
-# 1. รันการทดสอบ Unit Tests ทั้ง 158 ข้อ
-npm run test
+# ครั้งแรก
+vercel link --yes --project tree-for-life
 
-# 2. รันการทดสอบ E2E Playwright ทั้ง 6 Flow
-npm run test:e2e
+# ตั้ง env (production) — ค่าลับพิมพ์ผ่าน stdin ไม่ให้ค้างใน shell history
+vercel env add DATABASE_URL production --sensitive
+vercel env add ADMIN_PASSWORD production --sensitive
+printf '3' | vercel env add DB_POOL_MAX production
+printf 'https://tree-for-life.vercel.app' | vercel env add NEXT_PUBLIC_SITE_URL production
+printf '<line-oa-id>' | vercel env add NEXT_PUBLIC_LINE_OA_ID production
 
-# 3. รัน Type Check
-npx tsc --noEmit
+# ตรวจก่อน deploy
+make verify
 
-# 4. รัน Production Build ในเครื่องเพื่อทดสอบ SSG/SSR
-npm run build
+# (ครั้งแรก) สร้างตาราง + seed จากเครื่องเรา แทนที่จะรอ request แรก
+# ใช้ Session pooler (port 5432) เพราะ seed ใช้ advisory lock ระดับ session
+DATABASE_URL='<session-pooler-uri>' npm run db:setup
 
-# 5. ทดสอบการเชื่อมต่อและ Seed Database
-DATABASE_URL="<your-connection-string>" npm run db:setup
+# deploy
+vercel deploy --prod
 ```
 
+หลัง deploy ตรวจ:
+
+```bash
+curl -sI https://<domain>/ | head -1                      # 200
+curl -s  https://<domain>/search?q=มอนสเตอร่า | grep -c "/plants/"   # > 0
+curl -sI https://<domain>/admin | head -1                 # 401 (ต้องใส่รหัส)
+curl -s  https://<domain>/sitemap.xml | head -5
+```
+
+### 4.1 Deploy อัตโนมัติจาก GitHub
+เชื่อม repo ใน Vercel → **Settings → Git** → ทุก push ไป `main` = production, ทุก PR = preview
+Preview ใช้ `DATABASE_URL` ของ preview (แนะนำ Supabase branch หรือ project แยก) — **อย่าให้ preview ชี้ DB production**
+
 ---
 
-## 6. รายการ Environment Variables ทั้งหมด
+## 5. Pre-flight checklist
 
-| ตัวแปร | จำเป็นไหม? | ค่าเริ่มต้น | รายละเอียด |
-| :--- | :---: | :--- | :--- |
-| `DATABASE_URL` | แนะนำ | *(ว่าง = ใช้ PGlite)* | Connection URI ของ PostgreSQL เช่น Neon หรือ Supabase |
-| `NEXT_PUBLIC_SITE_URL` | แนะนำ | `http://localhost:3000` | URL หลักของเว็บ สำหรับ SEO Structured Data และ OpenGraph |
-| `DB_POOL_MAX` | ไม่ | `10` | จำนวน Connection สูงสุดต่อ Lambda instance (สำหรับ Serverless) |
-| `PORT` | ไม่ | `3000` | พอร์ตสำหรับ HTTP Server |
+- [ ] `make verify` ผ่าน (typecheck + 158 tests + build)
+- [ ] `DATABASE_URL` ชี้ project ที่ถูกต้อง (ไม่ใช่ของแอปอื่น)
+- [ ] `ADMIN_PASSWORD` ตั้งแล้ว และเข้า `/admin` ได้
+- [ ] `NEXT_PUBLIC_LINE_OA_ID` เป็น OA จริงของร้าน (ลองกดถามร้านบนมือถือ)
+- [ ] `NEXT_PUBLIC_SITE_URL` ตรงกับโดเมนที่ใช้จริง
+- [ ] ⚠️ Vercel Hobby ใช้ได้เฉพาะงานส่วนตัว/ไม่ใช่เชิงพาณิชย์ — เปิดใช้กับลูกค้าจริงให้ย้ายเป็น Pro
 
 ---
 
-## 7. คำถามที่พบบ่อยและข้อควรระวัง (Production FAQs)
+## 6. ข้อจำกัดที่ต้องรู้ของเวอร์ชันปัจจุบัน
 
-#### Q: การเข้าเว็บครั้งแรกของวันทำไมโหลดนานประมาณ 1-2 วินาที?
-- **ตอบ:** เป็นพฤติกรรมปกติของ Neon Free Tier (Scale-to-Zero) ที่จะพักการทำงานเมื่อไม่มีการเรียกใช้เกิน 5 นาที เพื่อไม่ให้เสียโควต้า หลังจากตื่นแล้ว คำสั่งต่อๆ ไปจะตอบสนองรวดเร็วปกติ (<50ms)
+ระบบที่ deploy อยู่คือ **Phase 1 เวอร์ชันเดโม** — ดูรายการเต็มใน [`ROADMAP.md` §1](./ROADMAP.md):
+- role switcher ในเมนูยังเป็นของเดโม (หลังบ้านจริงป้องกันด้วย `ADMIN_PASSWORD` แล้ว)
+- API สวนของฉันยังไม่ตรวจ ownership → แก้ใน F00 ก่อนโปรโมตกับลูกค้าจริง
+- ยังไม่มีแจ้งเตือน (F03), ล็อกอิน LINE (F02), หน้านโยบายความเป็นส่วนตัว (F11)
+- รูปพันธุ์ยังเป็นรูปชั่วคราวจาก Unsplash (F01)
 
-#### Q: ลูกค้าที่เข้าใช้งานแบบ Guest (ไม่ได้ล็อกอิน) ข้อมูลจะหายไหม?
-- **ตอบ:** ไม่หายครับ ข้อมูลสวนของ Guest จะถูกผูกด้วย UUID Guest Token ไว้ใน `localStorage` ของอุปกรณ์นั้นๆ ตลอดไป และเมื่อใดที่ลูกค้าลงทะเบียนหรือสลับบทบาท ระบบมีฟังก์ชัน Automatic Guest Migration ย้ายข้อมูลต้นไม้ทั้งหมดเข้าบัญชีให้อัตโนมัติ
+---
 
-#### Q: การแชทผ่าน LINE เสียค่าบริการไหม?
-- **ตอบ:** การกดส่งข้อความเปิดแชท 1 ต่อ 1 ผ่าน LINE Official Account ของร้าน (Deep Link + QR Code) เป็นบริการฟรี 100% ไม่มีค่าใช้จ่ายจาก LINE
+## 7. ทางเลือกอื่น
+
+### Neon
+ใช้ pooled connection string (`-pooler` ใน host) เป็น `DATABASE_URL` ได้ทันที ขั้นตอนอื่นเหมือนกัน
+
+### Docker (self-host / VPS)
+```bash
+docker compose up -d --build          # Next.js + Postgres 16
+docker build -t tree-for-life . && docker run -p 3000:3000 -e DATABASE_URL=... -e ADMIN_PASSWORD=... tree-for-life
+```
+`next start` ถือเป็น production → ต้องตั้ง `ADMIN_PASSWORD` ไม่อย่างนั้นหลังบ้านถูกปิด
+
+---
+
+## 8. FAQ
+
+**เปิดเว็บครั้งแรกช้า?** Cold start ของ function + ตรวจ DDL ตอนบูต (~ครั้งเดียวต่อ instance) · Supabase free ที่ถูก pause ต้องกด restore ใน dashboard
+
+**Guest ข้อมูลหายไหม?** ผูกกับ `guest_token` ใน `localStorage` ของเครื่องนั้น — ล้างเบราว์เซอร์ = หาย จนกว่าจะมี LINE Login (F02)
+
+**ปุ่มถามร้านเสียเงินไหม?** ไม่ — เป็นลิงก์เปิดแชท LINE OA ฝั่งผู้ใช้ ไม่ใช้โควตาข้อความของร้าน
