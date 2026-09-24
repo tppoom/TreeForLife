@@ -19,25 +19,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/garden`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/today`,
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 0.7,
-    },
   ];
 
   try {
     const speciesList = await getAllSpecies({ stockStatus: "all" });
-    const dynamicSpeciesRoutes: MetadataRoute.Sitemap = speciesList.map((s) => ({
+    // Hidden species 404 publicly, so they must not be advertised to crawlers
+    const dynamicSpeciesRoutes: MetadataRoute.Sitemap = speciesList
+      .filter((s) => s.stockStatus !== "hidden")
+      .map((s) => ({
       url: `${baseUrl}/plants/${s.slug}`,
-      lastModified: s.createdAt ? new Date(s.createdAt) : new Date(),
+      lastModified: s.updatedAt ? new Date(s.updatedAt) : new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
     }));

@@ -231,8 +231,9 @@ describe("Task 6: Public Catalog, Faceted Search & Plant Detail Integration", ()
 
       const urls = entries.map((e) => e.url);
       expect(urls.some((u) => u.endsWith("/search"))).toBe(true);
-      expect(urls.some((u) => u.endsWith("/garden"))).toBe(true);
-      expect(urls.some((u) => u.endsWith("/today"))).toBe(true);
+      // Per-user pages are not indexable content
+      expect(urls.some((u) => u.endsWith("/garden"))).toBe(false);
+      expect(urls.some((u) => u.endsWith("/today"))).toBe(false);
       expect(urls.some((u) => u.includes("/plants/monstera-albo-variegata"))).toBe(true);
 
       for (const entry of entries) {
