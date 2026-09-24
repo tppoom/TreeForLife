@@ -306,7 +306,8 @@ describe("Task 8: My Garden Hub, Add Wizard & Care Calendar Integration", () => 
         params: Promise.resolve({ id: createdPlantId }),
       });
       expect(metadata.title).toContain("น้องมอนเขียวสวย");
-      expect(metadata.title).toContain("TreeForLife");
+      // The root layout's title.template appends "| TreeForLife"; the page must not repeat it
+      expect(metadata.title).not.toContain("TreeForLife");
     });
 
     it("PlantGardenDetailClient renders hero card, 30-day care calendar, and inquiry trigger", async () => {

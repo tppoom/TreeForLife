@@ -4,7 +4,7 @@ import { SearchClient, type FilterState } from "@/components/search/SearchClient
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "ค้นหาและเลือกซื้อพันธุ์ไม้ | Catalog & Plant Finder | TreeForLife",
+  title: "ค้นหาและเลือกซื้อพันธุ์ไม้ | Catalog & Plant Finder",
   description:
     "ค้นหาพันธุ์ไม้ตามความต้องการแสง รอบรดน้ำ ความปลอดภัยต่อสัตว์เลี้ยง หรือตำแหน่งที่วางในบ้าน | Boutique plant search with faceted filters.",
 };

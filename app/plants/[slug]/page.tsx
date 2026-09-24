@@ -16,14 +16,14 @@ export async function generateMetadata({ params }: PlantDetailPageProps): Promis
 
   if (!plant) {
     return {
-      title: "ไม่พบพันธุ์ไม้ | Plant Not Found | TreeForLife",
+      title: "ไม่พบพันธุ์ไม้ | Plant Not Found",
     };
   }
 
   const primaryImage = plant.media?.[0]?.blobUrl || "https://treeforlife.shop/og-image.jpg";
 
   return {
-    title: `${plant.nameTh} (${plant.nameEn}) | คู่มือการดูแลและข้อมูลพันธุ์ไม้ | TreeForLife`,
+    title: `${plant.nameTh} (${plant.nameEn}) วิธีปลูกและดูแล`,
     description: `${plant.nameTh} - ${plant.summary}. ดูตารางรดน้ำตาม 3 ฤดูกาลไทย วิธีรักษาใบ และความต้องการแสง`,
     keywords: [
       plant.nameTh,

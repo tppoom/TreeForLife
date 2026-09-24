@@ -269,9 +269,20 @@ export function HomeClient({ featuredPlants }: HomeClientProps) {
 
                   {/* Stock Tag */}
                   <div className="absolute top-2.5 left-2.5">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-700/90 text-white backdrop-blur-md shadow-sm">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
-                      {t("filters.stock_in_stock")}
+                    {/* page.tsx falls back to non-in-stock plants when fewer than 8 are in stock */}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold backdrop-blur-md shadow-sm ${
+                        plant.stockStatus === "in_stock"
+                          ? "bg-emerald-700/90 text-white"
+                          : plant.stockStatus === "made_to_order"
+                          ? "bg-sky-700/90 text-white"
+                          : "bg-amber-700/90 text-white"
+                      }`}
+                    >
+                      {plant.stockStatus === "in_stock" && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse" />
+                      )}
+                      {t(`filters.stock_${plant.stockStatus}`)}
                     </span>
                   </div>
 

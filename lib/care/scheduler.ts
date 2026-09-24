@@ -442,6 +442,7 @@ export interface CareScheduleExplanation {
   finalIntervalDays: number;
   isCustom: boolean;
   formula: string;
+  formulaEn: string;
   descriptionTh: string;
   descriptionEn: string;
   factors: {
@@ -635,15 +636,18 @@ export function explainCareSchedule(
   }
 
   let formula = "";
+  let formulaEn = "";
   let descriptionTh = "";
   let descriptionEn = "";
 
   if (isCustom) {
     formula = `กำหนดเอง: ${finalIntervalDays} วัน (ข้ามตัวคูณทั้งหมด)`;
+    formulaEn = `Custom: ${finalIntervalDays} days (all multipliers skipped)`;
     descriptionTh = `รอบรดน้ำถูกกำหนดเอง: ทุก ${finalIntervalDays} วัน (ไม่ใช้ตัวคูณอัตโนมัติ)`;
     descriptionEn = `Custom watering interval: every ${finalIntervalDays} days (bypasses automatic multipliers)`;
   } else {
     formula = `${baseDays} × ${materialFactor.toFixed(2)} × ${sizeFactor.toFixed(2)} × ${placementFactor.toFixed(2)} = ${rawCalculatedDays.toFixed(2)} → ${finalIntervalDays} วัน`;
+    formulaEn = `${baseDays} × ${materialFactor.toFixed(2)} × ${sizeFactor.toFixed(2)} × ${placementFactor.toFixed(2)} = ${rawCalculatedDays.toFixed(2)} → ${finalIntervalDays} days`;
     descriptionTh = `ช่วง${seasonInfo.nameTh} (${seasonInfo.monthsTh}): ค่าพื้นฐาน ${baseDays} วัน × ${matMeta.labelTh} × กระถาง ${sizeLabelTh} × ${placeMeta.labelTh} → แนะนำรดน้ำทุก ${finalIntervalDays} วัน`;
     descriptionEn = `During ${seasonInfo.nameEn} (${seasonInfo.monthsEn}): base ${baseDays} days × ${matMeta.labelEn} × Pot ${sizeLabelEn} × ${placeMeta.labelEn} → Recommended interval: every ${finalIntervalDays} days`;
   }
@@ -660,6 +664,7 @@ export function explainCareSchedule(
     finalIntervalDays,
     isCustom,
     formula,
+    formulaEn,
     descriptionTh,
     descriptionEn,
     factors: {

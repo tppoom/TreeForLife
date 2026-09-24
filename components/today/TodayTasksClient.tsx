@@ -60,6 +60,8 @@ export function TodayTasksClient({ initialTasks }: TodayTasksClientProps) {
 
   // Fetch pending care tasks for current user or guest
   const fetchTasks = useCallback(async () => {
+    // Wait for the guest token to be restored from localStorage (see AppContext)
+    if (!user?.id && !guestToken) return;
     try {
       setLoading(true);
       const queryParam = user?.id ? `userId=${user.id}` : `guestToken=${guestToken}`;

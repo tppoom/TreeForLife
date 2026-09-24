@@ -18,13 +18,13 @@ export async function generateMetadata({
 
   if (!plant || !plant.isActive) {
     return {
-      title: "ไม่พบต้นไม้ | Plant Not Found | TreeForLife",
+      title: "ไม่พบต้นไม้ | Plant Not Found",
     };
   }
 
   const speciesName = plant.speciesNameTh || plant.customSpeciesName || "ต้นไม้ในสวน";
   return {
-    title: `${plant.nickname} (${speciesName}) | ปฏิทินดูแล 30 วัน & บันทึกสุขภาพ | TreeForLife`,
+    title: `${plant.nickname} (${speciesName}) | ปฏิทินดูแล 30 วัน & บันทึกสุขภาพ`,
     description: `ตารางรดน้ำและปฏิทินดูแล 30 วันสำหรับ ${plant.nickname}. คำนวณตาม 3 ฤดูไทย ขนาดกระถาง ${plant.potSizeInch} นิ้ว`,
   };
 }

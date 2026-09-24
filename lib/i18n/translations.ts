@@ -173,6 +173,8 @@ export interface TranslationDictionary {
     plant_details: string;
     edit_plant: string;
     save_changes: string;
+    interval_changed: string;
+    water_plant_aria: string;
     notes_label: string;
     notes_placeholder: string;
   };
@@ -456,6 +458,8 @@ export const translations: Record<Locale, TranslationDictionary> = {
       plant_details: "รายละเอียดต้นไม้",
       edit_plant: "แก้ไขข้อมูลต้นไม้",
       save_changes: "บันทึกการเปลี่ยนแปลง",
+      interval_changed: "รอบรดน้ำเปลี่ยนจากทุก {from} วัน เป็นทุก {to} วัน",
+      water_plant_aria: "บันทึกการรดน้ำสำหรับ {name}",
       notes_label: "บันทึกช่วยจำ",
       notes_placeholder: "จดบันทึกเกี่ยวกับต้นไม้นี้ เช่น อาการ หรือการเปลี่ยนกระถาง...",
     },
@@ -737,6 +741,8 @@ export const translations: Record<Locale, TranslationDictionary> = {
       plant_details: "Plant Details",
       edit_plant: "Edit Plant Info",
       save_changes: "Save Changes",
+      interval_changed: "Watering interval changed from every {from} days to every {to} days",
+      water_plant_aria: "Record watering for {name}",
       notes_label: "Care Notes",
       notes_placeholder: "Keep private notes about this plant, health issues, or repotting...",
     },

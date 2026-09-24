@@ -19,6 +19,8 @@ import {
   mergeGuestPlants,
   recordTaskAction,
 } from "@/lib/services/gardenService";
+import { calculateCareInterval, formatDate, generateNextTaskDue } from "@/lib/care/scheduler";
+import { GET as getPlantByIdRoute } from "@/app/api/garden/plants/[id]/route";
 import {
   createInquiry,
   getInquiries,
@@ -613,6 +615,76 @@ describe("Domain Services & REST API Endpoints", () => {
 
       // Reset
       await updateStockStatus(sp.id, "in_stock");
+    });
+  });
+  describe("6. QA regressions (e2e/full-app.spec.ts)", () => {
+    const guestToken = "qa-regression-guest";
+
+    it("completing a task whose next due date equals its own due date keeps the plant scheduled", async () => {
+      // Added today with a 2-day interval -> first task due today+2. Watering today yields
+      // next due today+2 too, which collides with the (now done) row on the unique constraint.
+      const plant = await addUserPlant({
+        guestToken,
+        nickname: "QA same-day water",
+        acquiredAt: formatDate(new Date()),
+        potSizeInch: 8,
+        potMaterial: "plastic",
+        placement: "indoor_window",
+        customWaterDays: 2,
+      });
+      const [first] = (await getUserPlantById(plant.id))!.tasks;
+      expect(first.dueDate).toBe(generateNextTaskDue(new Date(), 2));
+
+      const result = await completeTask({ taskId: first.id, userPlantId: plant.id });
+      expect(result.nextDueDate).toBe(first.dueDate);
+
+      const after = (await getUserPlantById(plant.id))!;
+      const pending = after.tasks.filter((t) => t.status === "pending");
+      expect(pending).toHaveLength(1);
+      expect(pending[0].dueDate).toBe(first.dueDate);
+      expect(pending[0].snoozeCount).toBe(0);
+      expect(after.logs).toHaveLength(1);
+    });
+
+    it("custom species use the default template with pot/placement multipliers and are logged as demand", async () => {
+      const customSpeciesName = `QA Custom Regression ${Date.now()}`;
+      const plant = await addUserPlant({
+        guestToken,
+        customSpeciesName,
+        nickname: "QA custom",
+        acquiredAt: formatDate(new Date()),
+        potSizeInch: 4,
+        potMaterial: "terracotta",
+        placement: "balcony_shade",
+      });
+      const expected = calculateCareInterval({ potSizeInch: 4, potMaterial: "terracotta", placement: "balcony_shade" });
+      const detail = (await getUserPlantById(plant.id))!;
+      expect(detail.tasks[0].dueDate).toBe(generateNextTaskDue(new Date(), expected));
+      expect(detail.calculation?.finalIntervalDays).toBe(expected);
+
+      const misses = await getSearchMisses(500);
+      expect(misses.some((m) => m.query === customSpeciesName.toLowerCase())).toBe(true);
+    });
+
+    it("malformed plant ids are treated as not found instead of throwing", async () => {
+      expect(await getUserPlantById("not-a-uuid")).toBeNull();
+      expect(await updateUserPlant("not-a-uuid", { nickname: "x" })).toBeUndefined();
+      const res = await getPlantByIdRoute(new Request("http://localhost/api/garden/plants/not-a-uuid"), {
+        params: Promise.resolve({ id: "not-a-uuid" }),
+      });
+      expect(res.status).toBe(404);
+    });
+
+    it("createInquiry persists the customer's note in payload.customNote for the admin log", async () => {
+      const result = await createInquiry({
+        sourcePage: "/plants/ficus-lyrata",
+        intent: "price",
+        speciesNameTh: "ไทรใบสัก",
+        customNote: "  ขอรูปต้นจริงด้วยครับ  ",
+      });
+      expect(result.message).toContain("ขอรูปต้นจริงด้วยครับ");
+      const [row] = await getInquiries({ refCode: result.refCode });
+      expect((row.payload as Record<string, unknown>).customNote).toBe("ขอรูปต้นจริงด้วยครับ");
     });
   });
 });
