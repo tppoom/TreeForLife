@@ -3,6 +3,20 @@
 > Production stack: **Vercel (Next.js, region `sin1`) + Supabase Postgres (Singapore)**
 > ทางเลือกอื่น (Neon, Docker) อยู่ท้ายเอกสาร · ภาพรวมการตัดสินใจอยู่ใน [`ROADMAP.md` §5](./ROADMAP.md)
 
+## 0. Production ปัจจุบัน
+
+| | |
+|---|---|
+| URL | https://treeforlife-app.vercel.app |
+| Vercel project | `treeforlife-app` (team `tppooms-projects`, region `sin1`) — **ไม่ใช่** project `tree-for-life` ซึ่งเป็นโค้ดอีกชุด |
+| Supabase project | `treeforlife-app` (ref `bhjearzlvtydtopaqpmg`, Singapore) · RLS เปิดทุกตาราง (Data API อ่านไม่ได้) |
+| Credentials | อยู่ในเครื่องผู้ดูแลที่ `~/.treeforlife-prod-credentials` (ย้ายเข้า password manager) |
+
+> ⚠️ **Vercel Hobby บล็อก deployment (`TEAM_ACCESS_REQUIRED`) ถ้าอีเมลผู้ commit ไม่ใช่อีเมลที่ยืนยันในบัญชี Vercel** — แก้ถาวรโดยเพิ่มอีเมล git (`git config user.email`) ใน Vercel → Account Settings → Emails แล้วเชื่อม GitHub App กับ repo (Vercel → Project → Settings → Git) เพื่อให้ push แล้ว deploy อัตโนมัติ · ระหว่างนี้ deploy จากสำเนาที่ไม่มี `.git`:
+> ```bash
+> D=$(mktemp -d) && git archive HEAD | tar -x -C $D && cp -r .vercel $D/ && (cd $D && vercel deploy --prod --yes)
+> ```
+
 ---
 
 ## 1. สถาปัตยกรรม
