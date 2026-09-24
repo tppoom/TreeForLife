@@ -45,7 +45,7 @@ All 11 implementation tasks, automated tests, production build verification, and
   - Cool Season: Nov–Feb
 - **Factor Multipliers:** Microclimate adjustments for:
   - Pot materials (Terracotta `0.8x`, Plastic `1.0x`, Glazed Ceramic/Cement `1.15x`)
-  - Pot diameters (<=4" `0.85x`, 5–8" `1.0x`, 9–12" `1.15x`, >12" `1.3x`)
+  - Pot diameters (<6" `0.85x`, 6–10" `1.0x`, >10" `1.2x`)
   - Placements (Outdoor Sun `0.7x`, Balcony Shade `0.9x`, Indoor Window `1.0x`, Indoor Far `1.25x`, Air Con `1.2x`)
 - **Safety Clamping:** All computed intervals strictly clamped between **1 and 30 days**.
 - **Task Management:** Due date rollover, snoozing (+1 day, capped at 3 consecutive snoozes), and skip actions.

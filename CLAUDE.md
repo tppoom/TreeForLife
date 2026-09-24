@@ -60,7 +60,7 @@ TreeForLife has **two schema sources that must stay strictly in sync**:
 
 - `lib/care/scheduler.ts` implements SPEC.md §5:
   - Thai 3-season cycle: Hot (Mar–May), Rainy (Jun–Oct), Cool (Nov–Feb).
-  - Multipliers: pot material (0.8x–1.15x), pot diameter (0.85x–1.3x), placement (0.7x–1.25x).
+  - Multipliers: pot material (0.8x–1.15x), pot diameter (0.85x–1.2x), placement (0.7x–1.25x).
   - Safety bounds: All intervals clamped between **1 and 30 days**.
   - Snooze limit: Max 3 consecutive snoozes.
 - **STRICT TIMEZONE RULE:** **Never use `new Date().toISOString().split('T')[0]`**. UTC midnight causes day rollback in Thailand (UTC+7). **Always use `formatDate(new Date())`** from `@/lib/care/scheduler`.

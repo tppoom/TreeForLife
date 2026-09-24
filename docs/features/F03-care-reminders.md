@@ -45,6 +45,8 @@ Vercel Cron ใช้เวลา **UTC** · Hobby รันได้วัน�
 | งาน | schedule (UTC) | เวลาไทย | ทำอะไร |
 |---|---|---|---|
 | `/api/cron/generate-tasks` | `0 20 * * *` | 03:00 | สร้าง task ล่วงหน้า 14 วันให้ทุกต้นที่ active (`ON CONFLICT DO NOTHING` บน unique เดิม) · ข้ามเดือนงดปุ๋ย · repot เตือนล่วงหน้า 14 วัน |
+
+**ต้องแก้ใน `gardenService` ด้วย (ช่องว่างจาก SPEC §5.3 ที่มีอยู่แล้วในโค้ด)**: ย้ายตรรกะ "งานถัดไปของต้นนี้คืออะไร" ไปฟังก์ชันเดียว `planUpcomingTasks(plant, template, fromDate, horizonDays)` ใน `lib/care/scheduler.ts` (pure, เทสต์ได้) แล้วใช้ทั้งตอน `addUserPlant`, ตอน rollover หลังกด done/skip และใน cron — ครอบคลุม: รดน้ำ · ปุ๋ย (**ข้ามเดือนใน `fertilize_pause_months`** โดยเลื่อนไปวันแรกของเดือนถัดไปที่ไม่งด) · `repot` (นับจาก `acquired_at` หรือ log repot ล่าสุด + `repot_months`, สร้าง task ที่ due = วันครบ − 14 วัน) · `prune` (`prune_days`) · `pest_check` (`pest_check_days`) · และห่อ insert ทั้งหมดของ `addUserPlant` ใน transaction เดียว
 | `/api/cron/send-reminders` | `0 0 * * *` | 07:00 | ส่งสรุปรวม 1 ข้อความ/คน (ดู §5) |
 | `/api/cron/season-recalc` | `0 21 1 3,6,11 *` | 04:00 วันที่ 1 มี.ค./มิ.ย./พ.ย. | คำนวณรอบใหม่ของ task รดน้ำที่ยัง pending + ใส่ข้อความ "เข้าหน้าฝนแล้ว ปรับรอบให้ห่างขึ้น" ไว้ในสรุปวันถัดไป |
 | `/api/cron/cleanup` | `0 19 * * 0` | อาทิตย์ 02:00 | pending เกิน 30 วัน → skipped · ลบ `rate_limits` เก่า · ลบ push subscription ที่ตายแล้ว · ลบรูปกำพร้าใน Storage |
