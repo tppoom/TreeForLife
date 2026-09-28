@@ -330,6 +330,9 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
+export const AppProvider = AppContextProvider;
+
+
 export function useApp(): AppContextValue {
   const context = useContext(AppContext);
   if (!context) {

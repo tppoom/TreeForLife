@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { isDemoMode } from "@/lib/config/app-mode";
 import { useApp, type UserRole } from "@/lib/context/AppContext";
 import {
   ShieldAlert,
@@ -374,34 +375,38 @@ export function AdminDashboardClient({
             </p>
           </div>
 
-          <div className="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-xl text-left border border-zinc-200 dark:border-zinc-700/60 space-y-2 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
-            <p className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-              <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              {locale === "th" ? "วิธีเข้าถึงหน้าจัดการร้าน:" : "How to access the Admin Portal:"}
-            </p>
-            <p>
-              {locale === "th"
-                ? "ใช้เมนูสลับบทบาทเดโม (Demo Role Switcher) ที่แถบเมนูด้านบน หรือคลิกปุ่มลัดด้านล่างนี้ได้ทันทีเพื่อทดสอบระบบ"
-                : "Switch roles using the Demo Role Switcher in the top navigation bar, or click one of the quick switch buttons below to test."}
-            </p>
-          </div>
+          {isDemoMode() && (
+            <>
+              <div className="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-xl text-left border border-zinc-200 dark:border-zinc-700/60 space-y-2 text-xs sm:text-sm text-zinc-600 dark:text-zinc-300">
+                <p className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                  <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                  {locale === "th" ? "วิธีเข้าถึงหน้าจัดการร้าน:" : "How to access the Admin Portal:"}
+                </p>
+                <p>
+                  {locale === "th"
+                    ? "ใช้เมนูสลับบทบาทเดโม (Demo Role Switcher) ที่แถบเมนูด้านบน หรือคลิกปุ่มลัดด้านล่างนี้ได้ทันทีเพื่อทดสอบระบบ"
+                    : "Switch roles using the Demo Role Switcher in the top navigation bar, or click one of the quick switch buttons below to test."}
+                </p>
+              </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-            <button
-              onClick={() => setRole("staff")}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm transition shadow-sm active:scale-95"
-            >
-              <UserCheck className="w-4 h-4" />
-              {t("admin.switch_to_staff")}
-            </button>
-            <button
-              onClick={() => setRole("admin")}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition shadow-sm active:scale-95"
-            >
-              <ShieldCheck className="w-4 h-4" />
-              {t("admin.switch_to_admin_btn")}
-            </button>
-          </div>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                <button
+                  onClick={() => setRole("staff")}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-medium text-sm transition shadow-sm active:scale-95"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  {t("admin.switch_to_staff")}
+                </button>
+                <button
+                  onClick={() => setRole("admin")}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm transition shadow-sm active:scale-95"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  {t("admin.switch_to_admin_btn")}
+                </button>
+              </div>
+            </>
+          )}
 
           <div className="pt-2">
             <Link

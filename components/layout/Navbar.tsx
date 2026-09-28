@@ -17,7 +17,9 @@ import {
   ChevronDown,
   UserCheck,
   MessageCircle,
+  Sparkles,
 } from "lucide-react";
+import { isDemoMode } from "@/lib/config/app-mode";
 import { useApp, type UserRole } from "@/lib/context/AppContext";
 import {
   InquiryModal,
@@ -100,6 +102,8 @@ export function Navbar() {
     }
   }, [pathname]);
 
+  const showDemoControls = isDemoMode();
+
   const navLinks = [
     { href: "/search", label: t("nav.catalog"), icon: BookOpen },
     { href: "/garden", label: t("nav.garden"), icon: Sprout },
@@ -111,6 +115,16 @@ export function Navbar() {
       icon: ShieldCheck,
       badge: role === "admin" || role === "staff" ? role.toUpperCase() : undefined,
     },
+    ...(showDemoControls
+      ? [
+          {
+            href: "/demo",
+            label: "Showcase Hub",
+            icon: Sparkles,
+            badge: "DEMO",
+          },
+        ]
+      : []),
   ];
 
   const isLinkActive = (href: string) => {
@@ -164,6 +178,15 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-sand-200 dark:border-forest-800/80 bg-sand-50/90 dark:bg-forest-950/90 backdrop-blur-md transition-colors">
+      {showDemoControls && (
+        <div className="bg-forest-900 text-sand-100 text-xs py-1 px-4 text-center border-b border-forest-800 flex items-center justify-center gap-2">
+          <span className="font-semibold text-emerald-400">🌟 Demo Mode</span>
+          <span>กำลังเปิดใช้งานเวอร์ชันจำลองทุกเฟส</span>
+          <Link href="/demo" className="underline font-medium hover:text-emerald-300">
+            เปิด Showcase Hub →
+          </Link>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo & Brand */}
@@ -236,56 +259,58 @@ export function Navbar() {
             </button>
 
             {/* Demo Role Switcher Dropdown */}
-            <div className="relative" ref={roleDropdownRef}>
-              <button
-                type="button"
-                onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-sand-300 dark:border-forest-700 bg-sand-100/70 dark:bg-forest-900/60 text-xs font-medium text-forest-800 dark:text-sand-200 hover:bg-sand-200/80 dark:hover:bg-forest-800 transition min-h-[44px]"
-                aria-expanded={roleDropdownOpen}
-                aria-label={t("roles.switch_role")}
-              >
-                <UserCheck className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
-                <span>{t(`roles.short_${role}`)}</span>
-                <ChevronDown className="w-3 h-3 text-sand-600 dark:text-sand-400" />
-              </button>
+            {showDemoControls && (
+              <div className="relative" ref={roleDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-sand-300 dark:border-forest-700 bg-sand-100/70 dark:bg-forest-900/60 text-xs font-medium text-forest-800 dark:text-sand-200 hover:bg-sand-200/80 dark:hover:bg-forest-800 transition min-h-[44px]"
+                  aria-expanded={roleDropdownOpen}
+                  aria-label={t("roles.switch_role")}
+                >
+                  <UserCheck className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
+                  <span>{t(`roles.short_${role}`)}</span>
+                  <ChevronDown className="w-3 h-3 text-sand-600 dark:text-sand-400" />
+                </button>
 
-              {roleDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-64 rounded-xl border border-sand-200 dark:border-forest-700 bg-white dark:bg-forest-900 shadow-elevated p-2 z-50 animate-in fade-in slide-in-from-top-2">
-                  <div className="px-2 py-1.5 text-[11px] font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wider">
-                    {t("roles.switch_role")}
+                {roleDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-xl border border-sand-200 dark:border-forest-700 bg-white dark:bg-forest-900 shadow-elevated p-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-2 py-1.5 text-[11px] font-semibold text-sand-500 dark:text-sand-400 uppercase tracking-wider">
+                      {t("roles.switch_role")}
+                    </div>
+                    <div className="space-y-1">
+                      {rolesList.map((r) => {
+                        const isSelected = r.id === role;
+                        return (
+                          <button
+                            key={r.id}
+                            onClick={() => handleRoleChange(r.id)}
+                            className={`w-full text-left px-2.5 py-2 rounded-lg text-xs transition flex flex-col gap-0.5 ${
+                              isSelected
+                                ? "bg-forest-50 dark:bg-forest-800/80 text-forest-900 dark:text-sand-100 font-semibold border-l-2 border-forest-600"
+                                : "text-forest-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-forest-800/40"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span>{r.label}</span>
+                              {isSelected && (
+                                <span className="text-[10px] font-bold text-forest-600 dark:text-forest-400">✓</span>
+                              )}
+                            </div>
+                            <span className="text-[11px] font-normal text-sand-600 dark:text-sand-400 line-clamp-1">
+                              {r.desc}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-sand-200 dark:border-forest-800 px-2 text-[11px] text-sand-500 dark:text-sand-400">
+                      <span className="font-medium">{user.displayName}</span>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    {rolesList.map((r) => {
-                      const isSelected = r.id === role;
-                      return (
-                        <button
-                          key={r.id}
-                          onClick={() => handleRoleChange(r.id)}
-                          className={`w-full text-left px-2.5 py-2 rounded-lg text-xs transition flex flex-col gap-0.5 ${
-                            isSelected
-                              ? "bg-forest-50 dark:bg-forest-800/80 text-forest-900 dark:text-sand-100 font-semibold border-l-2 border-forest-600"
-                              : "text-forest-700 dark:text-sand-300 hover:bg-sand-100 dark:hover:bg-forest-800/40"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span>{r.label}</span>
-                            {isSelected && (
-                              <span className="text-[10px] font-bold text-forest-600 dark:text-forest-400">✓</span>
-                            )}
-                          </div>
-                          <span className="text-[11px] font-normal text-sand-600 dark:text-sand-400 line-clamp-1">
-                            {r.desc}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-2 pt-2 border-t border-sand-200 dark:border-forest-800 px-2 text-[11px] text-sand-500 dark:text-sand-400">
-                    <span className="font-medium">{user.displayName}</span>
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
 
             {/* Language Toggle (TH/EN) */}
             <button
@@ -407,34 +432,36 @@ export function Navbar() {
           </div>
 
           {/* Role Switcher in Mobile Menu */}
-          <div className="pt-3 border-t border-sand-200 dark:border-forest-800">
-            <div className="text-xs font-semibold text-sand-600 dark:text-sand-400 uppercase tracking-wider mb-2">
-              {t("roles.switch_role")}
+          {showDemoControls && (
+            <div className="pt-3 border-t border-sand-200 dark:border-forest-800">
+              <div className="text-xs font-semibold text-sand-600 dark:text-sand-400 uppercase tracking-wider mb-2">
+                {t("roles.switch_role")}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {rolesList.map((r) => {
+                  const isSelected = r.id === role;
+                  return (
+                    <button
+                      key={r.id}
+                      onClick={() => handleRoleChange(r.id)}
+                      className={`px-3 py-2.5 rounded-lg text-xs font-medium text-left border min-h-[44px] flex items-center justify-between ${
+                        isSelected
+                          ? "border-forest-600 bg-forest-100/70 dark:bg-forest-900/80 text-forest-900 dark:text-sand-50 font-semibold"
+                          : "border-sand-200 dark:border-forest-800 bg-white/50 dark:bg-forest-900/20 text-forest-700 dark:text-sand-300"
+                      }`}
+                    >
+                      <span>{t(`roles.short_${r.id}`)}</span>
+                      {isSelected && <span className="text-forest-600 dark:text-forest-400">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-2 text-xs text-sand-500 dark:text-sand-400 flex items-center gap-1.5">
+                <UserCheck className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
+                <span>{user.displayName}</span>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {rolesList.map((r) => {
-                const isSelected = r.id === role;
-                return (
-                  <button
-                    key={r.id}
-                    onClick={() => handleRoleChange(r.id)}
-                    className={`px-3 py-2.5 rounded-lg text-xs font-medium text-left border min-h-[44px] flex items-center justify-between ${
-                      isSelected
-                        ? "border-forest-600 bg-forest-100/70 dark:bg-forest-900/80 text-forest-900 dark:text-sand-50 font-semibold"
-                        : "border-sand-200 dark:border-forest-800 bg-white/50 dark:bg-forest-900/20 text-forest-700 dark:text-sand-300"
-                    }`}
-                  >
-                    <span>{t(`roles.short_${r.id}`)}</span>
-                    {isSelected && <span className="text-forest-600 dark:text-forest-400">✓</span>}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-2 text-xs text-sand-500 dark:text-sand-400 flex items-center gap-1.5">
-              <UserCheck className="w-3.5 h-3.5 text-forest-600 dark:text-forest-400" />
-              <span>{user.displayName}</span>
-            </div>
-          </div>
+          )}
         </div>
       )}
 

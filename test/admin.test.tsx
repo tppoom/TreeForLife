@@ -128,12 +128,15 @@ describe("Task 10: Shop Admin Dashboard Integration Tests", () => {
 
   describe("2. Protected View & Role Gate (Guest / Customer vs Staff / Admin)", () => {
     it("renders accessible role-upgrade notice when user is a 'guest'", () => {
+      const prevEnv = process.env.NEXT_PUBLIC_APP_MODE;
+      process.env.NEXT_PUBLIC_APP_MODE = "demo";
       const ctx = createMockAppContext({ role: "guest" });
       const html = renderToString(
         <AppContext.Provider value={ctx}>
           <AdminDashboardClient initialSpecies={seededSpecies} />
         </AppContext.Provider>
       );
+      process.env.NEXT_PUBLIC_APP_MODE = prevEnv;
 
       // Must display role-upgrade alert
       expect(html).toContain('role="alert"');
