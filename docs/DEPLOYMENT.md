@@ -19,6 +19,43 @@
 
 ---
 
+## 0.1 สถาปัตยกรรม 2 เวอร์ชัน (Dual-Mode Deployment)
+
+ระบบ TreeForLife รองรับการ deploy แยกเป็น 2 เวอร์ชันจาก codebase เดียวกัน ควบคุมผ่านตัวแปร `NEXT_PUBLIC_APP_MODE`:
+
+```
+                    ┌────────────────────────┐
+                    │  Codebase: TreeForLife │
+                    └───────────┬────────────┘
+                                │
+        ┌───────────────────────┴───────────────────────┐
+        ▼                                               ▼
+┌───────────────────────────────┐       ┌───────────────────────────────┐
+│ 1. Production (พร้อมใช้งานจริง) │       │ 2. Prototype Showcase (เดโม)   │
+├───────────────────────────────┤       ├───────────────────────────────┤
+│ URL: treeforlife-app.vercel.app│      │ URL: treeforlife-demo.vercel...│
+│ NEXT_PUBLIC_APP_MODE=production│      │ NEXT_PUBLIC_APP_MODE=demo     │
+│                               │       │                               │
+│ • UI สะอาด ไม่มีป้าย Mock/เดโม  │       │ • แถบแจ้งเตือน Demo Mode      │
+│ • ซ่อน Role Switcher ทั้งหมด   │       │ • เมนูสลับบทบาท (RoleSwitcher)│
+│ • ป้องกัน /admin ด้วยรหัสผ่าน    │       │ • Showcase Hub ที่ /demo      │
+│ • เข้า /demo จะถูก redirect ออก │       │ • จำลองครบทั้ง Phase 1, 2, 3  │
+└───────────────────────────────┘       └───────────────────────────────┘
+```
+
+### การตั้งค่า Vercel สำหรับทั้ง 2 โปรเจกต์:
+
+1. **Production Project (`treeforlife-app`)**:
+   - `NEXT_PUBLIC_APP_MODE=production` (หรือปล่อยว่าง โค้ดจะ default เป็น production อัตโนมัติ)
+   - `ADMIN_PASSWORD=<รหัสผ่านที่ปลอดภัย>`
+   - `DATABASE_URL=<Supabase production pooler>`
+
+2. **Prototype Showcase Project (`treeforlife-demo`)**:
+   - `NEXT_PUBLIC_APP_MODE=demo`
+   - `DATABASE_URL=<Supabase pooler>` (สามารถใช้ DB ร่วมกันหรือแยก read-only ได้)
+
+---
+
 ## 1. สถาปัตยกรรม
 
 ```
@@ -45,6 +82,7 @@
 | `ADMIN_PASSWORD` | ✅ prod | middleware | รหัสเข้า `/admin` (username อะไรก็ได้) · **ไม่ตั้ง = หลังบ้านถูกปิดใน production** |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | sitemap, robots, OG | เช่น `https://tree-for-life.vercel.app` หรือโดเมนจริง |
 | `NEXT_PUBLIC_LINE_OA_ID` | ✅ | ปุ่มถามร้าน | ID ของ LINE OA **ไม่ต้องมี `@`** (โค้ดเติมให้ในลิงก์) |
+| `NEXT_PUBLIC_APP_MODE` | เสริม | client/server | `production` (default สะอาดจริง) หรือ `demo` (เปิด Showcase Hub ที่ `/demo`) — ดู §0.1 |
 | ตัวแปรของ F02/F03 (LINE Login, VAPID, CRON_SECRET, …) | ภายหลัง | | ดูไฟล์ฟีเจอร์นั้น ๆ |
 
 > ตัวแปร `NEXT_PUBLIC_*` ถูกฝังตอน build — แก้แล้วต้อง redeploy
