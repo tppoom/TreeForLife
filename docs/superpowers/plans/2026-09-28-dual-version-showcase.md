@@ -34,82 +34,11 @@
   export function isProductionMode(): boolean;
   ```
 
-- [ ] **Step 1: Write failing unit test for app-mode helper**
-
-```ts
-// test/app-mode.test.ts
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { getAppMode, isDemoMode, isProductionMode } from "../lib/config/app-mode";
-
-describe("app-mode helper", () => {
-  const originalEnv = process.env.NEXT_PUBLIC_APP_MODE;
-
-  afterEach(() => {
-    process.env.NEXT_PUBLIC_APP_MODE = originalEnv;
-  });
-
-  it("defaults to 'production' when NEXT_PUBLIC_APP_MODE is undefined or empty", () => {
-    delete process.env.NEXT_PUBLIC_APP_MODE;
-    expect(getAppMode()).toBe("production");
-    expect(isProductionMode()).toBe(true);
-    expect(isDemoMode()).toBe(false);
-
-    process.env.NEXT_PUBLIC_APP_MODE = "";
-    expect(getAppMode()).toBe("production");
-    expect(isProductionMode()).toBe(true);
-    expect(isDemoMode()).toBe(false);
-  });
-
-  it("returns 'demo' when NEXT_PUBLIC_APP_MODE is set to 'demo'", () => {
-    process.env.NEXT_PUBLIC_APP_MODE = "demo";
-    expect(getAppMode()).toBe("demo");
-    expect(isDemoMode()).toBe(true);
-    expect(isProductionMode()).toBe(false);
-  });
-
-  it("treats unknown values as 'production'", () => {
-    process.env.NEXT_PUBLIC_APP_MODE = "staging";
-    expect(getAppMode()).toBe("production");
-    expect(isProductionMode()).toBe(true);
-    expect(isDemoMode()).toBe(false);
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `npx vitest run test/app-mode.test.ts`
-Expected: FAIL ("Cannot find module '../lib/config/app-mode'")
-
-- [ ] **Step 3: Implement minimal code in `lib/config/app-mode.ts`**
-
-```ts
-// lib/config/app-mode.ts
-export type AppMode = "production" | "demo";
-
-/**
- * Returns the current application runtime mode based on NEXT_PUBLIC_APP_MODE.
- * Defaults to 'production' if not explicitly set to 'demo'.
- */
-export function getAppMode(): AppMode {
-  return process.env.NEXT_PUBLIC_APP_MODE === "demo" ? "demo" : "production";
-}
-
-export function isDemoMode(): boolean {
-  return getAppMode() === "demo";
-}
-
-export function isProductionMode(): boolean {
-  return getAppMode() === "production";
-}
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `npx vitest run test/app-mode.test.ts`
-Expected: PASS (3 tests passed)
-
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Write failing unit test for app-mode helper**
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Implement minimal code in `lib/config/app-mode.ts`**
+- [x] **Step 4: Run test to verify it passes**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/config/app-mode.ts test/app-mode.test.ts
@@ -129,91 +58,12 @@ git commit -m "feat(config): add app-mode environment helper"
 - Consumes: `isDemoMode()` from `lib/config/app-mode.ts`
 - Produces: Navbar that hides the demo role dropdown in production mode, and displays "🌟 Showcase Hub" banner & nav button in demo mode.
 
-- [ ] **Step 1: Write test for role switcher gating and demo banner**
-
-```tsx
-// test/role-switcher-gating.test.tsx
-import React from "react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { AppProvider } from "../lib/context/AppContext";
-import { Navbar } from "../components/layout/Navbar";
-
-describe("Navbar Mode Gating", () => {
-  const originalEnv = process.env.NEXT_PUBLIC_APP_MODE;
-
-  afterEach(() => {
-    process.env.NEXT_PUBLIC_APP_MODE = originalEnv;
-  });
-
-  it("does not render Demo Role Switcher in production mode", () => {
-    process.env.NEXT_PUBLIC_APP_MODE = "production";
-    render(
-      <AppProvider>
-        <Navbar />
-      </AppProvider>
-    );
-
-    // Role switcher dropdown label should not be present
-    expect(screen.queryByLabelText(/สลับบทบาท/i)).toBeNull();
-    expect(screen.queryByText(/Showcase Hub/i)).toBeNull();
-  });
-
-  it("renders Demo Role Switcher and Showcase link in demo mode", () => {
-    process.env.NEXT_PUBLIC_APP_MODE = "demo";
-    render(
-      <AppProvider>
-        <Navbar />
-      </AppProvider>
-    );
-
-    // Role switcher dropdown and showcase links should be visible
-    expect(screen.getByLabelText(/สลับบทบาท/i)).toBeDefined();
-    expect(screen.getAllByText(/Showcase Hub/i).length).toBeGreaterThan(0);
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `npx vitest run test/role-switcher-gating.test.tsx`
-Expected: FAIL (Role switcher is currently rendered unconditionally)
-
-- [ ] **Step 3: Modify `components/layout/Navbar.tsx` and `components/admin/AdminDashboardClient.tsx`**
-
-In `components/layout/Navbar.tsx`:
-- Import `isDemoMode` from `@/lib/config/app-mode`.
-- Add demo mode check: `const showDemoControls = isDemoMode();`
-- Wrap desktop and mobile role dropdowns with `{showDemoControls && (...)}`.
-- In demo mode, add top announcement banner:
-  ```tsx
-  {showDemoControls && (
-    <div className="bg-forest-900 text-sand-100 text-xs py-1 px-4 text-center border-b border-forest-800 flex items-center justify-center gap-2">
-      <span className="font-semibold text-emerald-400">🌟 Demo Mode</span>
-      <span>กำลังเปิดใช้งานเวอร์ชันจำลองทุกเฟส</span>
-      <Link href="/demo" className="underline font-medium hover:text-emerald-300">
-        เปิด Showcase Hub →
-      </Link>
-    </div>
-  )}
-  ```
-- In navigation links, if `showDemoControls`, add `Showcase Hub` nav link pointing to `/demo`.
-
-In `components/admin/AdminDashboardClient.tsx`:
-- Import `isDemoMode` from `@/lib/config/app-mode`.
-- Wrap the demo switcher cards in the role gate banner with `{isDemoMode() && (...)}`.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `npx vitest run test/role-switcher-gating.test.tsx`
-Expected: PASS (2 tests passed)
-
-- [ ] **Step 5: Run existing tests to ensure no regressions**
-
-Run: `npm test`
-Expected: PASS (All test suites pass)
-
-- [ ] **Step 6: Commit**
+- [x] **Step 1: Write test for role switcher gating and demo banner**
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Modify `components/layout/Navbar.tsx` and `components/admin/AdminDashboardClient.tsx`**
+- [x] **Step 4: Run test to verify it passes**
+- [x] **Step 5: Run existing tests to ensure no regressions**
+- [x] **Step 6: Commit**
 
 ```bash
 git add components/layout/Navbar.tsx components/admin/AdminDashboardClient.tsx test/role-switcher-gating.test.tsx
@@ -233,137 +83,11 @@ git commit -m "feat(ui): gate role switcher behind demo mode and add showcase ba
 - Consumes: `isProductionMode()` from `lib/config/app-mode.ts`
 - Produces: `/demo` page that redirects to `/` in production mode and renders the showcase hero & navigation tabs in demo mode.
 
-- [ ] **Step 1: Write test for `/demo` route guarding and hero rendering**
-
-```tsx
-// test/demo-route-guard.test.tsx
-import React from "react";
-import { describe, it, expect, afterEach } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { AppProvider } from "../lib/context/AppContext";
-import DemoPage from "../app/demo/page";
-
-describe("Demo Page Route Guard", () => {
-  const originalEnv = process.env.NEXT_PUBLIC_APP_MODE;
-
-  afterEach(() => {
-    process.env.NEXT_PUBLIC_APP_MODE = originalEnv;
-  });
-
-  it("renders showcase hero and title in demo mode", () => {
-    process.env.NEXT_PUBLIC_APP_MODE = "demo";
-    render(
-      <AppProvider>
-        <DemoPage />
-      </AppProvider>
-    );
-
-    expect(screen.getByText(/TreeForLife Experience Hub/i)).toBeDefined();
-    expect(screen.getByText(/ภาพรวมโครงการครบทุกเฟส/i)).toBeDefined();
-  });
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `npx vitest run test/demo-route-guard.test.tsx`
-Expected: FAIL (Cannot find module `../app/demo/page`)
-
-- [ ] **Step 3: Implement `components/demo/ShowcaseHero.tsx` and `app/demo/page.tsx`**
-
-`components/demo/ShowcaseHero.tsx`:
-```tsx
-import React from "react";
-import { Sparkles, Layers, ArrowRight } from "lucide-react";
-
-export interface ShowcaseHeroProps {
-  activeTab: "all" | "phase1" | "phase2" | "phase3";
-  onTabChange: (tab: "all" | "phase1" | "phase2" | "phase3") => void;
-}
-
-export function ShowcaseHero({ activeTab, onTabChange }: ShowcaseHeroProps) {
-  const tabs = [
-    { id: "all", label: "ทั้งหมด (All Phases)" },
-    { id: "phase1", label: "Phase 1: ระบบหลัก" },
-    { id: "phase2", label: "Phase 2: AI อัจฉริยะ" },
-    { id: "phase3", label: "Phase 3: ชุมชน & เติบโต" },
-  ] as const;
-
-  return (
-    <section className="bg-gradient-to-b from-sand-100 to-sand-50 dark:from-forest-900 dark:to-forest-950 py-12 px-4 sm:px-6 lg:px-8 border-b border-sand-200 dark:border-forest-800">
-      <div className="max-w-6xl mx-auto text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span>Interactive All-Phases Prototype</span>
-        </div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-forest-900 dark:text-sand-50 tracking-tight">
-          🌿 TreeForLife Experience Hub
-        </h1>
-        <p className="max-w-2xl mx-auto text-base sm:text-lg text-sand-700 dark:text-sand-300">
-          ภาพรวมโครงการครบทุกเฟสของร้านต้นไม้ ทดลองสัมผัสประสบการณ์ฟีเจอร์ AI และระบบการดูแลต้นไม้อัจฉริยะล่วงหน้าได้ในหน้าเดียว
-        </p>
-
-        {/* Filter Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 pt-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition min-h-[44px] ${
-                activeTab === tab.id
-                  ? "bg-forest-800 text-sand-50 shadow-md dark:bg-emerald-700"
-                  : "bg-white dark:bg-forest-800/60 text-forest-800 dark:text-sand-200 hover:bg-sand-100 dark:hover:bg-forest-700 border border-sand-200 dark:border-forest-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-```
-
-`app/demo/page.tsx`:
-```tsx
-"use client";
-
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { isProductionMode } from "@/lib/config/app-mode";
-import { ShowcaseHero } from "@/components/demo/ShowcaseHero";
-
-export default function DemoPage() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"all" | "phase1" | "phase2" | "phase3">("all");
-
-  useEffect(() => {
-    // If accessed while in production mode, redirect cleanly to homepage
-    if (isProductionMode()) {
-      router.replace("/");
-    }
-  }, [router]);
-
-  return (
-    <main className="min-h-screen bg-sand-50 dark:bg-forest-950 pb-20">
-      <ShowcaseHero activeTab={activeTab} onTabChange={setActiveTab} />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
-        <div id="showcase-content" className="space-y-16">
-          {/* Phase cards will be mounted here in subsequent tasks */}
-        </div>
-      </div>
-    </main>
-  );
-}
-```
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `npx vitest run test/demo-route-guard.test.tsx`
-Expected: PASS
-
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Write test for `/demo` route guarding and hero rendering**
+- [x] **Step 2: Run test to verify it fails**
+- [x] **Step 3: Implement `components/demo/ShowcaseHero.tsx` and `app/demo/page.tsx`**
+- [x] **Step 4: Run test to verify it passes**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/demo/page.tsx components/demo/ShowcaseHero.tsx test/demo-route-guard.test.tsx
@@ -384,7 +108,7 @@ git commit -m "feat(demo): scaffold showcase hub page and hero component"
 **Interfaces:**
 - Produces: 4 client components providing interactive simulators for AI Doctor, Garden Designer Before/After, AI Chat, and Budget Calculator.
 
-- [ ] **Step 1: Write test for Phase 2 prototypes**
+- [x] **Step 1: Write test for Phase 2 prototypes**
 
 ```tsx
 // test/phase2-prototypes.test.tsx
@@ -420,12 +144,12 @@ describe("Phase 2 AI Prototypes", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/phase2-prototypes.test.tsx`
 Expected: FAIL (Cannot find modules)
 
-- [ ] **Step 3: Implement the 4 Phase 2 prototype components**
+- [x] **Step 3: Implement the 4 Phase 2 prototype components**
 
 1. `components/demo/PlantDoctorPrototype.tsx`:
    - Preset selector: "มอนสเตอร่า ใบเหลือง", "ยางอินเดีย ขอบใบไหม้", "ไทรใบสัก จุดดำ".
@@ -451,12 +175,12 @@ Expected: FAIL (Cannot find modules)
    - Style filter pills (Minimal, Tropical Cafe, Air Purifier).
    - Dynamic plant bundle listing showing exact species, individual prices, total price, and placement tips.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run test/phase2-prototypes.test.tsx`
 Expected: PASS (2 tests passed)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/demo/PlantDoctorPrototype.tsx components/demo/GardenDesignerPrototype.tsx components/demo/AssistantChatPrototype.tsx components/demo/BudgetRecommenderPrototype.tsx test/phase2-prototypes.test.tsx
