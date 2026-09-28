@@ -2,10 +2,6 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-
-if (typeof globalThis !== "undefined" && !(globalThis as any).self) {
-  (globalThis as any).self = globalThis;
-}
 import {
   Compass,
   Droplets,
@@ -33,7 +29,7 @@ export function Phase1Recap() {
         "บันทึกลงสวนได้ทันที",
       ],
       linkText: "สำรวจคลังต้นไม้",
-      href: "/plants",
+      href: "/search",
       icon: Compass,
     },
     {
@@ -79,7 +75,7 @@ export function Phase1Recap() {
       ],
       linkText: "เปิดแบบฟอร์มสอบถาม",
       isInquiryModal: true,
-      href: "/plants",
+      href: "/search",
       icon: MessageCircle,
     },
   ];

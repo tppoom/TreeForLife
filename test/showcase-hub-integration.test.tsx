@@ -3,6 +3,7 @@ import { describe, it, expect, afterEach, beforeEach, vi } from "vitest";
 import { renderToString } from "react-dom/server";
 import { AppProvider } from "../lib/context/AppContext";
 import DemoPage from "../app/demo/page";
+import { ShowcaseHubView } from "../components/demo/ShowcaseHubView";
 
 const mockReplace = vi.fn();
 const mockPush = vi.fn();
@@ -64,7 +65,7 @@ describe("Showcase Hub Integration", () => {
     process.env.NEXT_PUBLIC_APP_MODE = "demo";
     render(
       <AppProvider>
-        <DemoPage initialTab="all" />
+        <ShowcaseHubView initialTab="all" />
       </AppProvider>
     );
 
@@ -87,7 +88,7 @@ describe("Showcase Hub Integration", () => {
     process.env.NEXT_PUBLIC_APP_MODE = "demo";
     render(
       <AppProvider>
-        <DemoPage initialTab="phase1" />
+        <ShowcaseHubView initialTab="phase1" />
       </AppProvider>
     );
 
@@ -100,7 +101,7 @@ describe("Showcase Hub Integration", () => {
     process.env.NEXT_PUBLIC_APP_MODE = "demo";
     render(
       <AppProvider>
-        <DemoPage initialTab="phase2" />
+        <ShowcaseHubView initialTab="phase2" />
       </AppProvider>
     );
 
@@ -114,7 +115,7 @@ describe("Showcase Hub Integration", () => {
     process.env.NEXT_PUBLIC_APP_MODE = "demo";
     render(
       <AppProvider>
-        <DemoPage initialTab="phase3" />
+        <ShowcaseHubView initialTab="phase3" />
       </AppProvider>
     );
 

@@ -19,6 +19,14 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/demo",
 }));
 
+vi.mock("next/link", () => ({
+  default: ({ children, href, ...props }: any) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
 let currentHtml = "";
 
 function render(component: React.ReactElement) {
