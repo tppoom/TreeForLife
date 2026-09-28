@@ -366,7 +366,7 @@ git commit -m "feat(demo): assemble all phases in showcase hub"
 - Tag: `v1.0.0-phase1-prod`
 - Tag: `v1.1.0-all-phases-demo`
 
-- [ ] **Step 1: Update documentation and bump version**
+- [x] **Step 1: Update documentation and bump version**
 
 In `package.json`:
 - Bump `"version": "1.0.0"`
@@ -376,7 +376,7 @@ In `docs/DEPLOYMENT.md`:
   - `treeforlife-app.vercel.app` uses `NEXT_PUBLIC_APP_MODE=production` (Clean Phase 1, guest-first, basic auth admin).
   - `treeforlife-demo.vercel.app` uses `NEXT_PUBLIC_APP_MODE=demo` (Includes `/demo` Showcase Hub and demo role switcher).
 
-- [ ] **Step 2: Run full build and test verification**
+- [x] **Step 2: Run full build and test verification**
 
 Run: `npm run build`
 Expected: Build succeeds with 0 TypeScript/ESLint errors and all routes compiled.
@@ -384,7 +384,7 @@ Expected: Build succeeds with 0 TypeScript/ESLint errors and all routes compiled
 Run: `npm test`
 Expected: 100% tests passing across all suites.
 
-- [ ] **Step 3: Commit and Create Git Release Tags**
+- [x] **Step 3: Commit and Create Git Release Tags**
 
 ```bash
 git add package.json docs/DEPLOYMENT.md README.md
@@ -397,7 +397,7 @@ git tag -a v1.0.0-phase1-prod -m "Release v1.0.0: TreeForLife Phase 1 Production
 git tag -a v1.1.0-all-phases-demo -m "Release v1.1.0: TreeForLife All-Phases Prototype Showcase Hub (Interactive Phase 1, 2, 3 Mock)"
 ```
 
-- [ ] **Step 4: Push to GitHub with tags**
+- [x] **Step 4: Push to GitHub with tags**
 
 ```bash
 git push origin main --tags
