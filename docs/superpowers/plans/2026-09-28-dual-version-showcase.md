@@ -201,7 +201,7 @@ git commit -m "feat(demo): add Phase 2 AI interactive prototype components"
 **Interfaces:**
 - Produces: 4 client components providing interactive simulators for Landscape Quotes, Community Board, Loyalty Points, and Shop Insights.
 
-- [ ] **Step 1: Write test for Phase 3 prototypes**
+- [x] **Step 1: Write test for Phase 3 prototypes**
 
 ```tsx
 // test/phase3-prototypes.test.tsx
@@ -232,12 +232,12 @@ describe("Phase 3 Platform Prototypes", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/phase3-prototypes.test.tsx`
 Expected: FAIL (Cannot find modules)
 
-- [ ] **Step 3: Implement the 4 Phase 3 prototype components**
+- [x] **Step 3: Implement the 4 Phase 3 prototype components**
 
 1. `components/demo/QuoteRequestPrototype.tsx`:
    - Interactive fields: Area size (sqm), sunlight exposure, preferred garden style.
@@ -255,12 +255,12 @@ Expected: FAIL (Cannot find modules)
    - Visual bar chart of top 5 trending plants of the month.
    - "Search Misses" table highlighting top searches with zero results to guide stock procurement.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run test/phase3-prototypes.test.tsx`
 Expected: PASS (2 tests passed)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add components/demo/QuoteRequestPrototype.tsx components/demo/CommunityBoardPrototype.tsx components/demo/MemberPointsPrototype.tsx components/demo/ShopAnalyticsPrototype.tsx test/phase3-prototypes.test.tsx
