@@ -280,7 +280,7 @@ git commit -m "feat(demo): add Phase 3 platform & community prototype components
 - Consumes: All prototype components from Tasks 3, 4, 5
 - Produces: The fully assembled Showcase Hub page at `/demo`.
 
-- [ ] **Step 1: Write integration test for the complete Showcase Hub**
+- [x] **Step 1: Write integration test for the complete Showcase Hub**
 
 ```tsx
 // test/showcase-hub-integration.test.tsx
@@ -318,12 +318,12 @@ describe("Showcase Hub Integration", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run test/showcase-hub-integration.test.tsx`
 Expected: FAIL
 
-- [ ] **Step 3: Implement `components/demo/Phase1Recap.tsx` and integrate into `app/demo/page.tsx`**
+- [x] **Step 3: Implement `components/demo/Phase1Recap.tsx` and integrate into `app/demo/page.tsx`**
 
 `components/demo/Phase1Recap.tsx`:
 - Render 4 cards highlighting working Phase 1 capabilities with direct link buttons:
@@ -336,17 +336,17 @@ In `app/demo/page.tsx`:
 - Mount `Phase1Recap`, Phase 2 prototypes (`PlantDoctorPrototype`, `GardenDesignerPrototype`, `AssistantChatPrototype`, `BudgetRecommenderPrototype`), and Phase 3 prototypes (`QuoteRequestPrototype`, `CommunityBoardPrototype`, `MemberPointsPrototype`, `ShopAnalyticsPrototype`).
 - Filter displayed sections based on `activeTab`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run test/showcase-hub-integration.test.tsx`
 Expected: PASS
 
-- [ ] **Step 5: Run full test suite**
+- [x] **Step 5: Run full test suite**
 
 Run: `npm test`
 Expected: PASS (All test files pass)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add components/demo/Phase1Recap.tsx app/demo/page.tsx test/showcase-hub-integration.test.tsx
