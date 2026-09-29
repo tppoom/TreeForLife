@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { getDb } from "../lib/db";
+import { careTasks } from "../db/schema";
+import { eq } from "drizzle-orm";
 import { GET as getPlants, POST as postPlant } from "../app/api/garden/plants/route";
 import { GET as getPlant, PATCH as patchPlant } from "../app/api/garden/plants/[id]/route";
 import { POST as archivePlant } from "../app/api/garden/plants/[id]/archive/route";
+import { POST as postTasks } from "../app/api/garden/tasks/route";
 import { POST as postInquiry } from "../app/api/inquiries/route";
 
 describe("API Security & Ownership Hardening", () => {
@@ -68,6 +71,36 @@ describe("API Security & Ownership Hardening", () => {
     expect(res.status).toBe(404);
   });
 
+  it("Anonymous caller attempting GET /api/garden/plants/[id] gets 404 NOT_FOUND", async () => {
+    const req = new Request(`https://example.com/api/garden/plants/${plantAId}`);
+    const res = await getPlant(req, { params: Promise.resolve({ id: plantAId }) });
+    expect(res.status).toBe(404);
+    const json = await res.json();
+    expect(json.error.code).toBe("NOT_FOUND");
+  });
+
+  it("Caller B attempting to act on Caller A's task gets 404 NOT_FOUND", async () => {
+    const db = await getDb();
+    const task = await db.query.careTasks.findFirst({
+      where: eq(careTasks.userPlantId, plantAId),
+    });
+    if (!task) throw new Error("Task for Plant A not found");
+
+    const req = new Request("https://example.com/api/garden/tasks", {
+      method: "POST",
+      headers: { "x-guest-token": guestTokenB, "content-type": "application/json" },
+      body: JSON.stringify({
+        userPlantId: plantAId,
+        taskId: task.id,
+        action: "done",
+      }),
+    });
+    const res = await postTasks(req);
+    expect(res.status).toBe(404);
+    const json = await res.json();
+    expect(json.error.code).toBe("NOT_FOUND");
+  });
+
   it("Rejects invalid payload with 400 VALIDATION_ERROR", async () => {
     const req = new Request("https://example.com/api/garden/plants", {
       method: "POST",
@@ -84,5 +117,31 @@ describe("API Security & Ownership Hardening", () => {
     expect(res.status).toBe(400);
     const json = await res.json();
     expect(json.error.code).toBe("VALIDATION_ERROR");
+  });
+
+  it("Rate limits inquiry creation after 10 requests per minute", async () => {
+    const ip = `198.51.100.${Date.now() % 250}`;
+    const makeReq = () =>
+      new Request("https://example.com/api/inquiries", {
+        method: "POST",
+        headers: {
+          "x-forwarded-for": ip,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          sourcePage: "/plants/test",
+          intent: "price",
+        }),
+      });
+
+    for (let i = 0; i < 10; i++) {
+      const res = await postInquiry(makeReq());
+      expect(res.status).toBe(201);
+    }
+
+    const blockedRes = await postInquiry(makeReq());
+    expect(blockedRes.status).toBe(429);
+    const json = await blockedRes.json();
+    expect(json.error.code).toBe("RATE_LIMITED");
   });
 });

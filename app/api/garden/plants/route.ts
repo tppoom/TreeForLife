@@ -12,11 +12,8 @@ export async function GET(req: Request) {
     if (actor.kind === "anonymous") {
       const url = new URL(req.url, "http://localhost");
       const qGuestToken = url.searchParams.get("guestToken");
-      const qUserId = url.searchParams.get("userId");
       if (qGuestToken && qGuestToken.trim()) {
         actor = { kind: "guest", guestToken: qGuestToken.trim() };
-      } else if (qUserId && qUserId.trim()) {
-        actor = { kind: "user", userId: qUserId.trim(), role: "customer", guestToken: null };
       }
     }
 
@@ -60,9 +57,7 @@ export async function POST(req: Request) {
     const actorKey =
       actor.kind === "user"
         ? actor.userId
-        : actor.kind === "guest"
-        ? actor.guestToken
-        : actor.ip;
+        : actor.guestToken;
     await assertRateLimit({ key: "plant:write:" + actorKey, limit: 30 });
 
     const schema =

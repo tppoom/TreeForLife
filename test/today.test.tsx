@@ -240,7 +240,10 @@ describe("Task 9: Today's Tasks Dashboard Integration Tests", () => {
       const initialSnoozeCount = overdueTaskObj.snoozeCount;
       const req = new Request("http://localhost/api/garden/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": testGuestToken,
+        },
         body: JSON.stringify({
           userPlantId: overdueTaskObj.userPlantId,
           taskId: overdueTaskObj.id,
@@ -267,7 +270,10 @@ describe("Task 9: Today's Tasks Dashboard Integration Tests", () => {
 
       const req = new Request("http://localhost/api/garden/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": testGuestToken,
+        },
         body: JSON.stringify({
           userPlantId: overdueTaskObj.userPlantId,
           taskId: overdueTaskObj.id,
@@ -278,13 +284,16 @@ describe("Task 9: Today's Tasks Dashboard Integration Tests", () => {
       const res = await postTasksRoute(req);
       expect(res.status).toBe(400);
       const data = await res.json();
-      expect(data.error).toContain("3 ครั้ง");
+      expect(data.error?.message || data.error).toContain("3 ครั้ง");
     });
 
     it("POST /api/garden/tasks action: 'skip' skips cycle and schedules next regular cycle", async () => {
       const req = new Request("http://localhost/api/garden/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": testGuestToken,
+        },
         body: JSON.stringify({
           userPlantId: overdueTaskObj.userPlantId,
           taskId: overdueTaskObj.id,
@@ -311,7 +320,10 @@ describe("Task 9: Today's Tasks Dashboard Integration Tests", () => {
     it("POST /api/garden/tasks action: 'complete' marks task done, records care log, and generates next cycle", async () => {
       const req = new Request("http://localhost/api/garden/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": testGuestToken,
+        },
         body: JSON.stringify({
           userPlantId: todayTaskObj.userPlantId,
           taskId: todayTaskObj.id,
@@ -361,7 +373,10 @@ describe("Task 9: Today's Tasks Dashboard Integration Tests", () => {
 
       const req = new Request("http://localhost/api/garden/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": batchGuestToken,
+        },
         body: JSON.stringify({
           batch: true,
           tasks: [
@@ -403,7 +418,10 @@ describe("Task 9: Today's Tasks Dashboard Integration Tests", () => {
 
       const req = new Request("http://localhost/api/garden/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": resilientGuestToken,
+        },
         body: JSON.stringify({
           batch: true,
           tasks: [

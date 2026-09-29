@@ -16,17 +16,12 @@ export async function GET(req: Request) {
   try {
     let actor = await getActor(req);
     const { searchParams } = new URL(req.url, "http://localhost");
-    const userId = searchParams.get("userId");
     const guestToken = searchParams.get("guestToken");
     const userPlantId = searchParams.get("userPlantId");
     const status = searchParams.get("status");
 
-    if (actor.kind === "anonymous") {
-      if (guestToken && guestToken.trim()) {
-        actor = { kind: "guest", guestToken: guestToken.trim() };
-      } else if (userId && userId.trim()) {
-        actor = { kind: "user", userId: userId.trim(), role: "customer", guestToken: null };
-      }
+    if (actor.kind === "anonymous" && guestToken && guestToken.trim()) {
+      actor = { kind: "guest", guestToken: guestToken.trim() };
     }
 
     const db = await getDb();
@@ -36,9 +31,7 @@ export async function GET(req: Request) {
       if (!plant) {
         return NextResponse.json({ tasks: [] });
       }
-      if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
-        requireOwner(actor, plant);
-      }
+      requireOwner(actor, plant);
 
       const conditions = [eq(careTasks.userPlantId, userPlantId)];
       if (status) {
@@ -132,12 +125,7 @@ export async function GET(req: Request) {
     // If no scoping parameter is provided, return empty array to prevent leaking data across users
     return NextResponse.json({ tasks: [] });
   } catch (error: unknown) {
-    if (error instanceof HttpError) {
-      return toErrorResponse(error);
-    }
-    const message = error instanceof Error ? error.message : "Failed to fetch tasks";
-    console.error("Error fetching tasks:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+    return toErrorResponse(error);
   }
 }
 
@@ -166,9 +154,7 @@ export async function POST(req: Request) {
             if (!plant) {
               throw new HttpError(404, "NOT_FOUND", "ไม่พบต้นไม้ที่ระบุ");
             }
-            if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
-              requireOwner(actor, plant);
-            }
+            requireOwner(actor, plant);
             const res = await recordTaskAction(item);
             succeeded.push(res);
           } catch (itemErr: unknown) {
@@ -191,7 +177,7 @@ export async function POST(req: Request) {
 
     const singleInput: TaskActionInput = body;
     if (!singleInput.userPlantId || !singleInput.taskId || !singleInput.action) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      throw new HttpError(400, "VALIDATION_ERROR", "Missing required fields");
     }
 
     const normalizedAction = singleInput.action === "complete" ? "done" : singleInput.action;
@@ -208,19 +194,20 @@ export async function POST(req: Request) {
     if (!plant) {
       throw new HttpError(404, "NOT_FOUND", "ไม่พบต้นไม้ที่ระบุ");
     }
-    if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
-      requireOwner(actor, plant);
-    }
+    requireOwner(actor, plant);
 
-    const result = await recordTaskAction(singleInput);
-    return NextResponse.json(result);
-  } catch (error: unknown) {
-    if (error instanceof HttpError) {
-      return toErrorResponse(error);
+    try {
+      const result = await recordTaskAction(singleInput);
+      return NextResponse.json(result);
+    } catch (actionErr: unknown) {
+      if (actionErr instanceof HttpError) {
+        throw actionErr;
+      }
+      const message = actionErr instanceof Error ? actionErr.message : "Failed to update task";
+      throw new HttpError(400, "BAD_REQUEST", message);
     }
-    const message = error instanceof Error ? error.message : "Failed to update task";
-    console.error("Error recording task action:", error);
-    return NextResponse.json({ error: message }, { status: 400 });
+  } catch (error: unknown) {
+    return toErrorResponse(error);
   }
 }
 

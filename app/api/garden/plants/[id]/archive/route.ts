@@ -19,9 +19,7 @@ export async function POST(
     }
 
     const actor = await getActor(req);
-    if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
-      requireOwner(actor, plant);
-    }
+    requireOwner(actor, plant);
 
     await archiveUserPlant(id);
     return NextResponse.json({ success: true });

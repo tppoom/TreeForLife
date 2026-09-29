@@ -344,7 +344,10 @@ describe("Task 8: My Garden Hub, Add Wizard & Care Calendar Integration", () => 
     it("PATCH /api/garden/plants/[id] updates plant environmental settings and nickname", async () => {
       const req = new Request(`http://localhost/api/garden/plants/${createdPlantId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": testGuestToken,
+        },
         body: JSON.stringify({
           nickname: "น้องมอนโฉมใหม่",
           potSizeInch: 10,
@@ -368,7 +371,9 @@ describe("Task 8: My Garden Hub, Add Wizard & Care Calendar Integration", () => 
     });
 
     it("GET /api/garden/plants/[id] returns updated plant data", async () => {
-      const req = new Request(`http://localhost/api/garden/plants/${createdPlantId}`);
+      const req = new Request(`http://localhost/api/garden/plants/${createdPlantId}`, {
+        headers: { "x-guest-token": testGuestToken },
+      });
       const res = await getPlantRoute(req, {
         params: Promise.resolve({ id: createdPlantId }),
       });
@@ -383,6 +388,7 @@ describe("Task 8: My Garden Hub, Add Wizard & Care Calendar Integration", () => 
     it("POST /api/garden/plants/[id]/archive marks plant as inactive", async () => {
       const req = new Request(`http://localhost/api/garden/plants/${createdPlantId}/archive`, {
         method: "POST",
+        headers: { "x-guest-token": testGuestToken },
       });
 
       const res = await archivePlantRoute(req, {

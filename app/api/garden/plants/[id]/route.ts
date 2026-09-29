@@ -23,9 +23,7 @@ export async function GET(
     }
 
     const actor = await getActor(req);
-    if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
-      requireOwner(actor, plant);
-    }
+    requireOwner(actor, plant);
 
     return NextResponse.json({ success: true, plant, data: plant });
   } catch (err: unknown) {
@@ -49,9 +47,7 @@ export async function PATCH(
     }
 
     const actor = await getActor(req);
-    if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
-      requireOwner(actor, plant);
-    }
+    requireOwner(actor, plant);
 
     const rawBody = await req.json();
     const parsed = UpdatePlantSchema.safeParse(rawBody);
@@ -59,7 +55,7 @@ export async function PATCH(
       throw new HttpError(400, "VALIDATION_ERROR", "ข้อมูลไม่ถูกต้อง", parsed.error.flatten());
     }
 
-    const updated = await updateUserPlant(id, rawBody);
+    const updated = await updateUserPlant(id, parsed.data);
     if (!updated) {
       throw new HttpError(404, "NOT_FOUND", "ไม่พบต้นไม้ที่ระบุ");
     }

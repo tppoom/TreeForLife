@@ -519,7 +519,10 @@ describe("Domain Services & REST API Endpoints", () => {
     it("POST /api/garden/tasks performs complete action", async () => {
       const req = new Request("http://localhost/api/garden/tasks", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": apiGuestToken,
+        },
         body: JSON.stringify({
           userPlantId: apiPlantId,
           taskId: apiTaskId,
@@ -533,6 +536,22 @@ describe("Domain Services & REST API Endpoints", () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.nextDueDate).toBeDefined();
+    });
+
+    it("POST /api/garden/plants/[id]/archive archives a plant", async () => {
+      const req = new Request(`http://localhost/api/garden/plants/${apiPlantId}/archive`, {
+        method: "POST",
+        headers: {
+          "x-guest-token": apiGuestToken,
+        },
+      });
+
+      const res = await archivePlantRoute(req, {
+        params: Promise.resolve({ id: apiPlantId }),
+      });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.success).toBe(true);
     });
 
     it("POST /api/garden/merge merges guest plants into user", async () => {
@@ -550,19 +569,6 @@ describe("Domain Services & REST API Endpoints", () => {
       const data = await res.json();
       expect(data.success).toBe(true);
       expect(data.plantCount).toBeGreaterThanOrEqual(1);
-    });
-
-    it("POST /api/garden/plants/[id]/archive archives a plant", async () => {
-      const req = new Request(`http://localhost/api/garden/plants/${apiPlantId}/archive`, {
-        method: "POST",
-      });
-
-      const res = await archivePlantRoute(req, {
-        params: Promise.resolve({ id: apiPlantId }),
-      });
-      expect(res.status).toBe(200);
-      const data = await res.json();
-      expect(data.success).toBe(true);
     });
 
     it("POST /api/inquiries creates an inquiry", async () => {
