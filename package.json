@@ -20,7 +20,8 @@
     "next": "^15.1.12",
     "pg": "^8.13.1",
     "react": "^19.0.8",
-    "react-dom": "^19.0.8"
+    "react-dom": "^19.0.8",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
