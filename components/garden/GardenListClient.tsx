@@ -24,6 +24,7 @@ import {
   PotMaterial,
   Placement,
 } from "@/lib/care/scheduler";
+import { GardenPdpaSection } from "./GardenPlantsClient";
 
 export interface UserPlantListItem {
   id: string;
@@ -503,6 +504,8 @@ export function GardenListClient() {
             </div>
           </div>
         )}
+        {/* PDPA & Data Rights Section */}
+        <GardenPdpaSection onReset={fetchPlants} className="mt-8" />
       </div>
     </div>
   );
