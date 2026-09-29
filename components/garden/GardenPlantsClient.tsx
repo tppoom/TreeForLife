@@ -49,11 +49,12 @@ export function GardenPdpaSection({ className = "", onReset }: GardenPdpaSection
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(
+        const errorMsg =
+          errorData.error?.message ||
+          (typeof errorData.error === "string" ? errorData.error : null) ||
           errorData.message ||
-            errorData.error ||
-            (locale === "th" ? "การดาวน์โหลดข้อมูลล้มเหลว" : "Export failed")
-        );
+          (locale === "th" ? "การดาวน์โหลดข้อมูลล้มเหลว" : "Export failed");
+        throw new Error(errorMsg);
       }
 
       const blob = await res.blob();
@@ -121,11 +122,12 @@ export function GardenPdpaSection({ className = "", onReset }: GardenPdpaSection
 
         if (!res.ok) {
           const errorData = await res.json().catch(() => ({}));
-          throw new Error(
+          const errorMsg =
+            errorData.error?.message ||
+            (typeof errorData.error === "string" ? errorData.error : null) ||
             errorData.message ||
-              errorData.error ||
-              (locale === "th" ? "การลบข้อมูลล้มเหลว" : "Deletion failed")
-          );
+            (locale === "th" ? "การลบข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง" : "Deletion failed, please try again");
+          throw new Error(errorMsg);
         }
       }
 

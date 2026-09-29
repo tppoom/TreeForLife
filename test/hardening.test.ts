@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { getDb } from "../lib/db";
 import { careTasks } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { GET as getPlants, POST as postPlant } from "../app/api/garden/plants/route";
+import { POST as postPlant } from "../app/api/garden/plants/route";
 import { GET as getPlant, PATCH as patchPlant } from "../app/api/garden/plants/[id]/route";
 import { POST as archivePlant } from "../app/api/garden/plants/[id]/archive/route";
 import { POST as postTasks } from "../app/api/garden/tasks/route";
