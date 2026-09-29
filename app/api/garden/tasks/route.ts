@@ -4,20 +4,42 @@ import { careTasks, userPlants, species } from "@/db/schema";
 import { eq, and, sql, asc } from "drizzle-orm";
 import {
   recordTaskAction,
+  getUserPlantById,
   TaskActionInput,
 } from "@/lib/services/gardenService";
+import { getActor, requireOwner } from "@/lib/auth/actor";
+import { assertRateLimit } from "@/lib/http/rate-limit";
+import { HttpError, toErrorResponse } from "@/lib/http/errors";
+import { TaskActionSchema } from "@/lib/validation/garden";
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
+    let actor = await getActor(req);
+    const { searchParams } = new URL(req.url, "http://localhost");
     const userId = searchParams.get("userId");
     const guestToken = searchParams.get("guestToken");
     const userPlantId = searchParams.get("userPlantId");
     const status = searchParams.get("status");
 
+    if (actor.kind === "anonymous") {
+      if (guestToken && guestToken.trim()) {
+        actor = { kind: "guest", guestToken: guestToken.trim() };
+      } else if (userId && userId.trim()) {
+        actor = { kind: "user", userId: userId.trim(), role: "customer", guestToken: null };
+      }
+    }
+
     const db = await getDb();
 
     if (userPlantId) {
+      const plant = await getUserPlantById(userPlantId);
+      if (!plant) {
+        return NextResponse.json({ tasks: [] });
+      }
+      if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
+        requireOwner(actor, plant);
+      }
+
       const conditions = [eq(careTasks.userPlantId, userPlantId)];
       if (status) {
         conditions.push(eq(careTasks.status, status));
@@ -54,10 +76,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ tasks });
     }
 
-    if (userId || guestToken) {
-      const userCondition = userId
-        ? eq(userPlants.userId, userId)
-        : eq(userPlants.guestToken, guestToken!);
+    if (actor.kind === "user" || actor.kind === "guest") {
+      const userCondition =
+        actor.kind === "user"
+          ? eq(userPlants.userId, actor.userId)
+          : eq(userPlants.guestToken, actor.guestToken);
 
       const plants = await db
         .select({ id: userPlants.id })
@@ -109,6 +132,9 @@ export async function GET(req: Request) {
     // If no scoping parameter is provided, return empty array to prevent leaking data across users
     return NextResponse.json({ tasks: [] });
   } catch (error: unknown) {
+    if (error instanceof HttpError) {
+      return toErrorResponse(error);
+    }
     const message = error instanceof Error ? error.message : "Failed to fetch tasks";
     console.error("Error fetching tasks:", error);
     return NextResponse.json({ error: message }, { status: 500 });
@@ -117,7 +143,16 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const actor = await getActor(req);
     const body = await req.json();
+
+    const actorKey =
+      actor.kind === "user"
+        ? actor.userId
+        : actor.kind === "guest"
+        ? actor.guestToken
+        : actor.ip;
+    await assertRateLimit({ key: "plant:write:" + actorKey, limit: 30 });
 
     // Support batch completion if batch is true and tasks array is provided
     if (body.batch && Array.isArray(body.tasks)) {
@@ -127,6 +162,13 @@ export async function POST(req: Request) {
       for (const item of body.tasks) {
         if (item.userPlantId && item.taskId && item.action) {
           try {
+            const plant = await getUserPlantById(item.userPlantId);
+            if (!plant) {
+              throw new HttpError(404, "NOT_FOUND", "ไม่พบต้นไม้ที่ระบุ");
+            }
+            if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
+              requireOwner(actor, plant);
+            }
             const res = await recordTaskAction(item);
             succeeded.push(res);
           } catch (itemErr: unknown) {
@@ -152,11 +194,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
+    const normalizedAction = singleInput.action === "complete" ? "done" : singleInput.action;
+    const parsed = TaskActionSchema.safeParse({
+      taskId: singleInput.taskId,
+      action: normalizedAction,
+      notes: singleInput.note,
+    });
+    if (!parsed.success) {
+      throw new HttpError(400, "VALIDATION_ERROR", "คำสั่งงานไม่ถูกต้อง", parsed.error.flatten());
+    }
+
+    const plant = await getUserPlantById(singleInput.userPlantId);
+    if (!plant) {
+      throw new HttpError(404, "NOT_FOUND", "ไม่พบต้นไม้ที่ระบุ");
+    }
+    if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
+      requireOwner(actor, plant);
+    }
+
     const result = await recordTaskAction(singleInput);
     return NextResponse.json(result);
   } catch (error: unknown) {
+    if (error instanceof HttpError) {
+      return toErrorResponse(error);
+    }
     const message = error instanceof Error ? error.message : "Failed to update task";
     console.error("Error recording task action:", error);
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
+

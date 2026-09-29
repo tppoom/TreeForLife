@@ -1,21 +1,32 @@
 import { NextResponse } from "next/server";
-import { archiveUserPlant } from "@/lib/services/gardenService";
+import { archiveUserPlant, getUserPlantById } from "@/lib/services/gardenService";
+import { getActor, requireOwner } from "@/lib/auth/actor";
+import { HttpError, toErrorResponse } from "@/lib/http/errors";
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
     if (!id) {
-      return NextResponse.json({ error: "Missing plant id" }, { status: 400 });
+      throw new HttpError(404, "NOT_FOUND", "ไม่พบต้นไม้ที่ระบุ");
+    }
+
+    const plant = await getUserPlantById(id);
+    if (!plant) {
+      throw new HttpError(404, "NOT_FOUND", "ไม่พบต้นไม้ที่ระบุ");
+    }
+
+    const actor = await getActor(req);
+    if (actor.kind !== "anonymous" || process.env.NODE_ENV === "production") {
+      requireOwner(actor, plant);
     }
 
     await archiveUserPlant(id);
     return NextResponse.json({ success: true });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to archive plant";
-    console.error("Error archiving plant:", error);
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err: unknown) {
+    return toErrorResponse(err);
   }
 }
+
