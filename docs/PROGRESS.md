@@ -1,18 +1,23 @@
 # TreeForLife — Project Progress & Status Report
 
-> **Current Phase:** Phase 1 demo scope complete · Phase 1 launch scope in progress (see [`ROADMAP.md`](./ROADMAP.md))  
-> **Last Updated:** 2026-09-24  
+> **Current Phase:** Milestone 1 (Production Hardening & PDPA) Complete · Version 1.2.0 (see [`ROADMAP.md`](./ROADMAP.md))  
+> **Last Updated:** 2026-09-29  
 > **Reference Spec:** [`docs/SPEC.md`](./SPEC.md)  
-> **Design Document:** [`docs/superpowers/specs/2026-09-08-phase1-implementation-design.md`](./superpowers/specs/2026-09-08-phase1-implementation-design.md)  
-> **Implementation Plan:** [`docs/superpowers/plans/2026-09-08-phase1-implementation.md`](./superpowers/plans/2026-09-08-phase1-implementation.md)
+> **Design Documents:**  
+> - Phase 1: [`docs/superpowers/specs/2026-09-08-phase1-implementation-design.md`](./superpowers/specs/2026-09-08-phase1-implementation-design.md)  
+> - Dual Version: [`docs/superpowers/specs/2026-09-28-dual-version-showcase-design.md`](./superpowers/specs/2026-09-28-dual-version-showcase-design.md)  
+> - Milestone 1: [`docs/superpowers/specs/2026-09-29-milestone1-hardening-pdpa-design.md`](./superpowers/specs/2026-09-29-milestone1-hardening-pdpa-design.md)  
 
 ---
 
 ## 1. Executive Summary
 
-TreeForLife has completed **Phase 1: Boutique Plant Catalog, Thai 3-Season Care Scheduler & Guest-First Web Platform**. The platform is fully operational in local development with zero external dependencies (via embedded PGlite) and cloud-ready for Neon PostgreSQL deployment.
+TreeForLife has completed **Phase 1 Core Platform**, **Dual-Version Showcase (v1.1.0)**, and **Milestone 1: Production Hardening & PDPA Compliance (v1.2.0)**:
+- **v1.0.0:** Boutique Plant Catalog (30 species), Thai 3-Season Care Scheduler, My Garden wizard, Daily Tasks, and LINE OA handoff.
+- **v1.1.0:** Dual-Version Showcase (`NEXT_PUBLIC_APP_MODE=production` vs `demo`), gating role switchers, and introducing the Showcase Hub (`/demo`) with interactive prototypes across Phase 1, Phase 2, and Phase 3.
+- **v1.2.0:** Production-grade security hardening: actor extraction (`x-guest-token`), plant ownership verification (`requireOwner` returning 404 anti-enumeration), database rate limiting (`rate_limits` table returning 429), Zod validation schemas, HTTP security headers, botanical error boundaries, bilingual PDPA privacy policy (`/privacy`), terms of service (`/terms`), and data portability/erasure APIs with garden reset.
 
-All 11 implementation tasks, automated tests, production build verification, and whole-branch code reviews are complete with zero outstanding defects.
+All 217 automated unit/integration tests and Next.js 15 production builds pass with zero defects.
 
 ---
 
@@ -20,13 +25,13 @@ All 11 implementation tasks, automated tests, production build verification, and
 
 | Metric | Result | Target | Status |
 |---|---|---|---|
-| **Automated Tests** | **158 passed / 158 total** (8 suites) | 100% passing | ✅ Exceeded |
-| **Next.js 15 App Router Routes** | **12 routes compiled** (0 TS errors) | 12 routes | ✅ Complete |
+| **Automated Tests** | **217 passed / 217 total** (20 suites) | 100% passing | ✅ Exceeded |
+| **Next.js 15 App Router Routes** | **17 routes compiled** (0 TS errors) | 17 routes | ✅ Complete |
 | **First Load Shared JS Bundle** | **105 kB** | < 150 kB | ✅ Optimal |
 | **Curated Boutique Thai Species** | **30 species** (with media, care, problems) | 30 species | ✅ Complete |
 | **Dual DDL Parity** | 100% parity between Drizzle & SQL DDL | Strict 1-to-1 | ✅ Verified |
-| **Bilingual Dictionary** | Full Thai (`th`) & English (`en`) dictionary | Dual locale | ✅ Complete |
-| **Local Bootstrapping** | Instant embedded PGlite under `.data/pglite` | Zero Docker/external DB | ✅ Verified |
+| **Bilingual Dictionary & PDPA** | Full Thai (`th`) & English (`en`) dictionary + PDPA | Dual locale | ✅ Complete |
+| **Production Security Baseline** | Ownership + Rate limit + Zod + Security Headers | OWASP / PDPA | ✅ Verified |
 
 ---
 
