@@ -4,6 +4,7 @@ import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "@/db/schema";
 import { SCHEMA_DDL } from "./schema-ddl";
+export { SCHEMA_DDL } from "./schema-ddl";
 import { SEED_SPECIES } from "./seed-data";
 import path from "path";
 import fs from "fs";

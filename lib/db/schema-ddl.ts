@@ -144,4 +144,20 @@ CREATE TABLE IF NOT EXISTS search_misses (
   count INTEGER NOT NULL DEFAULT 1,
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS rate_limits (
+  key TEXT NOT NULL,
+  window_start TIMESTAMPTZ NOT NULL,
+  count INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (key, window_start)
+);
+
+CREATE INDEX IF NOT EXISTS user_plants_user_idx   ON user_plants (user_id)     WHERE is_active;
+CREATE INDEX IF NOT EXISTS user_plants_guest_idx  ON user_plants (guest_token) WHERE is_active;
+CREATE INDEX IF NOT EXISTS care_tasks_due_idx     ON care_tasks (due_date, status);
+CREATE INDEX IF NOT EXISTS care_logs_plant_idx    ON care_logs (user_plant_id, performed_at DESC);
+CREATE INDEX IF NOT EXISTS inquiries_created_idx  ON inquiries (created_at DESC);
+CREATE INDEX IF NOT EXISTS species_stock_idx      ON species (stock_status);
+CREATE UNIQUE INDEX IF NOT EXISTS favorites_user_species_uq  ON favorites (user_id, species_id)     WHERE user_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS favorites_guest_species_uq ON favorites (guest_token, species_id) WHERE guest_token IS NOT NULL;
 `;

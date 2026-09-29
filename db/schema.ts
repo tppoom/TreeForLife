@@ -10,8 +10,11 @@ import {
   date,
   pgEnum,
   unique,
+  primaryKey,
+  index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { relations, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
+import { relations, sql, type InferSelectModel, type InferInsertModel } from "drizzle-orm";
 
 // Enums
 export const roleEnum = pgEnum("role", ["customer", "staff", "admin"]);
@@ -73,7 +76,9 @@ export const species = pgTable("species", {
   publishedAt: timestamp("published_at", { withTimezone: true }).defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("species_stock_idx").on(table.stockStatus),
+]);
 
 // Species Media
 export const speciesMedia = pgTable("species_media", {
@@ -130,7 +135,10 @@ export const userPlants = pgTable("user_plants", {
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("user_plants_user_idx").on(table.userId).where(sql`${table.isActive} = true`),
+  index("user_plants_guest_idx").on(table.guestToken).where(sql`${table.isActive} = true`),
+]);
 
 // Care Tasks
 export const careTasks = pgTable("care_tasks", {
@@ -145,6 +153,7 @@ export const careTasks = pgTable("care_tasks", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   unique("care_tasks_plant_type_due_unique").on(table.userPlantId, table.type, table.dueDate),
+  index("care_tasks_due_idx").on(table.dueDate, table.status),
 ]);
 
 // Care Logs (Timeline History)
@@ -156,7 +165,9 @@ export const careLogs = pgTable("care_logs", {
   note: text("note"),
   photoUrl: text("photo_url"),
   source: text("source").notNull().default("app"), // app, line, backfill
-});
+}, (table) => [
+  index("care_logs_plant_idx").on(table.userPlantId, table.performedAt.desc()),
+]);
 
 // Favorites (Guest + User)
 export const favorites = pgTable("favorites", {
@@ -165,7 +176,10 @@ export const favorites = pgTable("favorites", {
   guestToken: text("guest_token"),
   speciesId: uuid("species_id").notNull().references(() => species.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  uniqueIndex("favorites_user_species_uq").on(table.userId, table.speciesId).where(sql`${table.userId} IS NOT NULL`),
+  uniqueIndex("favorites_guest_species_uq").on(table.guestToken, table.speciesId).where(sql`${table.guestToken} IS NOT NULL`),
+]);
 
 // Inquiries (Shop metric #1 & LINE Handoffs)
 export const inquiries = pgTable("inquiries", {
@@ -178,7 +192,9 @@ export const inquiries = pgTable("inquiries", {
   intent: text("intent").notNull().default("care_help"), // price, availability, care_help, design_quote
   payload: jsonb("payload").$type<Record<string, unknown>>().default({}).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}, (table) => [
+  index("inquiries_created_idx").on(table.createdAt.desc()),
+]);
 
 // Search Misses (Business Intelligence for Shop Owner)
 export const searchMisses = pgTable("search_misses", {
@@ -187,6 +203,19 @@ export const searchMisses = pgTable("search_misses", {
   count: integer("count").notNull().default(1),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// Rate Limits
+export const rateLimits = pgTable(
+  "rate_limits",
+  {
+    key: text("key").notNull(),
+    windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+    count: integer("count").notNull().default(1),
+  },
+  (table) => [
+    primaryKey({ columns: [table.key, table.windowStart] }),
+  ]
+);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -310,3 +339,6 @@ export type NewInquiry = InferInsertModel<typeof inquiries>;
 
 export type SearchMiss = InferSelectModel<typeof searchMisses>;
 export type NewSearchMiss = InferInsertModel<typeof searchMisses>;
+
+export type RateLimit = InferSelectModel<typeof rateLimits>;
+export type NewRateLimit = InferInsertModel<typeof rateLimits>;
