@@ -154,13 +154,18 @@ Preview ใช้ `DATABASE_URL` ของ preview (แนะนำ Supabase bra
 
 ---
 
-## 6. ข้อจำกัดที่ต้องรู้ของเวอร์ชันปัจจุบัน
+## 6. สถานะฟีเจอร์และการรักษาความปลอดภัย (Milestone 1 — v1.2.0)
 
-ระบบที่ deploy อยู่คือ **Phase 1 เวอร์ชันเดโม** — ดูรายการเต็มใน [`ROADMAP.md` §1](./ROADMAP.md):
-- role switcher ในเมนูยังเป็นของเดโม (หลังบ้านจริงป้องกันด้วย `ADMIN_PASSWORD` แล้ว)
-- API สวนของฉันยังไม่ตรวจ ownership → แก้ใน F00 ก่อนโปรโมตกับลูกค้าจริง
-- ยังไม่มีแจ้งเตือน (F03), ล็อกอิน LINE (F02), หน้านโยบายความเป็นส่วนตัว (F11)
-- รูปพันธุ์ยังเป็นรูปชั่วคราวจาก Unsplash (F01)
+ระบบได้รับการยกระดับความปลอดภัยและปฏิบัติตามกฎหมาย PDPA อย่างสมบูรณ์แล้วในเวอร์ชัน **v1.2.0**:
+- **Actor Identity & Ownership**: API สวนของฉัน (`/api/garden/*`) ทุกเส้นทางตรวจสอบสิทธิ์ผ่าน `x-guest-token` header และ `requireOwner` (หากไม่ใช่เจ้าของจะตอบกลับเป็น HTTP 404 NOT_FOUND ทันทีเพื่อป้องกันการสุ่มเจาะดูข้อมูล ID)
+- **Input Validation**: ข้อมูลนำเข้าทั้งหมดถูกตรวจสอบโครงสร้างผ่าน Zod schemas (`lib/validation/`) ป้องกันข้อมูลผิดปกติ
+- **Rate Limiting**: มีระบบจำกัดความถี่การยิง API ผ่านตารางฐานข้อมูล Postgres `rate_limits` ตอบกลับเป็น HTTP 429 พร้อม header `Retry-After`
+- **Security Headers & Error Pages**: มีการฝัง HTTP Security Headers (`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`) และหน้า Error / 404 สไตล์ Botanical Luxury
+- **PDPA Compliance (พ.ร.บ. คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562)**:
+  - หน้านโยบายความเป็นส่วนตัวสองภาษา `/privacy` (TH/EN) และข้อกำหนดการใช้งาน `/terms`
+  - สิทธิขอรับข้อมูล (Data Portability): `GET /api/account/export` เพื่อดาวน์โหลดข้อมูลในรูปแบบ JSON
+  - สิทธิขอให้ลบข้อมูล (Right to Erasure): `POST /api/account/delete` พร้อมปุ่ม "ล้างข้อมูลในเครื่องนี้" ในหน้า `/garden`
+- *สิ่งที่ยังอยู่ใน Roadmap ถัดไป:* LINE Login (F02), ระบบแจ้งเตือนทางไลน์ (F03), การเชื่อมต่อคลังรูปภาพจริง (F01)
 
 ---
 

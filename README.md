@@ -34,6 +34,12 @@
   - ระบบล็อกอินจำลอง (Guest, Customer, Staff, Admin)
   - ปรับสถานะสต็อกแบบเรียลไทม์ (In Stock, Made to Order, Seasonal)
   - ตารางบันทึกการสอบถามของลูกค้า และ Demand Analytics จากคำค้นหาที่ไม่พบ
+- 🔒 **ระบบความปลอดภัยระดับ Production & PDPA (Milestone 1 — v1.2.0)**:
+  - **Resource Ownership**: ตรวจสอบความเป็นเจ้าของต้นไม้ (`requireOwner`) ผ่าน `x-guest-token` header และตอบกลับ 404 NOT_FOUND เมื่อไม่ได้รับอนุญาตเพื่อป้องกันการสุ่มเจาะดูข้อมูล
+  - **Database Rate Limiting**: ป้องกันการ Flood API ด้วยตาราง `rate_limits` ตอบกลับ HTTP 429 พร้อม header `Retry-After`
+  - **Zod Schema Validation**: ตรวจสอบความถูกต้องของข้อมูล Request Body/Query ทุกจุด (`lib/validation/`)
+  - **HTTP Security Headers & Error Boundaries**: ป้องกัน XSS/Clickjacking และมีหน้า Error/404 สไตล์ Botanical Luxury
+  - **PDPA Privacy Compliance**: หน้านโยบายความเป็นส่วนตัวสองภาษา `/privacy`, ข้อกำหนด `/terms`, สิทธิขอรับข้อมูล JSON (`GET /api/account/export`), และสิทธิขอให้ลบข้อมูล (`POST /api/account/delete` พร้อมปุ่มล้างข้อมูลในเครื่อง)
 - 🌐 **รองรับ 2 ภาษา 100% (Bilingual TH / EN) & Dark Mode**:
   - คลังความรู้ภาษาอังกฤษสมบูรณ์ครบ 30 ชนิด ไร้ปัญหาข้อความหลุด
   - ธีมสีสไตล์ Botanical Luxury (#faf8f5 Warm Sand / #0b1a13 Deep Forest)
@@ -84,7 +90,7 @@ npm run dev
 ## 🧪 การทดสอบและตรวจสอบคุณภาพ (Testing & Quality)
 
 ```bash
-# รัน Unit & Integration Tests ทั้งหมด (158 ผ่าน 100%)
+# รัน Unit & Integration Tests ทั้งหมด (217 การทดสอบ ผ่าน 100%)
 npm run test
 
 # รัน End-to-End Playwright Tests (6 Flow ผ่าน 100%)
