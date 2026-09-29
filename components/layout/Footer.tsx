@@ -6,7 +6,7 @@ import { Sprout, MessageCircle, Clock, MapPin, ExternalLink, Shield } from "luci
 import { useApp } from "@/lib/context/AppContext";
 
 export function Footer() {
-  const { t } = useApp();
+  const { t, locale } = useApp();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -92,6 +92,22 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/privacy"
+                  className="text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50 hover:underline transition"
+                >
+                  {locale === "en" ? "Privacy Policy (PDPA)" : "นโยบายความเป็นส่วนตัว"}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/terms"
+                  className="text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50 hover:underline transition"
+                >
+                  {locale === "en" ? "Terms of Service" : "ข้อกำหนดการใช้งาน"}
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/admin"
                   className="inline-flex items-center gap-1.5 text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50 hover:underline transition"
                 >
@@ -131,12 +147,26 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright and Tagline */}
-        <div className="mt-10 pt-6 border-t border-sand-200 dark:border-forest-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-forest-600 dark:text-sand-400">
-          <div>
-            {t("footer.copyright", { year: currentYear })}
+        {/* Bottom Bar: Copyright, Legal Links, and Tagline */}
+        <div className="mt-10 pt-6 border-t border-sand-200 dark:border-forest-800/80 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-forest-600 dark:text-sand-400">
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1">
+            <span>{t("footer.copyright", { year: currentYear })}</span>
+            <span className="hidden sm:inline text-sand-400 dark:text-forest-700">·</span>
+            <Link
+              href="/privacy"
+              className="hover:text-forest-950 dark:hover:text-sand-100 underline-offset-4 hover:underline transition"
+            >
+              {locale === "en" ? "Privacy Policy" : "นโยบายความเป็นส่วนตัว"}
+            </Link>
+            <span className="text-sand-400 dark:text-forest-700">·</span>
+            <Link
+              href="/terms"
+              className="hover:text-forest-950 dark:hover:text-sand-100 underline-offset-4 hover:underline transition"
+            >
+              {locale === "en" ? "Terms of Service" : "ข้อกำหนดการใช้งาน"}
+            </Link>
           </div>
-          <div className="font-serif italic text-forest-700 dark:text-sand-300">
+          <div className="font-serif italic text-forest-700 dark:text-sand-300 text-center md:text-right">
             {t("footer.nurtured_note")}
           </div>
         </div>
