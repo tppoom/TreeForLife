@@ -1,4 +1,5 @@
 import { PGlite } from "@electric-sql/pglite";
+import { pg_trgm } from "@electric-sql/pglite/contrib/pg_trgm";
 import { drizzle as drizzlePglite } from "drizzle-orm/pglite";
 import { drizzle as drizzleNodePg } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
@@ -6,6 +7,7 @@ import * as schema from "@/db/schema";
 import { SCHEMA_DDL } from "./schema-ddl";
 export { SCHEMA_DDL } from "./schema-ddl";
 import { SEED_SPECIES } from "./seed-data";
+import { normalizeThaiSearch } from "@/lib/search/normalize";
 import path from "path";
 import fs from "fs";
 
@@ -63,7 +65,9 @@ export async function getDb(): Promise<DbClient> {
         }
 
         if (!pgliteInstance) {
-          pgliteInstance = new PGlite(dataDir);
+          pgliteInstance = new PGlite(dataDir, {
+            extensions: { pg_trgm },
+          });
           await pgliteInstance.waitReady;
         }
 
@@ -115,15 +119,26 @@ export async function initDatabase(client: QueryableClient) {
     await client.query("BEGIN;");
     try {
       for (const item of SEED_SPECIES) {
+        const searchText = normalizeThaiSearch(
+          [
+            item.nameTh,
+            item.nameEn,
+            item.nameSci,
+            ...(Array.isArray(item.aliases) ? item.aliases : []),
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+
         const speciesRes = await client.query(
           `INSERT INTO species (
             slug, name_th, name_en, name_sci, aliases, family, summary,
             light, water_need, placement, difficulty, pet_safe, mature_size,
             mature_height_cm, growth_rate, soil_mix, fertilizer_note, propagation,
-            shop_note, stock_status
+            shop_note, stock_status, search_text
           ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
-          ) ON CONFLICT (slug) DO UPDATE SET slug = EXCLUDED.slug RETURNING id;`,
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+          ) ON CONFLICT (slug) DO UPDATE SET slug = EXCLUDED.slug, search_text = EXCLUDED.search_text RETURNING id;`,
           [
             item.slug,
             item.nameTh,
@@ -145,6 +160,7 @@ export async function initDatabase(client: QueryableClient) {
             item.propagation ?? null,
             item.shopNote,
             item.stockStatus,
+            searchText,
           ]
         );
 
@@ -207,6 +223,43 @@ export async function initDatabase(client: QueryableClient) {
       await client.query("ROLLBACK;");
       console.error("Database seed failed, rolled back transaction:", seedErr);
       throw seedErr;
+    }
+  }
+
+  // Backfill search_text for existing species where search_text IS NULL
+  if (hasLock) {
+    const missingSearchRes = await client.query(
+      "SELECT id, name_th, name_en, name_sci, aliases FROM species WHERE search_text IS NULL;"
+    );
+    if (missingSearchRes.rows && missingSearchRes.rows.length > 0) {
+      for (const row of missingSearchRes.rows) {
+        let aliases: string[] = [];
+        if (Array.isArray(row.aliases)) {
+          aliases = row.aliases;
+        } else if (typeof row.aliases === "string") {
+          try {
+            const parsed = JSON.parse(row.aliases);
+            if (Array.isArray(parsed)) aliases = parsed;
+            else aliases = [row.aliases];
+          } catch {
+            aliases = [row.aliases];
+          }
+        }
+        const searchText = normalizeThaiSearch(
+          [
+            row.name_th as string,
+            row.name_en as string,
+            row.name_sci as string,
+            ...aliases,
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+        await client.query(
+          "UPDATE species SET search_text = $1 WHERE id = $2;",
+          [searchText, row.id]
+        );
+      }
     }
   }
 } finally {

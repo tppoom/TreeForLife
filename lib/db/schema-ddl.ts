@@ -1,4 +1,6 @@
 export const SCHEMA_DDL = `
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   display_name TEXT NOT NULL,
@@ -37,6 +39,7 @@ CREATE TABLE IF NOT EXISTS species (
   shop_note TEXT NOT NULL,
   stock_status TEXT NOT NULL DEFAULT 'in_stock',
   price_range_internal TEXT,
+  search_text TEXT,
   published_at TIMESTAMPTZ DEFAULT NOW(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -142,6 +145,9 @@ CREATE TABLE IF NOT EXISTS search_misses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   query TEXT NOT NULL UNIQUE,
   count INTEGER NOT NULL DEFAULT 1,
+  normalized_query TEXT,
+  suggested_species_id UUID REFERENCES species(id) ON DELETE SET NULL,
+  resolved_at TIMESTAMPTZ,
   last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -160,4 +166,12 @@ CREATE INDEX IF NOT EXISTS inquiries_created_idx  ON inquiries (created_at DESC)
 CREATE INDEX IF NOT EXISTS species_stock_idx      ON species (stock_status);
 CREATE UNIQUE INDEX IF NOT EXISTS favorites_user_species_uq  ON favorites (user_id, species_id)     WHERE user_id IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS favorites_guest_species_uq ON favorites (guest_token, species_id) WHERE guest_token IS NOT NULL;
+
+-- Additive migrations for existing databases (ADR-03)
+ALTER TABLE species ADD COLUMN IF NOT EXISTS search_text TEXT;
+ALTER TABLE search_misses ADD COLUMN IF NOT EXISTS normalized_query TEXT;
+ALTER TABLE search_misses ADD COLUMN IF NOT EXISTS suggested_species_id UUID REFERENCES species(id) ON DELETE SET NULL;
+ALTER TABLE search_misses ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
+
+CREATE INDEX IF NOT EXISTS species_search_trgm    ON species USING gin (search_text gin_trgm_ops);
 `;

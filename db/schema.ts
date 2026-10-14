@@ -73,6 +73,7 @@ export const species = pgTable("species", {
   shopNote: text("shop_note").notNull(), // Authentic shop owner experience & tips
   stockStatus: text("stock_status").notNull().default("in_stock"), // in_stock, made_to_order, seasonal, hidden
   priceRangeInternal: text("price_range_internal"),
+  searchText: text("search_text"),
   publishedAt: timestamp("published_at", { withTimezone: true }).defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -201,6 +202,9 @@ export const searchMisses = pgTable("search_misses", {
   id: uuid("id").primaryKey().defaultRandom(),
   query: text("query").notNull().unique(),
   count: integer("count").notNull().default(1),
+  normalizedQuery: text("normalized_query"),
+  suggestedSpeciesId: uuid("suggested_species_id").references(() => species.id, { onDelete: "set null" }),
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
