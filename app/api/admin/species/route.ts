@@ -6,7 +6,7 @@ import { AdminSpeciesCreateSchema } from "@/lib/validation/admin";
 import { HttpError, toErrorResponse } from "@/lib/http/errors";
 import { normalizeThaiSearch } from "@/lib/search/normalize";
 
-export async function GET(_req?: Request) {
+export async function GET(_req: Request) {
   try {
     const db = await getDb();
     const speciesList = await db
