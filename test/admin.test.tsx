@@ -80,7 +80,7 @@ describe("Task 10: Shop Admin Dashboard Integration Tests", () => {
     await getDb();
 
     // Fetch seeded species
-    seededSpecies = await getAllSpecies({ stockStatus: "all" });
+    seededSpecies = await getAllSpecies({ stockStatus: "all", includeDrafts: true });
     expect(seededSpecies.length).toBeGreaterThanOrEqual(30);
     testSpeciesId = seededSpecies[0].id;
     testSpeciesSlug = seededSpecies[0].slug;

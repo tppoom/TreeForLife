@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { getDb } from "@/lib/db";
+import { species } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import {
   getAllSpecies,
   getSpeciesBySlug,
@@ -221,6 +223,58 @@ describe("Task 6: Public Catalog, Faceted Search & Plant Detail Integration", ()
       expect(scriptElement.type).toBe("script");
       expect(scriptElement.props.type).toBe("application/ld+json");
       expect(scriptElement.props.dangerouslySetInnerHTML.__html).not.toContain("<");
+    });
+
+    it("excludes draft species with publishedAt: null by default and includes when includeDrafts: true", async () => {
+      const db = await getDb();
+      const draftSlug = `draft-test-plant-${Date.now()}`;
+      const [draft] = await db
+        .insert(species)
+        .values({
+          slug: draftSlug,
+          nameTh: "ต้นไม้ฉบับร่างทดสอบ",
+          nameEn: "Draft Test Plant",
+          nameSci: "Draftus testus",
+          family: "Testaceae",
+          summary: "ต้นไม้สำหรับทดสอบความปลอดภัยของแบบร่าง",
+          light: "shade",
+          waterNeed: "low",
+          placement: ["indoor"],
+          difficulty: 1,
+          petSafe: "safe",
+          matureSize: "sm",
+          soilMix: "ดินโปร่ง",
+          shopNote: "ข้อความร้านค้า",
+          stockStatus: "in_stock",
+          searchText: "ต้นไม้ฉบับร่างทดสอบ draft test plant draftus testus",
+          publishedAt: null,
+        })
+        .returning();
+
+      try {
+        // Public getAllSpecies() excludes draft by default
+        const publicResults = await getAllSpecies({ search: "แบบร่างทดสอบ" });
+        expect(publicResults.some((s) => s.id === draft.id)).toBe(false);
+
+        const allPublicResults = await getAllSpecies({ stockStatus: "all" });
+        expect(allPublicResults.some((s) => s.id === draft.id)).toBe(false);
+
+        // getAllSpecies with includeDrafts: true includes draft
+        const adminResults = await getAllSpecies({ search: "แบบร่างทดสอบ", includeDrafts: true });
+        expect(adminResults.some((s) => s.id === draft.id)).toBe(true);
+
+        const allAdminResults = await getAllSpecies({ stockStatus: "all", includeDrafts: true });
+        expect(allAdminResults.some((s) => s.id === draft.id)).toBe(true);
+
+        // Public PlantDetailPage returns 404 (throws notFound) for draft species
+        await expect(PlantDetailPage({ params: Promise.resolve({ slug: draftSlug }) })).rejects.toThrow();
+
+        // generateMetadata returns not found title for draft species
+        const meta = await generatePlantMetadata({ params: Promise.resolve({ slug: draftSlug }) });
+        expect(meta.title).toContain("ไม่พบพันธุ์ไม้");
+      } finally {
+        await db.delete(species).where(eq(species.id, draft.id));
+      }
     });
   });
 

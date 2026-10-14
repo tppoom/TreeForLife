@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: PlantDetailPageProps): Promis
   const { slug } = await params;
   const plant = await getSpeciesBySlug(slug);
 
-  if (!plant || plant.stockStatus === "hidden") {
+  if (!plant || plant.stockStatus === "hidden" || !plant.publishedAt) {
     return {
       title: "ไม่พบพันธุ์ไม้ | Plant Not Found",
     };
@@ -58,8 +58,8 @@ export default async function PlantDetailPage({ params }: PlantDetailPageProps) 
   const { slug } = await params;
   const plant = await getSpeciesBySlug(slug);
 
-  // Hidden species are withdrawn by the shop; treat them as not found publicly
-  if (!plant || plant.stockStatus === "hidden") {
+  // Hidden species and unpublished drafts are not found publicly
+  if (!plant || plant.stockStatus === "hidden" || !plant.publishedAt) {
     notFound();
   }
 

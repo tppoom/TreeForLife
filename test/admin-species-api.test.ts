@@ -8,6 +8,7 @@ import { POST as uploadUrlMedia } from "../app/api/admin/media/upload-url/route"
 import { DELETE as deleteMedia, PATCH as updateMedia } from "../app/api/admin/media/[id]/route";
 import { requireStaff, type Actor } from "../lib/auth/actor";
 import { HttpError } from "../lib/http/errors";
+import { getAllSpecies } from "../lib/services/speciesService";
 
 describe("Admin Species Catalog APIs", () => {
   let createdId: string;
@@ -85,6 +86,14 @@ describe("Admin Species Catalog APIs", () => {
     expect(found).toBeDefined();
     expect(found.publishedAt).toBeNull();
     expect(Array.isArray(found.media)).toBe(true);
+  });
+
+  it("verifies draft species is excluded from getAllSpecies() by default and included when includeDrafts is true", async () => {
+    const publicList = await getAllSpecies({ stockStatus: "all" });
+    expect(publicList.some((s) => s.id === createdId)).toBe(false);
+
+    const adminList = await getAllSpecies({ stockStatus: "all", includeDrafts: true });
+    expect(adminList.some((s) => s.id === createdId)).toBe(true);
   });
 
   it("updates draft species details and reconciles problems", async () => {

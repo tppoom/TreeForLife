@@ -6,7 +6,7 @@ const VALID_STATUSES: StockStatus[] = ["in_stock", "made_to_order", "seasonal", 
 
 export async function GET() {
   try {
-    const list = await getAllSpecies({ stockStatus: "all" });
+    const list = await getAllSpecies({ stockStatus: "all", includeDrafts: true });
     return NextResponse.json({ species: list });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to fetch species list";

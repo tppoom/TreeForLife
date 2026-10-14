@@ -15,6 +15,7 @@ export interface SpeciesFilterParams {
   stockStatus?: string;
   sort?: "relevance" | "in_stock_first" | "easiest_first" | "name";
   limit?: number;
+  includeDrafts?: boolean;
 }
 
 export type SpeciesItem = {
@@ -36,6 +37,7 @@ export type SpeciesItem = {
   growthRate: string;
   shopNote: string;
   stockStatus: string;
+  publishedAt?: Date | null;
   createdAt: Date;
   updatedAt: Date;
   primaryImage: string;
@@ -49,6 +51,11 @@ export type SpeciesSearchResult = SpeciesItem[] & {
 export async function getAllSpecies(params: SpeciesFilterParams = {}): Promise<SpeciesSearchResult> {
   const db = await getDb();
   const conditions = [];
+
+  // Exclude drafts unless explicitly included
+  if (!params.includeDrafts) {
+    conditions.push(sql`${species.publishedAt} IS NOT NULL`);
+  }
 
   // Exclude hidden by default unless explicitly specified
   if (params.stockStatus && params.stockStatus !== "all") {
@@ -139,6 +146,7 @@ export async function getAllSpecies(params: SpeciesFilterParams = {}): Promise<S
       growthRate: species.growthRate,
       shopNote: species.shopNote,
       stockStatus: species.stockStatus,
+      publishedAt: species.publishedAt,
       createdAt: species.createdAt,
       updatedAt: species.updatedAt,
     })
@@ -166,6 +174,7 @@ export async function getAllSpecies(params: SpeciesFilterParams = {}): Promise<S
         .where(
           and(
             sql`${species.stockStatus} != 'hidden'`,
+            sql`${species.publishedAt} IS NOT NULL`,
             sql`word_similarity(${normQ}, ${species.searchText}) BETWEEN 0.2 AND 0.35`
           )
         )
@@ -280,6 +289,7 @@ export async function getSimilarSpecies(speciesId: string, light: string, waterN
       and(
         sql`${species.id} != ${speciesId}`,
         sql`${species.stockStatus} != 'hidden'`,
+        sql`${species.publishedAt} IS NOT NULL`,
         or(eq(species.light, light), eq(species.waterNeed, waterNeed))
       )
     )

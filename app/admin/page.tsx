@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const [speciesList, inquiries, searchMisses, stats] = await Promise.all([
-    getAllSpecies({ stockStatus: "all" }),
+    getAllSpecies({ stockStatus: "all", includeDrafts: true }),
     getAdminInquiriesList(100),
     getSearchMisses(100),
     getAdminStats(),
