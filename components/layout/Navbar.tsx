@@ -18,6 +18,7 @@ import {
   UserCheck,
   MessageCircle,
   Sparkles,
+  Layers,
 } from "lucide-react";
 import { isDemoMode } from "@/lib/config/app-mode";
 import { useApp, type UserRole } from "@/lib/context/AppContext";
@@ -106,6 +107,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/search", label: t("nav.catalog"), icon: BookOpen },
+    { href: "/collections", label: t("nav.collections"), icon: Layers },
     { href: "/garden", label: t("nav.garden"), icon: Sprout },
     { href: "/today", label: t("nav.today"), icon: CalendarCheck },
     { href: "/search?fav=true", label: t("nav.favorites"), icon: Heart },

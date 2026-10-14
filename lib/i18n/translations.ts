@@ -4,6 +4,7 @@ export interface TranslationDictionary {
   nav: {
     home: string;
     catalog: string;
+    collections: string;
     garden: string;
     today: string;
     favorites: string;
@@ -289,6 +290,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
     nav: {
       home: "หน้าแรก",
       catalog: "พันธุ์ไม้",
+      collections: "คอลเลกชันแนะนำ",
       garden: "สวนของฉัน",
       today: "งานวันนี้",
       favorites: "รายการโปรด",
@@ -572,6 +574,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
     nav: {
       home: "Home",
       catalog: "Catalog",
+      collections: "Collections",
       garden: "My Garden",
       today: "Today's Tasks",
       favorites: "Favorites",
