@@ -172,6 +172,8 @@ ALTER TABLE species ADD COLUMN IF NOT EXISTS search_text TEXT;
 ALTER TABLE search_misses ADD COLUMN IF NOT EXISTS normalized_query TEXT;
 ALTER TABLE search_misses ADD COLUMN IF NOT EXISTS suggested_species_id UUID REFERENCES species(id) ON DELETE SET NULL;
 ALTER TABLE search_misses ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMPTZ;
+ALTER TABLE species_media ADD COLUMN IF NOT EXISTS storage_path TEXT;
+ALTER TABLE species_media ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 CREATE INDEX IF NOT EXISTS species_search_trgm    ON species USING gin (search_text gin_trgm_ops);
 `;

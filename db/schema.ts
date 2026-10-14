@@ -90,6 +90,8 @@ export const speciesMedia = pgTable("species_media", {
   sortOrder: integer("sort_order").notNull().default(0),
   isPrimary: boolean("is_primary").notNull().default(false),
   credit: text("credit").notNull().default("ถ่ายที่ร้าน"),
+  storagePath: text("storage_path"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 // Species Problems (Common FAQs & Diagnoses)
