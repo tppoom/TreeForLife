@@ -19,22 +19,22 @@ M4                F01 ──► F05 (ต้องมี F02 สำหรับ c
 M5                F12 (เริ่มเก็บ event ตั้งแต่ M3) · F10
 ```
 
-| ID | ไฟล์ | ต้องมีก่อน |
-|---|---|---|
-| F00 | [production-hardening](./F00-production-hardening.md) | — |
-| F01 | [admin-catalog-cms](./F01-admin-catalog-cms.md) | F00 |
-| F02 | [line-login-sessions](./F02-line-login-sessions.md) | F00 |
-| F03 | [care-reminders](./F03-care-reminders.md) | F02 |
-| F04 | [fuzzy-thai-search](./F04-fuzzy-thai-search.md) | F00 |
-| F05 | [qr-care-tags](./F05-qr-care-tags.md) | F01 |
-| F06 | [aftercare-checkins](./F06-aftercare-checkins.md) | F03 |
-| F07 | [wishlist-restock-alerts](./F07-wishlist-restock-alerts.md) | F03 |
-| F08 | [supplies-nudges](./F08-supplies-nudges.md) | F03 |
-| F09 | [share-referral](./F09-share-referral.md) | F13 |
-| F10 | [growth-journal](./F10-growth-journal.md) | F01 (storage) |
-| F11 | [pdpa-privacy](./F11-pdpa-privacy.md) | F00 |
-| F12 | [first-party-analytics](./F12-first-party-analytics.md) | F00 |
-| F13 | [seo-collections](./F13-seo-collections.md) | — |
+| ID | ไฟล์ | ต้องมีก่อน | สถานะ |
+|---|---|---|:---:|
+| F00 | [production-hardening](./F00-production-hardening.md) | — | ✅ เสร็จแล้ว (M1) |
+| F01 | [admin-catalog-cms](./F01-admin-catalog-cms.md) | F00 | 🟡 รอดำเนินการ (M2) |
+| F02 | [line-login-sessions](./F02-line-login-sessions.md) | F00 | ⚪ แผน M3 |
+| F03 | [care-reminders](./F03-care-reminders.md) | F02 | ⚪ แผน M3 |
+| F04 | [fuzzy-thai-search](./F04-fuzzy-thai-search.md) | F00 | ✅ เสร็จแล้ว (M2) |
+| ~~F05~~ | ~~[qr-care-tags](./F05-qr-care-tags.md)~~ | F01 | ❌ ตัดออก |
+| F06 | [aftercare-checkins](./F06-aftercare-checkins.md) | F03 | ⚪ แผน M4 |
+| ~~F07~~ | ~~[wishlist-restock-alerts](./F07-wishlist-restock-alerts.md)~~ | F03 | ❌ ตัดออก |
+| F08 | [supplies-nudges](./F08-supplies-nudges.md) | F03 | ⚪ แผน M4 |
+| ~~F09~~ | ~~[share-referral](./F09-share-referral.md)~~ | F13 | ❌ ตัดออก |
+| ~~F10~~ | ~~[growth-journal](./F10-growth-journal.md)~~ | F01 (storage) | ❌ ตัดออก |
+| F11 | [pdpa-privacy](./F11-pdpa-privacy.md) | F00 | ✅ เสร็จแล้ว (M1) |
+| F12 | [first-party-analytics](./F12-first-party-analytics.md) | F00 | ⚪ ลดรูปใช้ GA4 |
+| F13 | [seo-collections](./F13-seo-collections.md) | — | ✅ เสร็จแล้ว (M2) |
 
 ## โครงของทุกไฟล์
 
