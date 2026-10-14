@@ -90,6 +90,10 @@ export async function PATCH(req: Request, context: RouteParams) {
     if (input.sortOrder !== undefined) updatePayload.sortOrder = input.sortOrder;
     if (input.credit !== undefined) updatePayload.credit = input.credit;
 
+    if (Object.keys(updatePayload).length === 0) {
+      return NextResponse.json({ success: true, data: media });
+    }
+
     const [updatedMedia] = await db
       .update(speciesMedia)
       .set(updatePayload)

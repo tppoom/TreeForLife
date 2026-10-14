@@ -87,7 +87,7 @@ describe("Admin Species Catalog APIs", () => {
     expect(Array.isArray(found.media)).toBe(true);
   });
 
-  it("updates draft species details", async () => {
+  it("updates draft species details and reconciles problems", async () => {
     const req = new Request(`https://example.com/api/admin/species/${createdId}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
@@ -100,6 +100,14 @@ describe("Admin Species Catalog APIs", () => {
           waterDaysRainy: 4,
           waterDaysCool: 3,
         },
+        problems: [
+          {
+            symptomTh: "ใบเหลือง",
+            causeTh: "รดน้ำมากเกินไป",
+            fixTh: "เว้นช่วงรดน้ำให้ดินแห้งก่อน",
+            severity: "medium",
+          },
+        ],
       }),
     });
     const res = await updateSpecies(req, { params: Promise.resolve({ id: createdId }) });
@@ -109,7 +117,7 @@ describe("Admin Species Catalog APIs", () => {
     expect(json.data.shopNote).toContain("ชอบความชื้นสูง");
   });
 
-  it("gets full species details with care template and media", async () => {
+  it("gets full species details with care template, problems, and media", async () => {
     const req = new Request(`https://example.com/api/admin/species/${createdId}`);
     const res = await getSpecies(req, { params: Promise.resolve({ id: createdId }) });
     expect(res.status).toBe(200);
@@ -117,6 +125,9 @@ describe("Admin Species Catalog APIs", () => {
     expect(json.data.id).toBe(createdId);
     expect(json.data.careTemplate).toBeDefined();
     expect(json.data.careTemplate.waterDaysHot).toBe(2);
+    expect(Array.isArray(json.data.problems)).toBe(true);
+    expect(json.data.problems.length).toBe(1);
+    expect(json.data.problems[0].symptomTh).toBe("ใบเหลือง");
   });
 
   it("publishes and unpublishes species via publish toggle", async () => {
@@ -191,6 +202,19 @@ describe("Admin Species Catalog APIs", () => {
     const json = await res.json();
     expect(json.data.altTh).toBe("รูปถ่ายเงินไหลมาด่างขาวมุมข้าง");
     expect(json.data.sortOrder).toBe(1);
+  });
+
+  it("handles empty media update without error", async () => {
+    const req = new Request(`https://example.com/api/admin/media/${createdMediaId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    const res = await updateMedia(req, { params: Promise.resolve({ id: createdMediaId }) });
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.success).toBe(true);
+    expect(json.data.id).toBe(createdMediaId);
   });
 
   it("deletes media record and calls storage provider", async () => {

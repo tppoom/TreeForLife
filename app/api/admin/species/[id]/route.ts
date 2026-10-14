@@ -176,6 +176,24 @@ export async function PATCH(req: Request, context: RouteParams) {
         });
     }
 
+    // If problems provided, reconcile species_problems
+    if (input.problems !== undefined) {
+      await db.delete(speciesProblems).where(eq(speciesProblems.speciesId, id));
+      if (input.problems.length > 0) {
+        await db.insert(speciesProblems).values(
+          input.problems.map((p, idx) => ({
+            ...(p.id ? { id: p.id } : {}),
+            speciesId: id,
+            symptomTh: p.symptomTh,
+            causeTh: p.causeTh,
+            fixTh: p.fixTh,
+            severity: p.severity ?? "medium",
+            sortOrder: p.sortOrder !== undefined ? p.sortOrder : idx,
+          }))
+        );
+      }
+    }
+
     return NextResponse.json({ success: true, data: updatedSpecies });
   } catch (err: unknown) {
     return toErrorResponse(err);

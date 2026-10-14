@@ -21,6 +21,10 @@ import {
   Info,
   Inbox,
   UserCheck,
+  Plus,
+  Tag,
+  Edit3,
+  Layers,
 } from "lucide-react";
 import { formatLineMessage, type InquiryIntent } from "@/lib/line/formatters";
 
@@ -128,6 +132,44 @@ export function AdminDashboardClient({
   // Search misses state
   const [missesList, setMissesList] = useState<AdminSearchMissItem[]>(initialSearchMisses);
   const [missesSearch, setMissesSearch] = useState("");
+  const [aliasModalQuery, setAliasModalQuery] = useState<string | null>(null);
+  const [aliasSelectedSpeciesId, setAliasSelectedSpeciesId] = useState<string>("");
+  const [linkingAlias, setLinkingAlias] = useState(false);
+
+  // Link Missed Search Query as Alias to Existing Species
+  const handleLinkAlias = useCallback(async () => {
+    if (!aliasModalQuery || !aliasSelectedSpeciesId) return;
+    setLinkingAlias(true);
+    try {
+      const resGet = await fetch(`/api/admin/species/${aliasSelectedSpeciesId}`);
+      if (!resGet.ok) throw new Error("ไม่พบข้อมูลพันธุ์ไม้");
+      const jsonGet = await resGet.json();
+      const currentAliases: string[] = jsonGet.data?.aliases || [];
+      if (!currentAliases.includes(aliasModalQuery)) {
+        const newAliases = [...currentAliases, aliasModalQuery];
+        const resPatch = await fetch(`/api/admin/species/${aliasSelectedSpeciesId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ aliases: newAliases }),
+        });
+        if (!resPatch.ok) throw new Error("อัปเดตชื่อเล่นไม่สำเร็จ");
+      }
+      const targetPlant = speciesList.find((s) => s.id === aliasSelectedSpeciesId);
+      const plantName = targetPlant ? (locale === "th" ? targetPlant.nameTh : targetPlant.nameEn) : "";
+      addToast(
+        locale === "th"
+          ? `เพิ่ม "${aliasModalQuery}" เป็นชื่อเล่นของ ${plantName} เรียบร้อยแล้ว`
+          : `Added "${aliasModalQuery}" as alias for ${plantName} successfully`,
+        "success"
+      );
+      setAliasModalQuery(null);
+      setAliasSelectedSpeciesId("");
+    } catch (err: any) {
+      addToast(err.message || "เกิดข้อผิดพลาดในการบันทึกชื่อเล่น", "error");
+    } finally {
+      setLinkingAlias(false);
+    }
+  }, [aliasModalQuery, aliasSelectedSpeciesId, speciesList, locale, addToast]);
 
   // Role Protection Gate
   const isAuthorized = role === "staff" || role === "admin";
@@ -449,10 +491,24 @@ export function AdminDashboardClient({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <Link
+            href="/admin/species/new"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition min-h-[44px]"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ เพิ่มพันธุ์ใหม่</span>
+          </Link>
+          <Link
+            href="/admin/species"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition min-h-[44px]"
+          >
+            <Layers className="w-4 h-4" />
+            <span>คลังพันธุ์ไม้ (CMS)</span>
+          </Link>
           <Link
             href="/search"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition min-h-[44px]"
           >
             <ExternalLink className="w-4 h-4" />
             {locale === "th" ? "ดูหน้าร้านจริง" : "View Live Shop"}
@@ -1103,12 +1159,15 @@ export function AdminDashboardClient({
                     <th scope="col" className="py-3.5 px-4 text-right">
                       {t("admin.last_seen")}
                     </th>
+                    <th scope="col" className="py-3.5 px-4 text-right">
+                      {locale === "th" ? "จัดการชื่อเล่น" : "Alias Link"}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800 text-sm">
                   {filteredMisses.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
+                      <td colSpan={6} className="py-12 text-center text-zinc-500 dark:text-zinc-400">
                         <TrendingUp className="w-8 h-8 mx-auto mb-2 text-zinc-400" />
                         <p>{t("admin.empty_search_misses")}</p>
                       </td>
@@ -1182,6 +1241,21 @@ export function AdminDashboardClient({
                           <td className="py-3.5 px-4 text-right text-xs text-zinc-500 dark:text-zinc-400 font-mono whitespace-nowrap">
                             {formatDateTime(item.lastSeenAt, locale)}
                           </td>
+
+                          {/* Link Alias Action */}
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAliasModalQuery(item.query);
+                                setAliasSelectedSpeciesId(speciesList[0]?.id || "");
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800 hover:bg-amber-100 font-medium text-xs transition min-h-[36px]"
+                            >
+                              <Tag className="w-3.5 h-3.5" />
+                              <span>เพิ่มเป็นชื่อเล่น (Alias)</span>
+                            </button>
+                          </td>
                         </tr>
                       );
                     })
@@ -1191,6 +1265,83 @@ export function AdminDashboardClient({
             </div>
           </div>
         </section>
+      )}
+
+      {/* Modal: Link Missed Search as Alias to Species */}
+      {aliasModalQuery && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <Tag className="w-5 h-5 text-amber-600" />
+                <span>เพิ่มเป็นชื่อเล่น (Alias)</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setAliasModalQuery(null)}
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              เมื่อลูกค้าพิมพ์ค้นหาคำนี้ในช่องค้นหา ระบบจะจับคู่และแสดงพันธุ์ไม้ที่เลือกทันที
+            </p>
+
+            <div className="p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700">
+              <span className="text-xs text-zinc-500 block mb-1">คำค้นหาที่ต้องการเชื่อมโยง:</span>
+              <span className="font-mono font-bold text-zinc-900 dark:text-zinc-100 text-sm">
+                "{aliasModalQuery}"
+              </span>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">
+                เลือกพันธุ์ไม้เป้าหมาย
+              </label>
+              <select
+                value={aliasSelectedSpeciesId}
+                onChange={(e) => setAliasSelectedSpeciesId(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 min-h-[44px]"
+              >
+                {speciesList.map((sp) => (
+                  <option key={sp.id} value={sp.id}>
+                    {sp.nameTh} ({sp.nameEn})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setAliasModalQuery(null)}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 min-h-[40px]"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                disabled={linkingAlias || !aliasSelectedSpeciesId}
+                onClick={handleLinkAlias}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs transition disabled:opacity-50 min-h-[40px] cursor-pointer"
+              >
+                {linkingAlias ? (
+                  <>
+                    <Clock className="w-3.5 h-3.5 animate-spin" />
+                    <span>กำลังบันทึก...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>บันทึกชื่อเล่น</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -242,6 +242,26 @@ export async function getSpeciesBySlug(slug: string) {
   };
 }
 
+export async function getSpeciesById(id: string) {
+  const db = await getDb();
+
+  const [item] = await db.select().from(species).where(eq(species.id, id)).limit(1);
+  if (!item) return null;
+
+  const [media, template, problems] = await Promise.all([
+    db.select().from(speciesMedia).where(eq(speciesMedia.speciesId, item.id)).orderBy(desc(speciesMedia.isPrimary), asc(speciesMedia.sortOrder)),
+    db.select().from(careTemplates).where(eq(careTemplates.speciesId, item.id)).limit(1),
+    db.select().from(speciesProblems).where(eq(speciesProblems.speciesId, item.id)).orderBy(asc(speciesProblems.sortOrder)),
+  ]);
+
+  return {
+    ...item,
+    media,
+    careTemplate: template[0] || null,
+    problems,
+  };
+}
+
 export async function getSimilarSpecies(speciesId: string, light: string, waterNeed: string) {
   const db = await getDb();
 

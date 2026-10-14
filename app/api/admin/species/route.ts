@@ -162,6 +162,37 @@ export async function POST(req: Request) {
       });
     }
 
+    if (input.problems && input.problems.length > 0) {
+      await db.insert(speciesProblems).values(
+        input.problems.map((p, idx) => ({
+          ...(p.id ? { id: p.id } : {}),
+          speciesId: newSpecies.id,
+          symptomTh: p.symptomTh,
+          causeTh: p.causeTh,
+          fixTh: p.fixTh,
+          severity: p.severity ?? "medium",
+          sortOrder: p.sortOrder !== undefined ? p.sortOrder : idx,
+        }))
+      );
+    } else if (input.copyFromId) {
+      const sourceProblems = await db
+        .select()
+        .from(speciesProblems)
+        .where(eq(speciesProblems.speciesId, input.copyFromId));
+      if (sourceProblems.length > 0) {
+        await db.insert(speciesProblems).values(
+          sourceProblems.map((p) => ({
+            speciesId: newSpecies.id,
+            symptomTh: p.symptomTh,
+            causeTh: p.causeTh,
+            fixTh: p.fixTh,
+            severity: p.severity,
+            sortOrder: p.sortOrder,
+          }))
+        );
+      }
+    }
+
     return NextResponse.json({ success: true, data: newSpecies }, { status: 201 });
   } catch (err: unknown) {
     return toErrorResponse(err);
