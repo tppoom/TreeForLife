@@ -83,6 +83,8 @@
 | `NEXT_PUBLIC_SITE_URL` | ✅ | sitemap, robots, OG | เช่น `https://tree-for-life.vercel.app` หรือโดเมนจริง |
 | `NEXT_PUBLIC_LINE_OA_ID` | ✅ | ปุ่มถามร้าน | ID ของ LINE OA **ไม่ต้องมี `@`** (โค้ดเติมให้ในลิงก์) |
 | `NEXT_PUBLIC_APP_MODE` | เสริม | client/server | `production` (default สะอาดจริง) หรือ `demo` (เปิด Showcase Hub ที่ `/demo`) — ดู §0.1 |
+| `NEXT_PUBLIC_SUPABASE_URL` | แนะนำ (รูป CMS) | client/server | Supabase Project URL (`https://<project-ref>.supabase.co`) สำหรับดึงรูปภาพสาธารณะ |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ prod (รูป CMS) | server | Service Role Key ใช้สร้าง Signed Upload URL และลบรูปใน bucket `species-media` (หากไม่ตั้งจะใช้ Mock Provider ใน dev อัตโนมัติ) |
 | ตัวแปรของ F02/F03 (LINE Login, VAPID, CRON_SECRET, …) | ภายหลัง | | ดูไฟล์ฟีเจอร์นั้น ๆ |
 
 > ตัวแปร `NEXT_PUBLIC_*` ถูกฝังตอน build — แก้แล้วต้อง redeploy
@@ -100,7 +102,16 @@
    - ใช้ **transaction pooler (6543)** สำหรับ serverless · `sslmode` ไม่ต้องใส่ (โค้ดเปิด SSL ให้เองเมื่อ host ไม่ใช่ localhost)
    - โค้ดใช้ query แบบมี parameter ธรรมดา (ไม่มี prepared statement ชื่อ) จึงใช้กับ transaction mode ได้
 4. **ใช้ project แยกสำหรับ TreeForLife** — ตารางชื่อ `users`, `species` ชนกับแอปอื่นได้ง่าย และ `CREATE TABLE IF NOT EXISTS` จะข้ามตารางเดิมที่โครงสร้างไม่ตรง ทำให้ seed ล้มหรือเขียนทับข้อมูลแอปอื่น
-5. Free plan จะ **pause project เมื่อไม่มีการใช้งาน ~7 วัน** — ก่อนมี cron (F03) ให้ตั้ง uptime monitor ฟรี (เช่น UptimeRobot) ยิงหน้าแรกวันละครั้ง
+5. **PostgreSQL Extension (`pg_trgm`)**:
+   - ระบบรองรับ Fuzzy Thai Search (Milestone 2) โดยใช้ `pg_trgm` และ GIN index บน `species.search_text`
+   - ใน `SCHEMA_DDL` มีคำสั่ง `CREATE EXTENSION IF NOT EXISTS pg_trgm;` อัตโนมัติ (บน Supabase เป็น extension มาตรฐานที่เปิดใช้งานได้ทันที)
+6. **Supabase Storage Bucket (`species-media`)**:
+   - ไปที่ **Storage → Create bucket**
+   - ตั้งชื่อ Bucket: `species-media`
+   - เปิดสวิตช์ **Public bucket** (เพื่อให้ดึงภาพพฤกษศาสตร์แสดงผลในเว็บได้โดยตรง)
+   - Policies: ค่าเริ่มต้นของ Public bucket จะเปิด Read ให้ anon อยู่แล้ว สำหรับ Write/Upload ระบบใช้ Service Role Key ผ่าน API ฝั่งเซิร์ฟเวอร์ (`/api/admin/media/upload-url`) ในการสร้าง Signed Upload URL จึงไม่ต้องเปิดสิทธิ์ให้อนุมัติเขียนภายนอก
+   - คัดลอก `Project URL` และ `service_role key` จาก **Project Settings → API** ไปใส่ใน Environment Variables
+7. Free plan จะ **pause project เมื่อไม่มีการใช้งาน ~7 วัน** — ก่อนมี cron (F03) ให้ตั้ง uptime monitor ฟรี (เช่น UptimeRobot) ยิงหน้าแรกวันละครั้ง
 
 ---
 
@@ -116,6 +127,8 @@ vercel env add ADMIN_PASSWORD production --sensitive
 printf '3' | vercel env add DB_POOL_MAX production
 printf 'https://tree-for-life.vercel.app' | vercel env add NEXT_PUBLIC_SITE_URL production
 printf '<line-oa-id>' | vercel env add NEXT_PUBLIC_LINE_OA_ID production
+printf 'https://<project-ref>.supabase.co' | vercel env add NEXT_PUBLIC_SUPABASE_URL production
+vercel env add SUPABASE_SERVICE_ROLE_KEY production --sensitive
 
 # ตรวจก่อน deploy
 make verify
@@ -135,6 +148,7 @@ curl -sI https://<domain>/ | head -1                      # 200
 curl -s  https://<domain>/search?q=มอนสเตอร่า | grep -c "/plants/"   # > 0
 curl -sI https://<domain>/admin | head -1                 # 401 (ต้องใส่รหัส)
 curl -s  https://<domain>/sitemap.xml | head -5
+curl -sI https://<domain>/collections/air-con-plants | head -1     # 200 (SEO Collections)
 ```
 
 ### 4.1 Deploy อัตโนมัติจาก GitHub
@@ -145,18 +159,37 @@ Preview ใช้ `DATABASE_URL` ของ preview (แนะนำ Supabase bra
 
 ## 5. Pre-flight checklist
 
-- [ ] `make verify` ผ่าน (typecheck + 158 tests + build)
+- [ ] `make verify` ผ่าน (typecheck + 265 tests + build)
 - [ ] `DATABASE_URL` ชี้ project ที่ถูกต้อง (ไม่ใช่ของแอปอื่น)
 - [ ] `ADMIN_PASSWORD` ตั้งแล้ว และเข้า `/admin` ได้
 - [ ] `NEXT_PUBLIC_LINE_OA_ID` เป็น OA จริงของร้าน (ลองกดถามร้านบนมือถือ)
 - [ ] `NEXT_PUBLIC_SITE_URL` ตรงกับโดเมนที่ใช้จริง
+- [ ] `NEXT_PUBLIC_SUPABASE_URL` และ `SUPABASE_SERVICE_ROLE_KEY` ตั้งค่าแล้ว (สำหรับระบบอัปโหลดรูป CMS)
+- [ ] Supabase Storage bucket `species-media` สร้างแล้วและเปิดเป็น Public bucket
 - [ ] ⚠️ Vercel Hobby ใช้ได้เฉพาะงานส่วนตัว/ไม่ใช่เชิงพาณิชย์ — เปิดใช้กับลูกค้าจริงให้ย้ายเป็น Pro
 
 ---
 
-## 6. สถานะฟีเจอร์และการรักษาความปลอดภัย (Milestone 1 — v1.2.0)
+## 6. สถานะฟีเจอร์และการรักษาความปลอดภัย (Milestone 2 — v1.3.0)
 
-ระบบได้รับการยกระดับความปลอดภัยและปฏิบัติตามกฎหมาย PDPA อย่างสมบูรณ์แล้วในเวอร์ชัน **v1.2.0**:
+ระบบได้รับการยกระดับฟีเจอร์การค้นหา คอลเลกชัน SEO และระบบจัดการร้านค้าอย่างสมบูรณ์ใน **v1.3.0** ควบคู่กับความปลอดภัยระดับองค์กรจาก Milestone 1:
+
+### 6.1 ฟีเจอร์ใหม่ใน Milestone 2 (v1.3.0: Shop Operations & Discoverability)
+- **Fuzzy Thai Search with `pg_trgm`**:
+  - ระบบค้นหาอัจฉริยะที่ทนทานต่อการสะกดผิด วรรณยุกต์ และคำพ้องเสียงภาษาไทย (`lib/search/normalize.ts`)
+  - ใช้ PostgreSQL `pg_trgm` GIN Index บนคอลัมน์ `species.search_text` ค้นหารวดเร็ว
+  - ระบบ Fuzzy Similarity Search พร้อมคำแนะนำพันธุ์ไม้ใกล้เคียง (Fallback Suggestions) เมื่อไม่พบคำค้นตรง
+  - บันทึกคำค้นหาที่ไม่พบลงตาราง `search_misses` แบบ normalized เพื่อวิเคราะห์ความต้องการลูกค้า (Demand Analytics)
+- **8 SEO Botanical Collection Hubs (`/collections/*`)**:
+  - คอลเลกชันพันธุ์ไม้ยอดนิยม 8 หน้าหลัก (ต้นไม้เลี้ยงในห้องแอร์, ปลอดภัยต่อสัตว์เลี้ยง, มือใหม่หัดปลูก, ฟอกอากาศ, ดูแลง่ายรดน้ำน้อย, ไม้ด่างหายาก, ต้นไม้ตั้งโต๊ะทำงาน, ไม้แดดระเบียง)
+  - Pre-render แบบ Static Generation (SSG) พร้อม Schema.org JSON-LD (FAQPage + ItemList), Open Graph Dynamic Metadata และการอ้างอิงใน `sitemap.xml`
+- **Shop Admin Catalog CMS with Photo Upload (`/admin/species/*`)**:
+  - อินเทอร์เฟซบริหารจัดการสายพันธุ์พืชบนมือถือและเดสก์ท็อปครบวงจร (เพิ่ม, แก้ไข, คัดลอกร่าง Clone Species)
+  - 4 แท็บฟังก์ชัน: ข้อมูลพฤกษศาสตร์, ตารางดูแล 3 ฤดูพร้อมสูตรคำนวณสด (Live Preview), อาการและปัญหาพบบ่อย, และคลังภาพ
+  - การจัดการรูปภาพจริงจากร้านผ่าน Supabase Storage bucket `species-media` ด้วย Signed Upload URL โดยตรง พร้อมสลับใช้งาน Local Mock Provider อัตโนมัติเมื่อไม่มีคีย์คลาวด์
+  - ระบบ Toggle สถานะสต็อกและปุ่มเผยแพร่ (Publish / Draft) พร้อมป้ายเตือนและตรวจสอบความถูกต้องด้วย Zod
+
+### 6.2 ความปลอดภัยและการปฏิบัติตามกฎหมาย (Milestone 1 Baseline)
 - **Actor Identity & Ownership**: API สวนของฉัน (`/api/garden/*`) ทุกเส้นทางตรวจสอบสิทธิ์ผ่าน `x-guest-token` header และ `requireOwner` (หากไม่ใช่เจ้าของจะตอบกลับเป็น HTTP 404 NOT_FOUND ทันทีเพื่อป้องกันการสุ่มเจาะดูข้อมูล ID)
 - **Input Validation**: ข้อมูลนำเข้าทั้งหมดถูกตรวจสอบโครงสร้างผ่าน Zod schemas (`lib/validation/`) ป้องกันข้อมูลผิดปกติ
 - **Rate Limiting**: มีระบบจำกัดความถี่การยิง API ผ่านตารางฐานข้อมูล Postgres `rate_limits` ตอบกลับเป็น HTTP 429 พร้อม header `Retry-After`
@@ -165,7 +198,7 @@ Preview ใช้ `DATABASE_URL` ของ preview (แนะนำ Supabase bra
   - หน้านโยบายความเป็นส่วนตัวสองภาษา `/privacy` (TH/EN) และข้อกำหนดการใช้งาน `/terms`
   - สิทธิขอรับข้อมูล (Data Portability): `GET /api/account/export` เพื่อดาวน์โหลดข้อมูลในรูปแบบ JSON
   - สิทธิขอให้ลบข้อมูล (Right to Erasure): `POST /api/account/delete` พร้อมปุ่ม "ล้างข้อมูลในเครื่องนี้" ในหน้า `/garden`
-- *สิ่งที่ยังอยู่ใน Roadmap ถัดไป:* LINE Login (F02), ระบบแจ้งเตือนทางไลน์ (F03), การเชื่อมต่อคลังรูปภาพจริง (F01)
+- *สิ่งที่ยังอยู่ใน Roadmap ถัดไป:* LINE Login (F02), ระบบแจ้งเตือนทางไลน์ (F03)
 
 ---
 

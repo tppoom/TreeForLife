@@ -1,23 +1,26 @@
 # TreeForLife — Project Progress & Status Report
 
-> **Current Phase:** Milestone 1 (Production Hardening & PDPA) Complete · Version 1.2.0 (see [`ROADMAP.md`](./ROADMAP.md))  
+> **Current Phase:** Milestone 2 (Shop Operations & Discoverability) Complete · Version 1.3.0 (see [`ROADMAP.md`](./ROADMAP.md))  
 > **Last Updated:** 2026-09-29  
 > **Reference Spec:** [`docs/SPEC.md`](./SPEC.md)  
 > **Design Documents:**  
 > - Phase 1: [`docs/superpowers/specs/2026-09-08-phase1-implementation-design.md`](./superpowers/specs/2026-09-08-phase1-implementation-design.md)  
 > - Dual Version: [`docs/superpowers/specs/2026-09-28-dual-version-showcase-design.md`](./superpowers/specs/2026-09-28-dual-version-showcase-design.md)  
 > - Milestone 1: [`docs/superpowers/specs/2026-09-29-milestone1-hardening-pdpa-design.md`](./superpowers/specs/2026-09-29-milestone1-hardening-pdpa-design.md)  
+> - Milestone 2 Spec: [`docs/superpowers/specs/2026-09-29-milestone2-shop-cms-search-seo-design.md`](./superpowers/specs/2026-09-29-milestone2-shop-cms-search-seo-design.md)  
+> - Milestone 2 Plan: [`docs/superpowers/plans/2026-09-29-milestone2-shop-cms-search-seo.md`](./superpowers/plans/2026-09-29-milestone2-shop-cms-search-seo.md)  
 
 ---
 
 ## 1. Executive Summary
 
-TreeForLife has completed **Phase 1 Core Platform**, **Dual-Version Showcase (v1.1.0)**, and **Milestone 1: Production Hardening & PDPA Compliance (v1.2.0)**:
+TreeForLife has completed **Phase 1 Core Platform**, **Dual-Version Showcase (v1.1.0)**, **Milestone 1: Production Hardening & PDPA Compliance (v1.2.0)**, and **Milestone 2: Shop Operations & Discoverability (v1.3.0)**:
 - **v1.0.0:** Boutique Plant Catalog (30 species), Thai 3-Season Care Scheduler, My Garden wizard, Daily Tasks, and LINE OA handoff.
 - **v1.1.0:** Dual-Version Showcase (`NEXT_PUBLIC_APP_MODE=production` vs `demo`), gating role switchers, and introducing the Showcase Hub (`/demo`) with interactive prototypes across Phase 1, Phase 2, and Phase 3.
 - **v1.2.0:** Production-grade security hardening: actor extraction (`x-guest-token`), plant ownership verification (`requireOwner` returning 404 anti-enumeration), database rate limiting (`rate_limits` table returning 429), Zod validation schemas, HTTP security headers, botanical error boundaries, bilingual PDPA privacy policy (`/privacy`), terms of service (`/terms`), and data portability/erasure APIs with garden reset.
+- **v1.3.0:** Shop Operations & Discoverability: PostgreSQL trigram fuzzy Thai search (`pg_trgm`) with normalization and fallback recommendations, 8 SEO Botanical Collection Hubs (`/collections/*`) with Schema.org JSON-LD (FAQPage + ItemList) generated statically (SSG), and a full-featured mobile-first Shop Admin Catalog CMS (`/admin/species/*`) with direct cloud photo upload to Supabase Storage (`species-media` bucket) and automatic local mock fallback.
 
-All 217 automated unit/integration tests and Next.js 15 production builds pass with zero defects.
+All 265 automated unit/integration tests across 28 test suites and Next.js 15 production builds compile cleanly with zero TypeScript errors.
 
 ---
 
@@ -25,23 +28,27 @@ All 217 automated unit/integration tests and Next.js 15 production builds pass w
 
 | Metric | Result | Target | Status |
 |---|---|---|---|
-| **Automated Tests** | **217 passed / 217 total** (20 suites) | 100% passing | ✅ Exceeded |
-| **Next.js 15 App Router Routes** | **17 routes compiled** (0 TS errors) | 17 routes | ✅ Complete |
+| **Automated Tests** | **265 passed / 265 total** (28 test suites) | 100% passing | ✅ Exceeded |
+| **Next.js 15 App Router Routes** | **29 routes compiled** (0 TS errors, clean build) | 29 routes | ✅ Complete |
+| **SEO Botanical Collections** | **8 SSG collections** (with ItemList & FAQ JSON-LD) | 8 collections | ✅ Complete |
 | **First Load Shared JS Bundle** | **105 kB** | < 150 kB | ✅ Optimal |
-| **Curated Boutique Thai Species** | **30 species** (with media, care, problems) | 30 species | ✅ Complete |
-| **Dual DDL Parity** | 100% parity between Drizzle & SQL DDL | Strict 1-to-1 | ✅ Verified |
+| **Curated Boutique Thai Species** | **30 species** (with media, care, problems + CMS CRUD) | 30 species | ✅ Complete |
+| **Database Trigram & DDL Parity** | `pg_trgm` GIN index + dual Drizzle/SQL schema parity | Strict 1-to-1 | ✅ Verified |
+| **Storage Provider Abstraction** | Supabase Storage (`species-media`) + Local Mock | Dual-mode | ✅ Verified |
 | **Bilingual Dictionary & PDPA** | Full Thai (`th`) & English (`en`) dictionary + PDPA | Dual locale | ✅ Complete |
 | **Production Security Baseline** | Ownership + Rate limit + Zod + Security Headers | OWASP / PDPA | ✅ Verified |
 
 ---
 
-## 3. Implemented Modules Breakdown (Phase 1)
+## 3. Implemented Modules Breakdown
 
 ### 3.1 Database & Storage Layer
 - **Embedded PGlite Engine:** Self-bootstraps under `.data/pglite` on first start; automatically creates 8 relational tables and seeds 30 curated boutique species with media and care templates.
 - **Dual DDL Synchronization:** Exact 1-to-1 mapping maintained between Drizzle ORM schema (`db/schema.ts`) and native SQL schema (`lib/db/schema-ddl.ts`).
-- **Neon Postgres Fallback:** Automatic switch to `pg.Pool` connection pool with SSL when `DATABASE_URL` is set in the environment.
+- **Neon / Supabase Postgres Fallback:** Automatic switch to `pg.Pool` connection pool with SSL when `DATABASE_URL` is set in the environment.
 - **Transaction Safety:** Seeding and multi-query operations run inside dedicated client connections with proper transaction handling (`BEGIN` / `COMMIT` / `ROLLBACK`).
+- **PostgreSQL Trigram Extension (`pg_trgm`):** Integrated into DDL and PGlite (`@electric-sql/pglite/contrib/pg_trgm`) with GIN index on `species.search_text`.
+- **Storage Provider Abstraction (`lib/storage/`):** Unified interface for signed uploads and file deletion via Supabase Storage (`species-media` bucket) with zero-credential fallback to `MockStorageProvider` for tests and local dev.
 
 ### 3.2 Thai 3-Season Care Schedule Engine
 - **Seasonal Microclimate Formulas:** Dynamic water, fertilize, and repotting intervals calculated across Thai calendar seasons:
@@ -57,7 +64,7 @@ All 217 automated unit/integration tests and Next.js 15 production builds pass w
 - **Timezone Standardization:** Standardized Asia/Bangkok date string generation via `formatDate(new Date())`.
 
 ### 3.3 Public Discovery & Catalog
-- **Homepage (`/`):** Seasonal search hero with Thai search suggestions, 6 category shortcuts (Indoor, Sun-loving, Pet-safe, Beginner, Air-purifying, Compact), in-stock plant carousel, and value proposition banner.
+- **Homepage (`/`):** Seasonal search hero with Thai search suggestions, 6 category shortcuts, in-stock plant carousel, and value proposition banner.
 - **Faceted Search (`/search`):** Full-text name & alias search, multi-attribute filter chips (light, water, placement, difficulty 1–5, pet safety, size, stock status), bidirectional URL parameter sync, zero-results state, and automatic `search_misses` query logging.
 - **Plant Detail (`/plants/[slug]`):** Botanical taxonomy, "Taken at Shop" media gallery, 6-metric summary grid, seasonal care instructions, shop advice box, common troubleshooting accordion, similar species recommendations, and JSON-LD structured data (Product/FAQ) with XSS sanitization.
 
@@ -69,21 +76,9 @@ All 217 automated unit/integration tests and Next.js 15 production builds pass w
   - Desktop UX: High-contrast LINE OA QR code with one-click clipboard copy.
 
 ### 3.5 My Garden & Plant Tracking
-- **My Garden Hub (`/garden`):**
-  - Real-time plant list with accessible, colorblind-safe due-status tags (Overdue red, Due Today amber, Upcoming sage).
-  - Quick action "Watered" directly on plant cards.
-  - Empty state onboarding.
-- **4-Step Add Wizard (`/garden/add`):**
-  - Step 1: Species selector (or custom plant).
-  - Step 2: Nickname, acquisition date, acquisition source (`shop`, `elsewhere`, `gift`, `propagated`).
-  - Step 3: Pot diameter (inches) & visual pot material selector.
-  - Step 4: Placement environment selector.
-  - **Live Preview:** Computes Thai seasonal interval and displays factor math in real time before saving.
-- **Plant Care Detail (`/garden/[id]`):**
-  - Interactive 30-day care task calendar preview.
-  - Historical care logs timeline.
-  - Live environmental setting editor with dynamic schedule recalculation.
-  - Soft archive action (`is_active = false`).
+- **My Garden Hub (`/garden`):** Real-time plant list with accessible, colorblind-safe due-status tags, quick action "Watered", and empty state onboarding.
+- **4-Step Add Wizard (`/garden/add`):** Species selector, nickname & acquisition source, pot diameter & material selector, placement selector, and live Thai seasonal care formula preview.
+- **Plant Care Detail (`/garden/[id]`):** Interactive 30-day care task calendar preview, historical care logs timeline, live environmental editor with dynamic schedule recalculation, and soft archive action (`is_active = false`).
 
 ### 3.6 Daily Tasks Dashboard
 - **Today's Tasks (`/today`):**
@@ -91,7 +86,6 @@ All 217 automated unit/integration tests and Next.js 15 production builds pass w
   - Task cards with plant nickname, task icon, due date tag, and care tips.
   - Actions: Done (`complete`), Snooze (`snooze`), Skip (`skip`).
   - Batch action: "Mark All Done" with resilient per-item error handling.
-  - Empty state when all plants are cared for.
 
 ### 3.7 Shop Admin Dashboard
 - **Admin Dashboard (`/admin`):**
@@ -104,25 +98,67 @@ All 217 automated unit/integration tests and Next.js 15 production builds pass w
 - **i18n Dictionary (`lib/i18n/translations.ts`):** Complete Thai (`th`) and English (`en`) strings for every UI surface.
 - **App Context (`lib/context/AppContext.tsx`):** Client-side state providing language, theme (class dark mode with `localStorage` persistence), persistent browser `guestToken`, demo user role switcher, and automatic guest-to-customer garden data migration.
 
+### 3.9 Thai Text Normalization & Trigram Fuzzy Search Engine (Milestone 2)
+- **Normalization Pipeline (`lib/search/normalize.ts`):** Strips Thai tone marks and diacritics (่ ้ ๊ ๋ ์ ํ ั ฺ), removes middle 'ะ' (equating "มอนสเตอร่า", "มอนสเตอรา", and "มอนสะเตอร่า"), strips punctuation/whitespace, and lowercases English text.
+- **Database Search Text:** Precomputed `search_text` column on `species` table indexed with `pg_trgm` GIN index.
+- **Fuzzy Search & Suggestions:** `speciesService.searchSpecies` performs normalized substring and trigram similarity search (`similarity(search_text, normalized_query) > 0.28`). When 0 exact results match, fallback suggestions are surfaced and displayed to the user.
+- **Demand Analytics:** Search queries yielding 0 results are normalized and logged to `search_misses` with frequency counters to inform nursery propagation planning.
+
+### 3.10 8 SEO Botanical Collections Hubs (Milestone 2)
+- **Curated Collection Registry (`lib/collections.ts`):** Defines 8 botanical collection themes (`air-con-plants`, `pet-safe-plants`, `beginner-plants`, `air-purifying-plants`, `low-water-plants`, `variegated-rare-plants`, `desk-plants`, `balcony-sun-plants`) with tailored search criteria, hero copy, and curated FAQ items.
+- **Static Site Generation (SSG):** `app/collections/[slug]/page.tsx` utilizes `generateStaticParams` for pre-rendering all 8 pages at build time.
+- **Schema Markup & Metadata:** Each collection page generates dynamic Open Graph metadata and dual Schema.org JSON-LD scripts (`FAQPage` and `ItemList`) for rich Google search snippet eligibility.
+- **Sitemap & Navigation Integration:** All collections automatically registered in `sitemap.xml` with priority 0.8 and linked from the main site navbar dropdown.
+
+### 3.11 Mobile-First Shop Admin Catalog CMS (Milestone 2)
+- **Catalog Management UI (`app/admin/species/`):** Full mobile-responsive species management allowing nursery staff to create, edit, clone, and publish plant entries.
+- **4 Specialized Editor Tabs:**
+  - *Tab 1: Basic Info:* Thai/English/Scientific names, family, mature size, light, water need, placements, difficulty, and aliases.
+  - *Tab 2: Photos:* Media gallery supporting direct photo upload, primary photo selection, caption editing, and photo deletion.
+  - *Tab 3: 3-Season Care:* Season-by-season water intervals (hot, rainy, cool), fertilizing schedule, repotting, and live preview showing exact computed days for terracotta/plastic pots across light settings.
+  - *Tab 4: Common Problems:* Symptom, cause, fix, and severity management with easy problem item addition and removal.
+- **Draft & Publish Lifecycle:** New species default to draft (`published_at = null`); dedicated publish action validates completeness before making species public.
+- **Backend Admin APIs (`app/api/admin/`):** RESTful endpoints for species CRUD, media signed upload URLs, media deletion, and publishing with full validation via Zod schemas (`lib/validation/admin.ts`).
+
 ---
 
 ## 4. Test Suite Coverage Summary
 
 ### 4.1 Unit & Integration Tests (Vitest)
 
-All test suites run with Vitest (`npm run test` or `make test`):
+All 28 test suites run with Vitest (`npm run test` or `make test`):
 
 | Test Suite File | Tests | Focus Area |
 |---|---|---|
-| `lib/services/services.test.ts` | 38 | Core domain services (species, garden, inquiries, admin) |
+| `lib/services/services.test.ts` | 42 | Core domain services (species, garden, inquiries, admin, search) |
 | `lib/care/scheduler.test.ts` | 26 | Care schedule engine, seasonal math, factor clamping |
 | `test/catalog-search-detail.test.ts` | 22 | Search filters, catalog sorting, plant detail, JSON-LD |
 | `test/admin.test.tsx` | 17 | Admin role gate, stock status toggles, demand analytics |
 | `lib/i18n/translations.test.ts` | 17 | i18n key completeness, parameter interpolation |
+| `test/admin-species-api.test.ts` | 14 | Admin catalog CRUD APIs, copy/clone, publishing, media endpoints |
 | `test/garden.test.tsx` | 13 | My Garden hub, 4-step wizard, care calendar preview |
 | `test/inquiry-modal.test.tsx` | 13 | LINE inquiry modal, ref code generation, QR display |
 | `test/today.test.tsx` | 12 | Today's tasks grouping, snooze limits, batch completion |
-| **Total Unit/Integration** | **158** | **All 158 tests passing (100% green)** |
+| `test/actor.test.ts` | 10 | Actor identity extraction, guest token, role authority |
+| `test/storage.test.ts` | 8 | Storage provider abstraction, signed upload URLs, delete, mock fallback |
+| `test/hardening.test.ts` | 7 | Security hardening, ownership checks, anti-enumeration 404s |
+| `test/collections.test.ts` | 6 | Collection criteria matching, helper functions, slug integrity |
+| `test/admin-species-ui.test.tsx` | 5 | Admin species list UI, editor tabs, live formula preview |
+| `test/showcase-hub-integration.test.tsx` | 5 | Dual-mode showcase hub, navigation, demo role switcher |
+| `test/errors.test.ts` | 5 | Error handling, standard JSON error formatting |
+| `test/normalize.test.ts` | 5 | Thai text normalization, tone mark stripping, middle 'ะ' removal |
+| `test/role-switcher-gating.test.tsx` | 4 | Production mode role switcher hiding, demo mode enabling |
+| `test/phase2-prototypes.test.tsx` | 4 | Phase 2 prototypes (AI Doctor, Garden Planner, Chat Assistant) |
+| `test/phase3-prototypes.test.tsx` | 4 | Phase 3 prototypes (Quote calculator, Community, Green Club) |
+| `test/privacy.test.ts` | 4 | PDPA privacy policy, terms, data export & account deletion |
+| `test/search-fuzzy.test.ts` | 4 | Fuzzy search matching, typos, tone mark tolerance, suggestions |
+| `test/seo-collections.test.ts` | 4 | Collections SSG page rendering, FAQ JSON-LD, ItemList schema |
+| `test/rate-limit.test.ts` | 3 | Postgres rate limiting, sliding window, HTTP 429 Retry-After |
+| `test/demo-route-guard.test.tsx` | 3 | Route guarding for /demo in production mode |
+| `test/validation.test.ts` | 3 | Zod schema validation for APIs |
+| `test/app-mode.test.ts` | 3 | NEXT_PUBLIC_APP_MODE configuration and helper utilities |
+| `test/search-trgm.test.ts` | 2 | pg_trgm extension verification and similarity calculation |
+| **Total Unit/Integration** | **265** | **All 265 tests passing across 28 suites (100% green)** |
 
 ### 4.2 End-to-End User Flow Tests (Playwright)
 
@@ -142,21 +178,19 @@ Official Playwright E2E test suite executed against live server (`npm run test:e
 
 ## 5. Architectural Rulings & Decisions Made
 
-1. **Local Bootstrapping Without Docker:** Embedded `@electric-sql/pglite` under `.data/pglite` enables any developer to clone and run `npm run dev` instantly without installing PostgreSQL or Docker.
-2. **Dual DDL Synchronization:** Hand-written DDL in `lib/db/schema-ddl.ts` guarantees instant table setup in PGlite while Drizzle in `db/schema.ts` provides complete TypeScript type safety across queries.
-3. **Asia/Bangkok Timezone Normalization:** Replaced UTC date string splitting (`new Date().toISOString().split('T')[0]`) with `formatDate(new Date())` from `@/lib/care/scheduler` to prevent premature midnight date rollbacks in Thai local time.
-4. **Dedicated Connection Checkout for Pool Seeding:** In `lib/db/index.ts`, when connecting to external PostgreSQL, dedicated clients are checked out from `Pool` and released in `finally` blocks to guarantee single-connection transaction boundaries (`BEGIN` / `COMMIT`).
-5. **Resilient Batch Operations:** In `/api/garden/tasks`, batch task completion processes each task with individual error isolation returning `{ success: true, succeeded, failed }` so a single failing task does not abort the entire batch.
-6. **XSS Protection:** Escaped JSON-LD structured data `<` characters (`\u003c`) to protect against script injection in server-rendered plant detail pages.
+1. **Local Bootstrapping Without Cloud Dependencies:** Embedded `@electric-sql/pglite` with `@electric-sql/pglite/contrib/pg_trgm` and `MockStorageProvider` allow the complete application and all 265 tests to run out of the box with zero external cloud accounts.
+2. **Dual DDL Synchronization with Trigram Ops:** Schema synchronization maintained strictly across Drizzle ORM (`db/schema.ts`) and native SQL (`lib/db/schema-ddl.ts`), including `search_text` column, additive `ALTER TABLE` statements for seamless production migrations, and GIN index with `gin_trgm_ops`.
+3. **Thai Search Normalization Pipeline:** Dedicated Unicode NFC normalizer strips tone marks, diacritics, and middle 'ะ' before querying, ensuring colloquial Thai variations match catalog entries.
+4. **Static Generation with Rich Schema Markup:** Collection hubs pre-rendered at build time with SSG and dual Schema.org JSON-LD scripts (`ItemList` and `FAQPage`) for enhanced Google search discoverability.
+5. **Direct-to-Storage Cloud Uploads:** Admin photo management generates presigned URLs for client-to-Supabase Storage direct uploads, preventing serverless function timeouts on large photo payloads.
+6. **Asia/Bangkok Timezone Normalization:** Standardized Asia/Bangkok date formatting across all care scheduling calculations.
+7. **Anti-Enumeration Ownership Model:** APIs return HTTP 404 NOT_FOUND instead of 403 FORBIDDEN when accessed by non-owners to prevent brute-force resource ID enumeration.
 
 ---
 
 ## 6. Next Steps & Roadmap
 
-> **Superseded (2026-09-24):** the plan below is replaced by [`docs/ROADMAP.md`](./ROADMAP.md) and the implementation-ready specs in [`docs/features/`](./features/README.md).
-
-The demo scope above passed all tests, but a gap review against `SPEC.md` §6 and the launch criteria in §11.3 found items still required before real customers use it: LINE Login, reminders (Web Push + LINE + cron), full admin CMS with real shop photos, ownership checks and rate limiting on garden APIs, fuzzy Thai search, and PDPA pages. See `ROADMAP.md` §1 for the full table.
-
-### 2026-09-24 changes
-- Added `middleware.ts`: HTTP Basic Auth on `/admin` and `/api/admin/*` via `ADMIN_PASSWORD`; locked in production when unset.
-- Production deploy target: Vercel (`sin1`) + Supabase Postgres (Singapore) — see `DEPLOYMENT.md`.
+Following the completion of **Milestone 2 (v1.3.0)**, remaining roadmap priorities (see [`docs/ROADMAP.md`](./ROADMAP.md)) include:
+- **Milestone 3: Customer Retention & Real-Time Notifications**:
+  - LINE Login integration (F02) for cross-device garden synchronization.
+  - Automated watering & care reminders via Web Push & LINE Messaging API with Vercel Cron (F03).

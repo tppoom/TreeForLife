@@ -30,11 +30,22 @@
 - 💬 **LINE Inquiry & Handoff Integration**:
   - สร้างรหัสอ้างอิงอัตโนมัติ `TFL-XXXX` เพื่อส่งต่อความต้องการไปยัง LINE Official Account
   - Deep Link เข้า LINE แอปพลิเคชันบนมือถือ และ QR Code สแกนบนคอมพิวเตอร์
-- 🛠️ **ระบบจัดการร้าน (Shop Admin Dashboard)**:
+- 🔍 **ระบบค้นหาพฤกษศาสตร์ภาษาไทยอัจฉริยะ (Fuzzy Thai Search with `pg_trgm`)**:
+  - ทนทานต่อการสะกดผิด วรรณยุกต์ และสระ 'ะ' กลางคำ (เช่น "มอนสเตอร่า", "มอนสเตอรา", "มอนสะเตอร่า" ได้ผลลัพธ์ถูกต้องแม่นยำ)
+  - ขับเคลื่อนด้วย PostgreSQL `pg_trgm` GIN Index บนคอลัมน์ `species.search_text` พร้อมการคำนวณ Similarity Threshold
+  - แสดงการ์ดแนะนำพันธุ์ไม้ใกล้เคียง (Fallback Suggestions) เมื่อไม่พบผลลัพธ์ตรง พร้อมระบบบันทึก `search_misses` เป็น Demand Analytics
+- 🌿 **8 คอลเลกชันพฤกษศาสตร์เพิ่มยอดค้นหา SEO (8 Botanical Collection Hubs — `/collections/*`)**:
+  - ศูนย์รวม 8 คอลเลกชันยอดนิยม (ต้นไม้เลี้ยงในห้องแอร์, สัตว์เลี้ยงปลอดภัย, มือใหม่หัดปลูก, ฟอกอากาศ, ดูแลง่ายรดน้ำน้อย, ไม้ด่างสะสม, ตั้งโต๊ะทำงาน, ไม้แดดระเบียง)
+  - พรีเรนเดอร์แบบ Static Generation (SSG) พร้อม Schema.org JSON-LD (FAQPage + ItemList), Dynamic Open Graph และการอ้างอิงใน `sitemap.xml`
+- 📸 **ระบบจัดการคลังพันธุ์ไม้และอัปโหลดภาพ (Shop Admin Catalog CMS — `/admin/species/*`)**:
+  - ระบบบริหารจัดการพฤกษศาสตร์บนมือถือและคอมพิวเตอร์: สร้างใหม่, แก้ไข, คัดลอกร่างพันธุ์ไม้ (Clone Species), และตั้งค่า Publish/Draft
+  - 4 แท็บฟังก์ชัน: ข้อมูลทั่วไป, ตารางดูแล 3 ฤดูพร้อม Live Preview คำนวณตามสูตรไทย, อาการและปัญหาพบบ่อย, และคลังภาพ
+  - รองรับการอัปโหลดรูปถ่ายจริงจากร้านขึ้น Supabase Storage (`species-media`) ผ่าน Signed URL โดยตรง พร้อม Local Mock Provider ที่ทำงานได้ทันทีโดยไม่ต้องตั้งค่าคลาวด์
+- 🛠️ **ระบบจัดการร้านและการสอบถาม (Shop Admin Dashboard)**:
   - ระบบล็อกอินจำลอง (Guest, Customer, Staff, Admin)
-  - ปรับสถานะสต็อกแบบเรียลไทม์ (In Stock, Made to Order, Seasonal)
+  - ปรับสถานะสต็อกแบบเรียลไทม์ (In Stock, Made to Order, Seasonal, Hidden)
   - ตารางบันทึกการสอบถามของลูกค้า และ Demand Analytics จากคำค้นหาที่ไม่พบ
-- 🔒 **ระบบความปลอดภัยระดับ Production & PDPA (Milestone 1 — v1.2.0)**:
+- 🔒 **ระบบความปลอดภัยระดับ Production & PDPA (Milestone 1 — v1.2.0 Baseline)**:
   - **Resource Ownership**: ตรวจสอบความเป็นเจ้าของต้นไม้ (`requireOwner`) ผ่าน `x-guest-token` header และตอบกลับ 404 NOT_FOUND เมื่อไม่ได้รับอนุญาตเพื่อป้องกันการสุ่มเจาะดูข้อมูล
   - **Database Rate Limiting**: ป้องกันการ Flood API ด้วยตาราง `rate_limits` ตอบกลับ HTTP 429 พร้อม header `Retry-After`
   - **Zod Schema Validation**: ตรวจสอบความถูกต้องของข้อมูล Request Body/Query ทุกจุด (`lib/validation/`)
@@ -90,7 +101,7 @@ npm run dev
 ## 🧪 การทดสอบและตรวจสอบคุณภาพ (Testing & Quality)
 
 ```bash
-# รัน Unit & Integration Tests ทั้งหมด (217 การทดสอบ ผ่าน 100%)
+# รัน Unit & Integration Tests ทั้งหมด (265 การทดสอบ ใน 28 Test Suites ผ่าน 100%)
 npm run test
 
 # รัน End-to-End Playwright Tests (6 Flow ผ่าน 100%)
@@ -112,11 +123,12 @@ npm run db:setup
 
 อ่านคู่มือฉบับเต็มได้ที่ [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 
-1. **สร้าง Database ฟรี**: สมัคร [Neon.tech](https://neon.tech) (เลือก Region: Singapore) แล้วคัดลอก **Pooled Connection String**
+1. **สร้าง Database ฟรี**: สมัคร [Neon.tech](https://neon.tech) หรือ [Supabase](https://supabase.com) (เลือก Region: Singapore) แล้วคัดลอก **Pooled Connection String**
 2. **Import โปรเจกต์บน Vercel**: เข้า [Vercel.com](https://vercel.com) แล้ว Import จาก Repository นี้
 3. **กำหนด Environment Variables บน Vercel**:
-   - `DATABASE_URL` = Connection String จาก Neon
+   - `DATABASE_URL` = Connection String จาก Postgres
    - `NEXT_PUBLIC_SITE_URL` = URL เว็บของคุณ
+   - `NEXT_PUBLIC_SUPABASE_URL` และ `SUPABASE_SERVICE_ROLE_KEY` (สำหรับการอัปโหลดรูปภาพ CMS)
 4. กด **Deploy** 🚀 (ระบบจะรัน DDL และ Auto-Seed ข้อมูล 30 ชนิดเข้าสู่ Cloud ให้โดยอัตโนมัติ)
 
 ---
@@ -126,11 +138,12 @@ npm run db:setup
 ```
 TreeForLife/
 ├── app/                  # Next.js 15 App Router (Pages, Layouts, API Routes)
-│   ├── admin/            # หน้า Shop Admin Dashboard
-│   ├── api/              # REST API Routes (plants, tasks, inquiries, stock)
+│   ├── admin/            # หน้า Shop Admin Dashboard & Species Catalog CMS (/admin/species/*)
+│   ├── api/              # REST API Routes (admin, species, media, plants, tasks, inquiries)
+│   ├── collections/      # 8 หน้า SEO Botanical Collection Hubs (/collections/[slug])
 │   ├── garden/           # หน้า My Garden Hub, Add Wizard, Plant Detail
 │   ├── plants/           # หน้ารายละเอียดพฤกษศาสตร์สาธารณะ (/plants/[slug])
-│   ├── search/           # หน้าค้นหาและกรองพันธุ์ไม้ Faceted Search
+│   ├── search/           # หน้าค้นหาและกรองพันธุ์ไม้ Faceted & Fuzzy Trigram Search
 │   └── today/            # หน้าแดชบอร์ดงานดูแลประจำวัน
 ├── components/           # React Components แยกตามหมวดหมู่
 ├── db/                   # Drizzle ORM Schema Definitions
@@ -140,7 +153,9 @@ TreeForLife/
 │   ├── context/          # AppContext (Auth, Theme, i18n, Toast)
 │   ├── db/               # Database Engine (PGlite & Postgres DDL + Auto-seed)
 │   ├── i18n/             # Bilingual Dictionary & English Knowledge Base
-│   └── services/         # Domain Services
+│   ├── search/           # Thai Text Normalization & Trigram Fuzzy Match Engine
+│   ├── services/         # Domain Services
+│   └── storage/          # Storage Provider Abstraction (Supabase & Mock Provider)
 ├── scripts/              # Automated Audit & Setup Utilities
 └── test/                 # Vitest & Playwright E2E Test Suites
 ```
