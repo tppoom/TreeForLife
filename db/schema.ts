@@ -41,6 +41,9 @@ export const users = pgTable("users", {
   lineUserId: text("line_user_id").unique(),
   avatarUrl: text("avatar_url"),
   role: text("role").notNull().default("customer"), // customer, staff, admin
+  sessionVersion: integer("session_version").default(1).notNull(),
+  lineFriend: boolean("line_friend"),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   timezone: text("timezone").default("Asia/Bangkok").notNull(),
   notifyWebPush: boolean("notify_web_push").default(true).notNull(),
   notifyLine: boolean("notify_line").default(true).notNull(),
@@ -135,6 +138,7 @@ export const userPlants = pgTable("user_plants", {
   placement: text("placement").notNull().default("indoor_window"), // outdoor_sun, balcony_shade, indoor_window, indoor_far, air_con
   customWaterDays: integer("custom_water_days"),
   isActive: boolean("is_active").notNull().default(true),
+  reminderOptInAskedAt: timestamp("reminder_opt_in_asked_at", { withTimezone: true }),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -153,6 +157,7 @@ export const careTasks = pgTable("care_tasks", {
   snoozeCount: integer("snooze_count").notNull().default(0),
   doneAt: timestamp("done_at", { withTimezone: true }),
   notifiedAt: timestamp("notified_at", { withTimezone: true }),
+  nudgeDismissedAt: timestamp("nudge_dismissed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   unique("care_tasks_plant_type_due_unique").on(table.userPlantId, table.type, table.dueDate),
@@ -223,11 +228,78 @@ export const rateLimits = pgTable(
   ]
 );
 
+// Push Subscriptions (Web Push)
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+  guestToken: text("guest_token"),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  lastSuccessAt: timestamp("last_success_at", { withTimezone: true }),
+}, (table) => [
+  index("push_subscriptions_user_idx").on(table.userId),
+  index("push_subscriptions_guest_idx").on(table.guestToken),
+]);
+
+// Notifications Log (Audit & Monthly LINE Quota Cap)
+export const notificationsLog = pgTable("notifications_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  guestToken: text("guest_token"),
+  channel: text("channel").notNull(), // web_push | line
+  kind: text("kind").notNull(), // daily_digest | aftercare | supplies | test | admin_alert
+  taskCount: integer("task_count").notNull().default(0),
+  ok: boolean("ok").notNull(),
+  error: text("error"),
+  sentAt: timestamp("sent_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("notifications_log_month_idx").on(table.channel, table.sentAt),
+]);
+
+// Cron Runs (Idempotency & Cursor Checkpointing)
+export const cronRuns = pgTable("cron_runs", {
+  job: text("job").notNull(),
+  runDate: date("run_date").notNull(),
+  status: text("status").notNull().default("running"), // running | done | failed
+  cursor: text("cursor"),
+  stats: jsonb("stats").$type<Record<string, unknown>>().default({}).notNull(),
+  startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+}, (table) => [
+  primaryKey({ columns: [table.job, table.runDate] }),
+]);
+
+// LINE Events Seen (Deduplication for Webhooks)
+export const lineEventsSeen = pgTable("line_events_seen", {
+  eventId: text("event_id").primaryKey(),
+  seenAt: timestamp("seen_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// Aftercare Check-ins (F06: 3 / 14 / 30 Days Check-ins)
+export const aftercareCheckins = pgTable("aftercare_checkins", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userPlantId: uuid("user_plant_id").notNull().references(() => userPlants.id, { onDelete: "cascade" }),
+  dayMark: integer("day_mark").notNull(), // 3 | 14 | 30
+  dueDate: date("due_date").notNull(),
+  answer: text("answer"), // good | unsure | bad | null
+  symptoms: jsonb("symptoms").$type<string[]>().default([]).notNull(),
+  inquiryId: uuid("inquiry_id").references(() => inquiries.id, { onDelete: "set null" }),
+  answeredAt: timestamp("answered_at", { withTimezone: true }),
+}, (table) => [
+  unique("aftercare_unique").on(table.userPlantId, table.dayMark),
+  index("aftercare_due_idx").on(table.dueDate, table.answer),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   userPlants: many(userPlants),
   favorites: many(favorites),
   inquiries: many(inquiries),
+  pushSubscriptions: many(pushSubscriptions),
+  notifications: many(notificationsLog),
 }));
 
 export const speciesRelations = relations(species, ({ one, many }) => ({
@@ -274,6 +346,7 @@ export const userPlantsRelations = relations(userPlants, ({ one, many }) => ({
   }),
   careTasks: many(careTasks),
   careLogs: many(careLogs),
+  aftercareCheckins: many(aftercareCheckins),
 }));
 
 export const careTasksRelations = relations(careTasks, ({ one }) => ({
@@ -309,6 +382,17 @@ export const inquiriesRelations = relations(inquiries, ({ one }) => ({
   user: one(users, {
     fields: [inquiries.userId],
     references: [users.id],
+  }),
+}));
+
+export const aftercareCheckinsRelations = relations(aftercareCheckins, ({ one }) => ({
+  userPlant: one(userPlants, {
+    fields: [aftercareCheckins.userPlantId],
+    references: [userPlants.id],
+  }),
+  inquiry: one(inquiries, {
+    fields: [aftercareCheckins.inquiryId],
+    references: [inquiries.id],
   }),
 }));
 
@@ -348,3 +432,18 @@ export type NewSearchMiss = InferInsertModel<typeof searchMisses>;
 
 export type RateLimit = InferSelectModel<typeof rateLimits>;
 export type NewRateLimit = InferInsertModel<typeof rateLimits>;
+
+export type PushSubscription = InferSelectModel<typeof pushSubscriptions>;
+export type NewPushSubscription = InferInsertModel<typeof pushSubscriptions>;
+
+export type NotificationLog = InferSelectModel<typeof notificationsLog>;
+export type NewNotificationLog = InferInsertModel<typeof notificationsLog>;
+
+export type CronRun = InferSelectModel<typeof cronRuns>;
+export type NewCronRun = InferInsertModel<typeof cronRuns>;
+
+export type LineEventSeen = InferSelectModel<typeof lineEventsSeen>;
+export type NewLineEventSeen = InferInsertModel<typeof lineEventsSeen>;
+
+export type AftercareCheckin = InferSelectModel<typeof aftercareCheckins>;
+export type NewAftercareCheckin = InferInsertModel<typeof aftercareCheckins>;

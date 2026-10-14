@@ -969,3 +969,117 @@ export function formatCareSummaryTh(template: CareTemplateInput): {
     repotSummary,
   };
 }
+
+export interface PlannedTask {
+  type: "water" | "fertilize" | "repot" | "prune" | "pest_check";
+  dueDate: string; // YYYY-MM-DD
+}
+
+/**
+ * Plans upcoming care tasks for a plant within a forecast horizon (F03 & SPEC §5.3, §5.6)
+ * - Water tasks based on seasonal interval
+ * - Fertilize tasks skipping pause months
+ * - Repot task alerted 14 days in advance
+ * - Prune and Pest check tasks
+ */
+export function planUpcomingTasks(opts: {
+  plantId?: string;
+  acquiredAt: string | Date;
+  potMaterial: PotMaterial;
+  potSizeInch: number;
+  placement: Placement;
+  customWaterDays?: number | null;
+  template: CareTemplateInput;
+  fromDate?: Date;
+  horizonDays?: number;
+}): PlannedTask[] {
+  const fromDate = opts.fromDate ? new Date(opts.fromDate) : new Date();
+  const horizon = opts.horizonDays ?? 14;
+  const horizonEndDate = new Date(fromDate);
+  horizonEndDate.setDate(horizonEndDate.getDate() + horizon);
+
+  const tasks: PlannedTask[] = [];
+
+  // 1. Water tasks
+  const waterInterval = calculateCareInterval({
+    potMaterial: opts.potMaterial,
+    potSizeInch: opts.potSizeInch,
+    placement: opts.placement,
+    date: fromDate,
+    template: opts.template,
+    customWaterDays: opts.customWaterDays,
+  });
+
+  let waterDate = new Date(fromDate);
+  waterDate.setDate(waterDate.getDate() + waterInterval);
+  while (waterDate <= horizonEndDate) {
+    tasks.push({
+      type: "water",
+      dueDate: formatDate(waterDate),
+    });
+    waterDate = new Date(waterDate);
+    waterDate.setDate(waterDate.getDate() + waterInterval);
+  }
+
+  // 2. Fertilize tasks
+  if (opts.template.fertilizeDays && opts.template.fertilizeDays > 0) {
+    let fertDate = new Date(fromDate);
+    fertDate.setDate(fertDate.getDate() + opts.template.fertilizeDays);
+
+    const pauseMonths = new Set(opts.template.fertilizePauseMonths || []);
+    while (pauseMonths.has(fertDate.getMonth() + 1)) {
+      fertDate.setMonth(fertDate.getMonth() + 1);
+      fertDate.setDate(1);
+    }
+
+    if (fertDate <= horizonEndDate) {
+      tasks.push({
+        type: "fertilize",
+        dueDate: formatDate(fertDate),
+      });
+    }
+  }
+
+  // 3. Repot task (advance warning by 14 days)
+  if (opts.template.repotMonths && opts.template.repotMonths > 0) {
+    const acq = new Date(opts.acquiredAt);
+    const repotDue = new Date(acq);
+    repotDue.setMonth(repotDue.getMonth() + opts.template.repotMonths);
+
+    // Warning is 14 days before repot date
+    const repotWarningDate = new Date(repotDue);
+    repotWarningDate.setDate(repotWarningDate.getDate() - 14);
+
+    if (repotWarningDate >= fromDate && repotWarningDate <= horizonEndDate) {
+      tasks.push({
+        type: "repot",
+        dueDate: formatDate(repotWarningDate),
+      });
+    }
+  }
+
+  // 4. Prune task
+  if (opts.template.pruneDays && opts.template.pruneDays > 0) {
+    const pruneDate = new Date(fromDate);
+    pruneDate.setDate(pruneDate.getDate() + opts.template.pruneDays);
+    if (pruneDate <= horizonEndDate) {
+      tasks.push({
+        type: "prune",
+        dueDate: formatDate(pruneDate),
+      });
+    }
+  }
+
+  // 5. Pest check task
+  const pestDays = opts.template.pestCheckDays || 14;
+  const pestDate = new Date(fromDate);
+  pestDate.setDate(pestDate.getDate() + pestDays);
+  if (pestDate <= horizonEndDate) {
+    tasks.push({
+      type: "pest_check",
+      dueDate: formatDate(pestDate),
+    });
+  }
+
+  return tasks;
+}

@@ -1,34 +1,48 @@
-import { NextResponse } from "next/server";
-import { mergeGuestPlants } from "@/lib/services/gardenService";
+import { NextResponse, type NextRequest } from "next/server";
 import { getActor } from "@/lib/auth/actor";
-import { HttpError, toErrorResponse } from "@/lib/http/errors";
+import { mergeGuestData } from "@/lib/services/gardenService";
+import { z } from "zod";
+
+const MergeSchema = z.object({
+  guestToken: z.string().min(1, "guestToken is required"),
+  userId: z.string().uuid().optional(),
+});
 
 export async function POST(req: Request) {
+  const actor = await getActor(req);
+
+  let body: unknown;
   try {
-    const actor = await getActor(req);
-
-    // Return 404 in production mode or when not authenticated as user to prevent unauthorized merges before F02
-    if (process.env.NODE_ENV === "production" && actor.kind !== "user") {
-      throw new HttpError(404, "NOT_FOUND", "ไม่พบปลายทางที่ระบุ");
-    }
-
-    const { guestToken, userId } = await req.json();
-    if (!guestToken || !userId) {
-      throw new HttpError(400, "VALIDATION_ERROR", "Missing guestToken or userId");
-    }
-
-    if (actor.kind === "user" && actor.userId !== userId) {
-      throw new HttpError(403, "FORBIDDEN", "ไม่สามารถรวมข้อมูลข้ามบัญชีได้");
-    }
-
-    const result = await mergeGuestPlants(guestToken, userId);
-    return NextResponse.json({
-      success: true,
-      plantCount: result.plantCount,
-      favoriteCount: result.favoriteCount,
-    });
-  } catch (error: unknown) {
-    return toErrorResponse(error);
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
-}
 
+  const parsed = MergeSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  const targetUserId =
+    actor.kind === "user" ? actor.userId : parsed.data.userId;
+
+  if (!targetUserId) {
+    return NextResponse.json(
+      { error: "Must be logged in or supply userId to merge guest plants." },
+      { status: 401 }
+    );
+  }
+
+  const result = await mergeGuestData(parsed.data.guestToken, targetUserId);
+
+  return NextResponse.json({
+    success: true,
+    plantCount: result.plantCount,
+    favoriteCount: result.favoriteCount,
+    inquiryCount: result.inquiryCount,
+    data: result,
+  });
+}

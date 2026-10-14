@@ -283,6 +283,42 @@ export interface TranslationDictionary {
     copyright: string;
     nurtured_note: string;
   };
+  auth: {
+    login_with_line: string;
+    logout: string;
+    account: string;
+    login_prompt_garden: string;
+    merge_success: string;
+    login_cancelled: string;
+    account_title: string;
+    notification_settings: string;
+    web_push_label: string;
+    line_push_label: string;
+    reminder_time_label: string;
+    send_test_notification: string;
+    test_sent_success: string;
+  };
+  aftercare: {
+    day3_title: string;
+    day14_title: string;
+    day30_title: string;
+    question: string;
+    good: string;
+    unsure: string;
+    bad: string;
+    good_reply: string;
+    symptom_picker_title: string;
+    ask_shop_button: string;
+  };
+  supplies: {
+    repot_nudge_title: string;
+    repot_nudge_desc: string;
+    repot_cta: string;
+    fertilizer_nudge_title: string;
+    fertilizer_nudge_desc: string;
+    fertilizer_cta: string;
+    dismiss: string;
+  };
 }
 
 export const translations: Record<Locale, TranslationDictionary> = {
@@ -569,6 +605,42 @@ export const translations: Record<Locale, TranslationDictionary> = {
       copyright: "© {year} TreeForLife. สงวนลิขสิทธิ์ทั้งหมด",
       nurtured_note: "ดูแลด้วยใจ ปลูกด้วยรัก · ร้านต้นไม้กรุงเทพฯ",
     },
+    auth: {
+      login_with_line: "เข้าสู่ระบบด้วย LINE",
+      logout: "ออกจากระบบ",
+      account: "บัญชีของฉัน",
+      login_prompt_garden: "เข้าสู่ระบบเพื่อบันทึกสวนไม่ให้สูญหาย และรับแจ้งเตือนทาง LINE",
+      merge_success: "ย้ายต้นไม้ {count} ต้นเข้าบัญชีเรียบร้อยแล้ว 🌿",
+      login_cancelled: "ยกเลิกการเข้าสู่ระบบ",
+      account_title: "ตั้งค่าบัญชี & การแจ้งเตือน",
+      notification_settings: "การแจ้งเตือนดูแลต้นไม้",
+      web_push_label: "เตือนผ่านเบราว์เซอร์ / มือถือเครื่องนี้ (Web Push)",
+      line_push_label: "เตือนผ่าน LINE Official Account",
+      reminder_time_label: "เวลาแจ้งเตือนประจำวัน",
+      send_test_notification: "ส่งข้อความทดสอบ",
+      test_sent_success: "ส่งข้อความทดสอบเรียบร้อยแล้ว!",
+    },
+    aftercare: {
+      day3_title: "เช็กอิน 3 วันแรก",
+      day14_title: "เช็กอิน 14 วัน",
+      day30_title: "เช็กอิน 30 วัน",
+      question: "ต้นไม้ปรับตัวเข้ากับบ้านใหม่ได้ดีไหมครับ?",
+      good: "🌿 สบายดี สดชื่น",
+      unsure: "😐 ไม่แน่ใจ มีอาการแปลกๆ",
+      bad: "🥀 ดูไม่ค่อยดี ช่วยดูให้หน่อย",
+      good_reply: "เยี่ยมเลยครับ! หมั่นสังเกตความชื้นในดินตามรอบนะครับ",
+      symptom_picker_title: "ต้นไม้มีอาการข้อไหนบ้างครับ? (เลือกได้หลายข้อ)",
+      ask_shop_button: "ปรึกษาร้านผ่าน LINE พร้อมส่งข้อมูลต้นนี้",
+    },
+    supplies: {
+      repot_nudge_title: "ถึงเวลาเปลี่ยนกระถางใหม่",
+      repot_nudge_desc: "ต้นไม้โตขึ้นแล้ว แนะนำขยับขนาดกระถางและเติมดินสูตรร้าน",
+      repot_cta: "ถามร้านเรื่องกระถางและดินปลูก",
+      fertilizer_nudge_title: "เริ่มฤดูบำรุงปุ๋ยรอบใหม่",
+      fertilizer_nudge_desc: "พ้นช่วงพักตัวแล้ว ได้เวลาเติมสารอาหารให้ใบสวย",
+      fertilizer_cta: "ถามร้านเรื่องปุ๋ยสูตรนี้",
+      dismiss: "รับทราบแล้ว ปิดการแจ้งเตือน",
+    },
   },
   en: {
     nav: {
@@ -852,6 +924,42 @@ export const translations: Record<Locale, TranslationDictionary> = {
       quick_links: "Quick Links",
       copyright: "© {year} TreeForLife. All rights reserved.",
       nurtured_note: "Nurtured with care · Grown with passion",
+    },
+    auth: {
+      login_with_line: "Log in with LINE",
+      logout: "Log out",
+      account: "My Account",
+      login_prompt_garden: "Log in to keep your garden safe and receive LINE care reminders",
+      merge_success: "Transferred {count} plants into your account 🌿",
+      login_cancelled: "Login cancelled",
+      account_title: "Account & Notification Settings",
+      notification_settings: "Care Reminders & Notifications",
+      web_push_label: "Browser & Mobile Notifications (Web Push)",
+      line_push_label: "LINE Official Account Reminders",
+      reminder_time_label: "Daily Reminder Time",
+      send_test_notification: "Send Test Notification",
+      test_sent_success: "Test notification sent successfully!",
+    },
+    aftercare: {
+      day3_title: "Day 3 Check-in",
+      day14_title: "Day 14 Check-in",
+      day30_title: "Day 30 Check-in",
+      question: "How is your plant settling in at home?",
+      good: "🌿 Thriving & Healthy",
+      unsure: "😐 Unsure / Some signs",
+      bad: "🥀 Struggling / Need Help",
+      good_reply: "Awesome! Keep observing soil moisture on schedule.",
+      symptom_picker_title: "Which symptoms are you seeing? (Select all that apply)",
+      ask_shop_button: "Consult Nursery via LINE with Plant Context",
+    },
+    supplies: {
+      repot_nudge_title: "Time to Repot",
+      repot_nudge_desc: "Plant has grown! Recommended to upsize pot and refresh soil.",
+      repot_cta: "Ask Shop for Pot & Soil",
+      fertilizer_nudge_title: "Seasonal Fertilizing Time",
+      fertilizer_nudge_desc: "Dormancy has passed, time to nourish foliage.",
+      fertilizer_cta: "Ask Shop for Fertilizer",
+      dismiss: "Dismiss",
     },
   },
 };

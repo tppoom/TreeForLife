@@ -260,6 +260,30 @@ export function Navbar() {
               <span className="xl:hidden">LINE</span>
             </button>
 
+            {/* User Account / LINE Login Button */}
+            {user?.id ? (
+              <Link
+                href="/account"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-sand-300 dark:border-forest-700 bg-sand-100/70 dark:bg-forest-900/60 text-xs font-semibold text-forest-800 dark:text-sand-200 hover:bg-sand-200/80 dark:hover:bg-forest-800 transition min-h-[44px]"
+                title={user.displayName}
+              >
+                <div className="w-6 h-6 rounded-full bg-forest-600 text-white flex items-center justify-center font-bold text-[10px]">
+                  {user.displayName.slice(0, 1).toUpperCase()}
+                </div>
+                <span className="hidden lg:inline truncate max-w-[100px]">{user.displayName}</span>
+              </Link>
+            ) : (
+              <a
+                href={`/api/auth/line/login?next=${encodeURIComponent(pathname || "/today")}`}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#06C755] text-white text-xs font-semibold hover:bg-[#05b34c] transition shadow-sm min-h-[44px]"
+                title={t("auth.login_with_line")}
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="hidden lg:inline">{t("auth.login_with_line")}</span>
+                <span className="lg:hidden">LINE</span>
+              </a>
+            )}
+
             {/* Demo Role Switcher Dropdown */}
             {showDemoControls && (
               <div className="relative" ref={roleDropdownRef}>

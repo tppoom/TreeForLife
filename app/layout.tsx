@@ -4,6 +4,7 @@ import { AppContextProvider } from "@/lib/context/AppContext";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { ToastContainer } from "@/components/ui/ToastContainer";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: {
@@ -75,6 +76,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col antialiased bg-sand-50 dark:bg-forest-950 text-forest-950 dark:text-sand-100 transition-colors selection:bg-forest-200 dark:selection:bg-forest-800">
         <AppContextProvider>
+          <ServiceWorkerRegister />
           <Navbar />
           <main className="flex-1 w-full">
             {children}

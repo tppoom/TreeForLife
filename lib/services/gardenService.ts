@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/db";
-import { userPlants, species, speciesMedia, careTemplates, careTasks, careLogs, favorites } from "@/db/schema";
+import { userPlants, species, speciesMedia, careTemplates, careTasks, careLogs, favorites, inquiries } from "@/db/schema";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import {
   calculateCareInterval,
@@ -684,7 +684,7 @@ export async function recordTaskAction(input: TaskActionInput) {
 }
 
 export async function mergeGuestPlants(guestToken: string, userId: string) {
-  if (!guestToken || !userId) return { plantCount: 0, favoriteCount: 0 };
+  if (!guestToken || !userId) return { plantCount: 0, favoriteCount: 0, inquiryCount: 0 };
   const db = await getDb();
 
   // Merge plants
@@ -694,16 +694,43 @@ export async function mergeGuestPlants(guestToken: string, userId: string) {
     .where(eq(userPlants.guestToken, guestToken))
     .returning();
 
-  // Merge favorites
-  const favRes = await db
-    .update(favorites)
-    .set({ userId, guestToken: null })
-    .where(eq(favorites.guestToken, guestToken))
+  // Merge favorites safely with conflict deduplication
+  const guestFavs = await db
+    .select({ id: favorites.id, speciesId: favorites.speciesId })
+    .from(favorites)
+    .where(eq(favorites.guestToken, guestToken));
+
+  let favoriteCount = 0;
+  for (const fav of guestFavs) {
+    try {
+      const [existing] = await db
+        .select({ id: favorites.id })
+        .from(favorites)
+        .where(and(eq(favorites.userId, userId), eq(favorites.speciesId, fav.speciesId)))
+        .limit(1);
+
+      if (!existing) {
+        await db.update(favorites).set({ userId, guestToken: null }).where(eq(favorites.id, fav.id));
+        favoriteCount++;
+      } else {
+        await db.delete(favorites).where(eq(favorites.id, fav.id));
+      }
+    } catch {
+      // Conflict caught safely
+    }
+  }
+
+  // Merge inquiries
+  const inqRes = await db
+    .update(inquiries)
+    .set({ userId })
+    .where(eq(inquiries.guestToken, guestToken))
     .returning();
 
   return {
     plantCount: plantRes.length,
-    favoriteCount: favRes.length,
+    favoriteCount,
+    inquiryCount: inqRes.length,
   };
 }
 

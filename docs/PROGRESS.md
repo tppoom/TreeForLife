@@ -1,26 +1,31 @@
 # TreeForLife — Project Progress & Status Report
 
-> **Current Phase:** Milestone 2 (Shop Operations & Discoverability) Complete · Version 1.3.0 (see [`ROADMAP.md`](./ROADMAP.md))  
-> **Last Updated:** 2026-09-29  
+> **Current Phase:** Milestones 3 & 4 (Retention & Repurchase) Complete · Version 1.4.0 (see [`ROADMAP.md`](./ROADMAP.md))  
+> **Last Updated:** 2026-10-14  
 > **Reference Spec:** [`docs/SPEC.md`](./SPEC.md)  
 > **Design Documents:**  
 > - Phase 1: [`docs/superpowers/specs/2026-09-08-phase1-implementation-design.md`](./superpowers/specs/2026-09-08-phase1-implementation-design.md)  
 > - Dual Version: [`docs/superpowers/specs/2026-09-28-dual-version-showcase-design.md`](./superpowers/specs/2026-09-28-dual-version-showcase-design.md)  
 > - Milestone 1: [`docs/superpowers/specs/2026-09-29-milestone1-hardening-pdpa-design.md`](./superpowers/specs/2026-09-29-milestone1-hardening-pdpa-design.md)  
-> - Milestone 2 Spec: [`docs/superpowers/specs/2026-09-29-milestone2-shop-cms-search-seo-design.md`](./superpowers/specs/2026-09-29-milestone2-shop-cms-search-seo-design.md)  
-> - Milestone 2 Plan: [`docs/superpowers/plans/2026-09-29-milestone2-shop-cms-search-seo.md`](./superpowers/plans/2026-09-29-milestone2-shop-cms-search-seo.md)  
+> - Milestone 2: [`docs/superpowers/specs/2026-09-29-milestone2-shop-cms-search-seo-design.md`](./superpowers/specs/2026-09-29-milestone2-shop-cms-search-seo-design.md)  
+> - Milestone 3 & 4: LINE Login, Reminders, PWA, Aftercare & Supplies Nudges
 
 ---
 
 ## 1. Executive Summary
 
-TreeForLife has completed **Phase 1 Core Platform**, **Dual-Version Showcase (v1.1.0)**, **Milestone 1: Production Hardening & PDPA Compliance (v1.2.0)**, and **Milestone 2: Shop Operations & Discoverability (v1.3.0)**:
+TreeForLife has completed **Phase 1 Core Platform**, **Dual-Version Showcase (v1.1.0)**, **Milestone 1: Production Hardening & PDPA Compliance (v1.2.0)**, **Milestone 2: Shop Operations & Discoverability (v1.3.0)**, and **Milestones 3 & 4: Retention & Repurchase (v1.4.0)**:
 - **v1.0.0:** Boutique Plant Catalog (30 species), Thai 3-Season Care Scheduler, My Garden wizard, Daily Tasks, and LINE OA handoff.
 - **v1.1.0:** Dual-Version Showcase (`NEXT_PUBLIC_APP_MODE=production` vs `demo`), gating role switchers, and introducing the Showcase Hub (`/demo`) with interactive prototypes across Phase 1, Phase 2, and Phase 3.
 - **v1.2.0:** Production-grade security hardening: actor extraction (`x-guest-token`), plant ownership verification (`requireOwner` returning 404 anti-enumeration), database rate limiting (`rate_limits` table returning 429), Zod validation schemas, HTTP security headers, botanical error boundaries, bilingual PDPA privacy policy (`/privacy`), terms of service (`/terms`), and data portability/erasure APIs with garden reset.
 - **v1.3.0:** Shop Operations & Discoverability: PostgreSQL trigram fuzzy Thai search (`pg_trgm`) with normalization and fallback recommendations, 8 SEO Botanical Collection Hubs (`/collections/*`) with Schema.org JSON-LD (FAQPage + ItemList) generated statically (SSG), and a full-featured mobile-first Shop Admin Catalog CMS (`/admin/species/*`) with direct cloud photo upload to Supabase Storage (`species-media` bucket) and automatic local mock fallback.
+- **v1.4.0:** Retention & Repurchase:
+  - **F02 LINE Login & Sessions:** PKCE OAuth 2.1 authentication with `tfl_oauth` cookie, secure 90-day HS256 JWT session cookie (`tfl_session`), automatic guest plant merging (`/api/garden/merge`), and user profile management (`/account`).
+  - **F03 Care Reminders & PWA:** Web Push API (`/api/notify/subscribe`), LINE Messaging API push daily digest with rich Flex Message format, daily cron task generator (`/api/cron/generate-tasks`), reminder sender (`/api/cron/send-reminders`), seasonal schedule recalculator (`/api/cron/season-recalc`), task cleanup job (`/api/cron/cleanup`), and PWA Service Worker (`/sw.js`) with Web App Manifest (`manifest.webmanifest`).
+  - **F06 Aftercare Check-ins:** Automated 3-day, 14-day, and 30-day post-purchase check-ins (`aftercare_checkins`) with shop wisdom for healthy plants and 1-tap LINE consultation handoff (`TFL-XXXX`) with plant history for struggling plants.
+  - **F08 Supplies & Repotting Nudges:** Smart context-aware supply suggestions (pot upsizing `+2"`, custom nursery soil mix, seasonal fertilizer formulas) with one-click LINE inquiry creation and dismiss tracking (`nudge_dismissed_at`).
 
-All 265 automated unit/integration tests across 28 test suites and Next.js 15 production builds compile cleanly with zero TypeScript errors.
+All 284 automated unit/integration tests across 33 test files and Next.js 15 production builds compile cleanly with zero TypeScript errors.
 
 ---
 
@@ -28,9 +33,13 @@ All 265 automated unit/integration tests across 28 test suites and Next.js 15 pr
 
 | Metric | Result | Target | Status |
 |---|---|---|---|
-| **Automated Tests** | **265 passed / 265 total** (28 test suites) | 100% passing | ✅ Exceeded |
-| **Next.js 15 App Router Routes** | **29 routes compiled** (0 TS errors, clean build) | 29 routes | ✅ Complete |
+| **Automated Tests** | **284 passed / 284 total** (33 test files) | 100% passing | ✅ Exceeded |
+| **Next.js 15 App Router Routes** | **44 routes compiled** (0 TS errors, clean build) | 44 routes | ✅ Complete |
 | **SEO Botanical Collections** | **8 SSG collections** (with ItemList & FAQ JSON-LD) | 8 collections | ✅ Complete |
+| **LINE Login & Sessions** | PKCE OAuth 2.1 + 90-day HS256 JWT + Auto Guest Merge | RFC 7636 | ✅ Complete |
+| **Notification Engine** | Web Push + LINE Flex Message Push + Vercel Cron (4 jobs) | ≤ 1 msg/day | ✅ Complete |
+| **Post-Purchase Aftercare** | 3d / 14d / 30d check-ins + Nursery wisdom / LINE Ref | 100% automated | ✅ Complete |
+| **Supplies & Repot Nudges** | Pot upsizing (+2") + Soil Mix + Seasonal Fertilizer | Smart Contextual | ✅ Complete |
 | **First Load Shared JS Bundle** | **105 kB** | < 150 kB | ✅ Optimal |
 | **Curated Boutique Thai Species** | **30 species** (with media, care, problems + CMS CRUD) | 30 species | ✅ Complete |
 | **Database Trigram & DDL Parity** | `pg_trgm` GIN index + dual Drizzle/SQL schema parity | Strict 1-to-1 | ✅ Verified |
