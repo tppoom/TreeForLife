@@ -47,6 +47,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Build filter parameters for speciesService
   const serviceParams = {
+    q: q.trim() ? q.trim() : undefined,
     search: q.trim() ? q.trim() : undefined,
     light: light !== "all" ? light : undefined,
     waterNeed: water !== "all" ? water : undefined,
@@ -64,6 +65,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     <SearchClient
       initialSpecies={speciesList}
       initialFilters={initialFilters}
+      didYouMean={speciesList.didYouMean}
     />
   );
 }
