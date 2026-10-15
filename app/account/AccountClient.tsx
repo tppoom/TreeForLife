@@ -40,6 +40,8 @@ export function AccountClient() {
   const [webPushSupported, setWebPushSupported] = useState(false);
   const [pushSubscribed, setPushSubscribed] = useState(false);
 
+  const isEn = locale === "en";
+
   useEffect(() => {
     // Check if web push is supported in browser
     if (typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window) {
@@ -70,7 +72,12 @@ export function AccountClient() {
       try {
         const permission = await Notification.requestPermission();
         if (permission !== "granted") {
-          addToast("กรุณาอนุญาตการแจ้งเตือนในเบราว์เซอร์เพื่อเปิดใช้งาน", "warning");
+          addToast(
+            isEn
+              ? "Please allow browser notifications to enable this feature."
+              : "กรุณาอนุญาตการแจ้งเตือนในเบราว์เซอร์เพื่อเปิดใช้งาน",
+            "warning"
+          );
           return;
         }
 
@@ -156,10 +163,10 @@ export function AccountClient() {
       if (res.ok) {
         addToast(t("auth.test_sent_success"), "success");
       } else {
-        addToast("ไม่สามารถส่งการทดสอบได้", "error");
+        addToast(isEn ? "Unable to send test notification." : "ไม่สามารถส่งการทดสอบได้", "error");
       }
     } catch {
-      addToast("เกิดข้อผิดพลาดในการส่งข้อความ", "error");
+      addToast(isEn ? "Error sending notification." : "เกิดข้อผิดพลาดในการส่งข้อความ", "error");
     } finally {
       setTestSending(false);
     }
@@ -174,7 +181,9 @@ export function AccountClient() {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-forest-600 border-t-transparent" />
-        <p className="mt-3 text-sm text-sand-600 dark:text-sand-400">กำลังโหลดข้อมูลบัญชี...</p>
+        <p className="mt-3 text-sm text-sand-600 dark:text-sand-400">
+          {isEn ? "Loading account profile..." : "กำลังโหลดข้อมูลบัญชี..."}
+        </p>
       </div>
     );
   }
@@ -229,7 +238,7 @@ export function AccountClient() {
               {profile.lineFriend && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  เพื่อน LINE OA
+                  {isEn ? "LINE OA Friend" : "เพื่อน LINE OA"}
                 </span>
               )}
             </div>
@@ -255,7 +264,9 @@ export function AccountClient() {
                 {t("auth.web_push_label")}
               </div>
               <div className="text-xs text-sand-600 dark:text-sand-400">
-                แจ้งเตือนบนหน้าจอมือถือและเบราว์เซอร์เมื่อถึงรอบรดน้ำ
+                {isEn
+                  ? "Receive reminders on mobile & desktop when care tasks are due."
+                  : "แจ้งเตือนบนหน้าจอมือถือและเบราว์เซอร์เมื่อถึงรอบรดน้ำ"}
               </div>
             </div>
           </div>
@@ -280,7 +291,9 @@ export function AccountClient() {
                 {t("auth.line_push_label")}
               </div>
               <div className="text-xs text-sand-600 dark:text-sand-400">
-                ส่งสรุปงานดูแลประจำวันพร้อมปุ่มกดบันทึกรดน้ำในแชท LINE
+                {isEn
+                  ? "Daily care digest with one-tap water logging directly in LINE chat."
+                  : "ส่งสรุปงานดูแลประจำวันพร้อมปุ่มกดบันทึกรดน้ำในแชท LINE"}
               </div>
             </div>
           </div>
@@ -313,7 +326,7 @@ export function AccountClient() {
           >
             {[6, 7, 8, 9, 10, 12, 17, 18, 19, 20].map((h) => (
               <option key={h} value={h}>
-                {String(h).padStart(2, "0")}:00 น.
+                {isEn ? `${String(h).padStart(2, "0")}:00` : `${String(h).padStart(2, "0")}:00 น.`}
               </option>
             ))}
           </select>
@@ -328,7 +341,7 @@ export function AccountClient() {
             className="inline-flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border border-forest-600 dark:border-forest-500 text-forest-700 dark:text-sand-100 text-xs font-semibold hover:bg-forest-50 dark:hover:bg-forest-900/50 transition min-h-[44px]"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>{testSending ? "กำลังส่ง..." : t("auth.send_test_notification")}</span>
+            <span>{testSending ? (isEn ? "Sending..." : "กำลังส่ง...") : t("auth.send_test_notification")}</span>
           </button>
         </div>
       </div>
@@ -336,7 +349,7 @@ export function AccountClient() {
       {/* Account Actions & Privacy */}
       <div className="p-6 rounded-2xl border border-sand-200 dark:border-forest-800 bg-white/80 dark:bg-forest-900/60 shadow-sm backdrop-blur space-y-4">
         <h3 className="text-sm font-semibold text-sand-600 dark:text-sand-400 uppercase tracking-wider">
-          การจัดการบัญชีและความเป็นส่วนตัว
+          {isEn ? "Account & Privacy Management" : "การจัดการบัญชีและความเป็นส่วนตัว"}
         </h3>
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -354,7 +367,7 @@ export function AccountClient() {
             className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-sand-300 dark:border-forest-700 text-forest-800 dark:text-sand-200 text-sm font-medium hover:bg-sand-100 dark:hover:bg-forest-800 transition min-h-[44px]"
           >
             <Shield className="w-4 h-4 text-forest-600" />
-            <span>นโยบายความเป็นส่วนตัว (PDPA)</span>
+            <span>{isEn ? "Privacy Policy" : "นโยบายความเป็นส่วนตัว"}</span>
           </Link>
         </div>
       </div>

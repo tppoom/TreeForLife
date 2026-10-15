@@ -359,9 +359,20 @@ function TermsMarkdownRenderer({ markdown }: { markdown: string }) {
   );
 }
 
-export default function TermsPage() {
-  const termsPath = path.join(process.cwd(), "content", "terms.th.md");
-  const termsContent = fs.readFileSync(termsPath, "utf-8");
+export default async function TermsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ lang?: string }>;
+}) {
+  const resolvedParams = searchParams ? await searchParams : {};
+  const activeLang = resolvedParams.lang === "en" ? "en" : "th";
+  const isEn = activeLang === "en";
+
+  const termsFile = isEn ? "terms.en.md" : "terms.th.md";
+  const termsPath = path.join(process.cwd(), "content", termsFile);
+  const termsContent = fs.existsSync(termsPath)
+    ? fs.readFileSync(termsPath, "utf-8")
+    : fs.readFileSync(path.join(process.cwd(), "content", "terms.th.md"), "utf-8");
 
   return (
     <div className="w-full bg-sand-50 dark:bg-forest-950 min-h-screen py-12 transition-colors">
@@ -372,27 +383,61 @@ export default function TermsPage() {
           className="inline-flex items-center gap-1.5 text-xs text-forest-600 dark:text-sand-400 hover:text-forest-950 dark:hover:text-sand-100 mb-6 font-medium transition"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          <span>กลับหน้าหลักร้านค้า (Back to Boutique)</span>
+          <span>{isEn ? "Back to Boutique Shop" : "กลับหน้าหลักร้านค้า"}</span>
         </Link>
 
         {/* Header Hero */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-forest-100/90 dark:bg-forest-900/80 text-forest-800 dark:text-sand-200 border border-forest-300/70 dark:border-forest-800 mb-3">
             <ScrollText className="w-4 h-4 text-forest-600 dark:text-forest-400" />
-            <span>ข้อกำหนดและเงื่อนไขการใช้งานแพลตฟอร์ม</span>
+            <span>{isEn ? "Platform Terms & Policies" : "ข้อกำหนดและเงื่อนไขการใช้งาน"}</span>
           </div>
 
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-forest-950 dark:text-sand-50 tracking-tight">
-            ข้อกำหนดการใช้งาน (Terms of Service)
+            {isEn ? "Terms of Service" : "ข้อกำหนดการใช้งาน"}
           </h1>
 
           <p className="mt-2 text-sm sm:text-base text-forest-700/80 dark:text-sand-300 leading-relaxed max-w-2xl">
-            ข้อตกลงการใช้บริการ ข้อสงวนสิทธิ์ทางพฤกษศาสตร์ และคำแนะนำการดูแลต้นไม้ที่ปรับตาม 3 ฤดูกาลไทย
+            {isEn
+              ? "Service agreement, botanical care disclaimer, and Thai 3-season care guidelines."
+              : "ข้อตกลงการใช้บริการ ข้อสงวนสิทธิ์ทางพฤกษศาสตร์ และคำแนะนำการดูแลต้นไม้ที่ปรับตาม 3 ฤดูกาลไทย"}
           </p>
 
-          <div className="mt-4 flex items-center justify-between text-xs text-forest-600 dark:text-sand-400 font-mono pb-4 border-b border-sand-200 dark:border-forest-800/80">
-            <span>ภาษาไทย (TH) · เวอร์ชัน 1.0</span>
-            <span>อัปเดตล่าสุด: 29 กันยายน 2569</span>
+          {/* Language Switcher Bar */}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-sand-200 dark:border-forest-800/80">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-forest-600 dark:text-sand-400">
+                {isEn ? "Language:" : "ภาษา:"}
+              </span>
+              <div className="inline-flex items-center p-1 rounded-xl bg-sand-200/80 dark:bg-forest-900/90 border border-sand-300/80 dark:border-forest-800 shadow-inner">
+                <Link
+                  href="/terms?lang=th"
+                  scroll={false}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    activeLang === "th"
+                      ? "bg-white dark:bg-forest-800 text-forest-950 dark:text-sand-50 shadow-sm"
+                      : "text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50"
+                  }`}
+                >
+                  ไทย
+                </Link>
+                <Link
+                  href="/terms?lang=en"
+                  scroll={false}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    activeLang === "en"
+                      ? "bg-white dark:bg-forest-800 text-forest-950 dark:text-sand-50 shadow-sm"
+                      : "text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50"
+                  }`}
+                >
+                  English
+                </Link>
+              </div>
+            </div>
+
+            <div className="text-xs text-forest-600 dark:text-sand-400 font-mono">
+              {isEn ? "Version 1.0 · Sep 29, 2026" : "เวอร์ชัน 1.0 · 29 กันยายน 2569"}
+            </div>
           </div>
         </div>
 
@@ -403,10 +448,12 @@ export default function TermsPage() {
               <SunMedium className="w-4 h-4" />
             </div>
             <h3 className="font-serif font-bold text-xs uppercase tracking-wider text-forest-900 dark:text-sand-100">
-              3 ฤดูกาลไทย & 5 กระถาง
+              {isEn ? "Thai 3-Season & Pots" : "3 ฤดูกาลไทย & 5 กระถาง"}
             </h3>
             <p className="mt-1 text-xs text-forest-700 dark:text-sand-300 leading-relaxed">
-              สูตรคำนวณรอบการรดน้ำปรับตามฤดูร้อน ฝน หนาว และวัสดุกระถางจริง
+              {isEn
+                ? "Adaptive schedules tuned for hot, rainy, cool cycles and actual pot materials."
+                : "สูตรคำนวณรอบการรดน้ำปรับตามฤดูร้อน ฝน หนาว และวัสดุกระถางจริง"}
             </p>
           </div>
 
@@ -415,10 +462,12 @@ export default function TermsPage() {
               <ShieldAlert className="w-4 h-4" />
             </div>
             <h3 className="font-serif font-bold text-xs uppercase tracking-wider text-forest-900 dark:text-sand-100">
-              สภาพแวดล้อมจริง
+              {isEn ? "Microclimate Awareness" : "สภาพแวดล้อมจริง"}
             </h3>
             <p className="mt-1 text-xs text-forest-700 dark:text-sand-300 leading-relaxed">
-              คำแนะนำเป็นแนวทางปฏิบัติทั่วไป ควรทดสอบความชื้นดินจริงควบคู่เสมอ
+              {isEn
+                ? "Schedules are horticultural guidance; always observe soil moisture directly."
+                : "คำแนะนำเป็นแนวทางปฏิบัติทั่วไป ควรทดสอบความชื้นดินจริงควบคู่เสมอ"}
             </p>
           </div>
 
@@ -427,10 +476,12 @@ export default function TermsPage() {
               <Sprout className="w-4 h-4" />
             </div>
             <h3 className="font-serif font-bold text-xs uppercase tracking-wider text-forest-900 dark:text-sand-100">
-              ไม่มีการตัดเงินบนเว็บ
+              {isEn ? "No In-App Payments" : "ไม่มีการตัดเงินบนเว็บ"}
             </h3>
             <p className="mt-1 text-xs text-forest-700 dark:text-sand-300 leading-relaxed">
-              แคตตาล็อกและผู้ช่วยดูแล สอบถามและสั่งซื้อผ่าน LINE Official Account
+              {isEn
+                ? "Catalog & care assistant; all plant inquiries and orders handled via LINE OA."
+                : "แคตตาล็อกและผู้ช่วยดูแล สอบถามและสั่งซื้อผ่าน LINE Official Account"}
             </p>
           </div>
         </div>
@@ -444,10 +495,12 @@ export default function TermsPage() {
         <div className="mt-10 p-6 rounded-2xl bg-forest-50/80 dark:bg-forest-900/60 border border-forest-200/70 dark:border-forest-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-center sm:text-left">
             <h3 className="font-serif font-bold text-base text-forest-950 dark:text-sand-50">
-              ต้องการสอบถามเพิ่มเติมเกี่ยวกับข้อกำหนดการใช้งาน?
+              {isEn ? "Questions about our terms or services?" : "ต้องการสอบถามเพิ่มเติมเกี่ยวกับข้อกำหนดการใช้งาน?"}
             </h3>
             <p className="text-xs text-forest-700 dark:text-sand-300">
-              ติดต่อทีมงานเนอสเซอรี่ TreeForLife ได้โดยตรงทาง LINE Official Account
+              {isEn
+                ? "Contact the TreeForLife nursery team directly on LINE Official Account."
+                : "ติดต่อทีมงานเนอสเซอรี่ TreeForLife ได้โดยตรงทาง LINE Official Account"}
             </p>
           </div>
 
@@ -458,7 +511,7 @@ export default function TermsPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] shadow-sm transition active:scale-95 min-h-[40px] shrink-0"
           >
             <MessageCircle className="w-4 h-4 fill-white" />
-            <span>ทักคุยกับร้านทาง LINE</span>
+            <span>{isEn ? "Chat with Nursery on LINE" : "ทักคุยกับร้านทาง LINE"}</span>
             <ExternalLink className="w-3 h-3 opacity-80" />
           </a>
         </div>

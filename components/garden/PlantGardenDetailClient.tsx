@@ -36,6 +36,7 @@ import {
   RefreshCw,
   Sprout,
 } from "lucide-react";
+import { SuppliesNudgeCard } from "@/components/care/SuppliesNudgeCard";
 import type { getUserPlantById } from "@/lib/services/gardenService";
 
 export type PlantDetailData = NonNullable<Awaited<ReturnType<typeof getUserPlantById>>>;
@@ -496,6 +497,17 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
             </div>
           </div>
         </div>
+
+        {/* Supplies & Repot Nudge (F08) */}
+        <SuppliesNudgeCard
+          userPlantId={plant.id}
+          plantNickname={plant.nickname}
+          speciesName={plant.speciesNameTh || plant.customSpeciesName || plant.nickname}
+          speciesId={plant.speciesId}
+          potSizeInch={Number(plant.potSizeInch) || 8}
+          soilMix={(plant as any).species?.soilMix || (plant.template as any)?.soilMix}
+          fertilizerNote={(plant as any).species?.fertilizerNote || (plant.template as any)?.fertilizerNote}
+        />
 
         {/* 30-DAY INTERACTIVE CARE CALENDAR SECTION */}
         <div className="bg-white dark:bg-forest-900/80 rounded-3xl border border-sand-200 dark:border-forest-800 p-6 sm:p-8 shadow-sm space-y-6">

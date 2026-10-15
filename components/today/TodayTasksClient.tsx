@@ -21,6 +21,7 @@ import {
   Check,
 } from "lucide-react";
 import { parseDateSafe, formatDate } from "@/lib/care/scheduler";
+import { AftercareCheckinBanner } from "@/components/care/AftercareCheckinBanner";
 
 export interface TodayCareTask {
   id: string;
@@ -595,6 +596,9 @@ export function TodayTasksClient({ initialTasks }: TodayTasksClientProps) {
             </Link>
           </div>
         </div>
+
+        {/* Aftercare Checkin Banner (F06) */}
+        <AftercareCheckinBanner />
 
         {/* Loading State */}
         {loading && (

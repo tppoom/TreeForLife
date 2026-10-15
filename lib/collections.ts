@@ -12,6 +12,7 @@ export interface Collection {
   titleTh: string;
   titleEn: string;
   badge: string;
+  badgeEn: string;
   introTh: string;
   introEn: string;
   filter: SpeciesFilterParams;
@@ -25,6 +26,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นไม้ห้องแอร์",
     titleEn: "Air-Conditioned Room Plants",
     badge: "สำหรับห้องแอร์",
+    badgeEn: "Air-Con Ready",
     introTh:
       "รวมพันธุ์ไม้ที่ทนทานต่อสภาพอากาศแห้งและความเย็นของเครื่องปรับอากาศ พร้อมคุณสมบัติช่วยฟอกอากาศและเพิ่มความชุ่มชื้น คัดสรรสายพันธุ์ที่ไม่ทิ้งใบง่าย ดูแลง่ายในพื้นที่ปิด และเหมาะสำหรับห้องนอนหรือห้องทำงานเป็นพิเศษ",
     introEn:
@@ -57,6 +59,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นไม้ปลอดภัยกับสัตว์เลี้ยง",
     titleEn: "Pet-Safe Houseplants",
     badge: "ปลอดภัยต่อสุนัขและแมว",
+    badgeEn: "Pet Friendly",
     introTh:
       "คัดสรรพันธุ์ไม้สวยงามที่ไม่เป็นพิษต่อสุนัขและแมว ปลอดภัยแม้สัตว์เลี้ยงเผลอแทะหรือสัมผัส ให้คุณเพลิดเพลินกับพื้นที่สีเขียวในบ้านได้อย่างสบายใจ ไร้กังวลเรื่องสารพิษอันตราย พร้อมคำแนะนำการจัดวางให้เป็นระเบียบ",
     introEn:
@@ -89,6 +92,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นไม้มือใหม่เลี้ยงง่าย",
     titleEn: "Beginner-Friendly Plants",
     badge: "เลี้ยงง่าย ไม่จุกจิก",
+    badgeEn: "Beginner Friendly",
     introTh:
       "ต้นไม้ที่อดทนสูง ปรับตัวเก่ง รดน้ำสัปดาห์ละ 1-2 ครั้งก็เติบโตได้ดี เหมาะสำหรับผู้เริ่มต้นปลูกต้นไม้ คนที่ไม่ค่อยมีเวลา หรือผู้ที่เคยปลูกแล้วกลัวตาย ปลูกรอดแน่นอน 100% พร้อมตารางดูแลแบบอัตโนมัติ",
     introEn:
@@ -121,6 +125,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นไม้ทนแดดจัด",
     titleEn: "Full-Sun Outdoor Plants",
     badge: "ทนแดดเมืองไทย",
+    badgeEn: "Full Sun Hardy",
     introTh:
       "รวบรวมพันธุ์ไม้ที่รักแสงแดดจัด แข็งแกร่งทนทานต่อสภาพอากาศร้อนและแสงแดดตลอดทั้งวันของเมืองไทย เหมาะสำหรับสวนกลางแจ้ง หน้าบ้าน ดาดฟ้า และพื้นที่รับแดดตรง ใบหนาสวยงามพร้อมรับลมร้อน",
     introEn:
@@ -153,6 +158,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นไม้ในห้องน้ำ",
     titleEn: "Bathroom & Humidity-Loving Plants",
     badge: "ชอบความชื้นสูง",
+    badgeEn: "High Humidity",
     introTh:
       "พันธุ์ไม้ที่ชื่นชอบความชื้นในอากาศสูง สามารถเติบโตได้ดีในห้องน้ำที่มีไอน้ำจากการอาบน้ำ ช่วยดูดซับกลิ่นอับ ฟอกอากาศ และเปลี่ยนห้องน้ำธรรมดาให้กลายเป็นโอเอซิสสไตล์สปาที่สดชื่นมีชีวิตชีวา",
     introEn:
@@ -185,6 +191,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นไม้แสงน้อย",
     titleEn: "Low-Light Tolerant Plants",
     badge: "แสงน้อยก็โตได้",
+    badgeEn: "Low Light Tolerant",
     introTh:
       "คัดสรรต้นไม้ฟอร์มสวยที่สามารถมีชีวิตชีวาได้แม้ในมุมอับแสง ห่างหน้าต่าง หรือในห้องที่เปิดไฟนีออนเป็นหลัก เหมาะสำหรับคอนโด ออฟฟิศ และห้องนอนที่ไม่ค่อยมีแสงธรรมชาติ ใบยังคงเขียวสดชื่นเสมอ",
     introEn:
@@ -217,6 +224,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นเล็กวางโต๊ะทำงาน",
     titleEn: "Desktop & Compact Plants",
     badge: "ขนาดกะทัดรัด",
+    badgeEn: "Compact Desktop",
     introTh:
       "ต้นไม้ขนาดเล็กกะทัดรัด ฟอร์มกระถางสวยงาม จัดวางบนโต๊ะทำงานหรือชั้นวางหนังสือได้พอดี ช่วยพักสายตาจากหน้าจอคอมพิวเตอร์ เพิ่มความสดชื่นและความคิดสร้างสรรค์ตลอดวันทำงานโดยไม่เกะกะพื้นที่",
     introEn:
@@ -249,6 +257,7 @@ export const COLLECTIONS: Collection[] = [
     titleTh: "ต้นไม้ระเบียงคอนโด",
     titleEn: "Condo Balcony Plants",
     badge: "ระเบียงคอนโด",
+    badgeEn: "Balcony Hardy",
     introTh:
       "พันธุ์ไม้ที่เหมาะสำหรับจัดวางบริเวณระเบียงห้องพักและคอนโด ทนทานต่อลมพัดและอุณหภูมิภายนอก เพิ่มความเป็นส่วนตัวและสร้างบรรยากาศสวนระเบียงส่วนตัวในเมืองหลวง ให้คุณมีมุมผ่อนคลายรับลมธรรมชาติ",
     introEn:

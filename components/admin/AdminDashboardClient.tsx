@@ -426,7 +426,7 @@ export function AdminDashboardClient({
                 </p>
                 <p>
                   {locale === "th"
-                    ? "ใช้เมนูสลับบทบาทเดโม (Demo Role Switcher) ที่แถบเมนูด้านบน หรือคลิกปุ่มลัดด้านล่างนี้ได้ทันทีเพื่อทดสอบระบบ"
+                    ? "ใช้เมนูสลับบทบาทที่แถบเมนูด้านบน หรือคลิกปุ่มลัดด้านล่างนี้ได้ทันทีเพื่อทดสอบระบบ"
                     : "Switch roles using the Demo Role Switcher in the top navigation bar, or click one of the quick switch buttons below to test."}
                 </p>
               </div>

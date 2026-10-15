@@ -183,9 +183,9 @@ export function Navbar() {
       {showDemoControls && (
         <div className="bg-forest-900 text-sand-100 text-xs py-1 px-4 text-center border-b border-forest-800 flex items-center justify-center gap-2">
           <span className="font-semibold text-emerald-400">🌟 Demo Mode</span>
-          <span>กำลังเปิดใช้งานเวอร์ชันจำลองทุกเฟส</span>
+          <span>{locale === "th" ? "กำลังเปิดใช้งานเวอร์ชันจำลองทุกเฟส" : "Interactive Prototype Active"}</span>
           <Link href="/demo" className="underline font-medium hover:text-emerald-300">
-            เปิด Showcase Hub →
+            {locale === "th" ? "เปิด Showcase Hub →" : "Explore Showcase Hub →"}
           </Link>
         </div>
       )}

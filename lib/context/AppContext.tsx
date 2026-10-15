@@ -159,19 +159,18 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // Restore Theme
+      // Restore Theme (Default to Light Theme)
       const savedTheme = localStorage.getItem("tfl_theme") as Theme | null;
-      if (savedTheme === "dark" || savedTheme === "light") {
-        setThemeState(savedTheme);
-        if (typeof document !== "undefined") {
-          document.documentElement.classList.toggle("dark", savedTheme === "dark");
-        }
-      } else if (
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
+      if (savedTheme === "dark") {
         setThemeState("dark");
-        document.documentElement.classList.add("dark");
+        if (typeof document !== "undefined") {
+          document.documentElement.classList.add("dark");
+        }
+      } else {
+        setThemeState("light");
+        if (typeof document !== "undefined") {
+          document.documentElement.classList.remove("dark");
+        }
       }
 
       // Restore or generate Guest Token

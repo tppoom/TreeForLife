@@ -25,25 +25,42 @@ export interface CreateInquiryInput {
 
 export async function createInquiry(input: CreateInquiryInput) {
   const db = await getDb();
-  const refCode = generateRefCode();
+  let row: any;
+  let refCode = "";
 
-  const [row] = await db
-    .insert(inquiries)
-    .values({
-      speciesId: input.speciesId || null,
-      userId: input.userId || null,
-      guestToken: input.guestToken || null,
-      sourcePage: input.sourcePage,
-      refCode,
-      intent: input.intent,
-      // Persist the customer's note so the admin inquiries tab (which reads payload.customNote) can show it
-      payload: {
-        ...(input.payload || {}),
-        ...(input.customNote?.trim() ? { customNote: input.customNote.trim() } : {}),
-      },
-      createdAt: new Date(),
-    })
-    .returning();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    refCode = generateRefCode();
+    try {
+      const res = await db
+        .insert(inquiries)
+        .values({
+          speciesId: input.speciesId || null,
+          userId: input.userId || null,
+          guestToken: input.guestToken || null,
+          sourcePage: input.sourcePage,
+          refCode,
+          intent: input.intent,
+          // Persist the customer's note so the admin inquiries tab (which reads payload.customNote) can show it
+          payload: {
+            ...(input.payload || {}),
+            ...(input.customNote?.trim() ? { customNote: input.customNote.trim() } : {}),
+          },
+          createdAt: new Date(),
+        })
+        .returning();
+      row = res[0];
+      break;
+    } catch (err: any) {
+      if (
+        (err?.message?.includes("inquiries_ref_code_key") ||
+          err?.code === "23505") &&
+        attempt < 4
+      ) {
+        continue;
+      }
+      throw err;
+    }
+  }
 
   const speciesName = input.speciesNameTh || "ต้นไม้";
   const message = formatLineMessage(input.intent, speciesName, refCode, input.customNote);

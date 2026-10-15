@@ -95,7 +95,7 @@ export function Footer() {
                   href="/privacy"
                   className="text-forest-700 dark:text-sand-300 hover:text-forest-950 dark:hover:text-sand-50 hover:underline transition"
                 >
-                  {locale === "en" ? "Privacy Policy (PDPA)" : "นโยบายความเป็นส่วนตัว"}
+                  {locale === "en" ? "Privacy Policy" : "นโยบายความเป็นส่วนตัว"}
                 </Link>
               </li>
               <li>

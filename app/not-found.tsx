@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import {
@@ -11,36 +13,47 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { getLineAddFriendUrl } from "@/lib/line/formatters";
+import { useApp } from "@/lib/context/AppContext";
 
 export default function NotFound() {
+  const { locale } = useApp();
+  const isEn = locale === "en";
   const lineAddFriendUrl = getLineAddFriendUrl();
 
   const quickLinks = [
     {
       href: "/",
-      label: "กลับสู่หน้าแรก",
-      description: "เริ่มต้นที่หน้าหลักและสำรวจพันธุ์ไม้ยอดนิยม",
+      label: isEn ? "Return to Home" : "กลับสู่หน้าแรก",
+      description: isEn
+        ? "Explore our homepage and featured boutique plants"
+        : "เริ่มต้นที่หน้าหลักและสำรวจพันธุ์ไม้ยอดนิยม",
       icon: Home,
       external: false,
     },
     {
       href: "/plants",
-      label: "คลังพันธุ์ไม้",
-      description: "เลือกชมและค้นหาพันธุ์ไม้ตามหมวดหมู่",
+      label: isEn ? "Botanical Catalog" : "คลังพันธุ์ไม้",
+      description: isEn
+        ? "Browse species and curated categories"
+        : "เลือกชมและค้นหาพันธุ์ไม้ตามหมวดหมู่",
       icon: BookOpen,
       external: false,
     },
     {
       href: "/garden",
-      label: "สวนของฉัน",
-      description: "ดูแลและติดตามรอบรดน้ำต้นไม้ของคุณ",
+      label: isEn ? "My Garden" : "สวนของฉัน",
+      description: isEn
+        ? "Track watering schedules and plant care logs"
+        : "ดูแลและติดตามรอบรดน้ำต้นไม้ของคุณ",
       icon: Sprout,
       external: false,
     },
     {
       href: lineAddFriendUrl,
-      label: "ติดต่อผ่าน LINE OA",
-      description: "พูดคุยกับผู้เชี่ยวชาญเพื่อขอความช่วยเหลือ",
+      label: isEn ? "Chat with Nursery" : "ติดต่อผ่าน LINE OA",
+      description: isEn
+        ? "Consult our botanists for direct care help"
+        : "พูดคุยกับผู้เชี่ยวชาญเพื่อขอความช่วยเหลือ",
       icon: MessageCircle,
       external: true,
       highlight: true,
@@ -62,10 +75,12 @@ export default function NotFound() {
         {/* Heading & Subtitle */}
         <div className="space-y-3">
           <h1 className="font-serif font-bold text-2xl sm:text-3xl lg:text-4xl text-forest-950 dark:text-sand-50 tracking-tight">
-            404 — ไม่พบหน้าที่คุณต้องการ
+            {isEn ? "404 — Page Not Found" : "404 — ไม่พบหน้าที่คุณต้องการ"}
           </h1>
           <p className="text-sm sm:text-base text-forest-800/80 dark:text-sand-300 max-w-lg mx-auto leading-relaxed">
-            หน้าที่คุณกำลังค้นหาอาจถูกย้าย หรือที่อยู่เว็บไซต์อาจไม่ถูกต้อง
+            {isEn
+              ? "The page you are looking for might have been moved or the address is incorrect."
+              : "หน้าที่คุณกำลังค้นหาอาจถูกย้าย หรือที่อยู่เว็บไซต์อาจไม่ถูกต้อง"}
           </p>
         </div>
 
@@ -76,15 +91,15 @@ export default function NotFound() {
             <input
               type="text"
               name="q"
-              placeholder="ค้นหาชื่อพันธุ์ไม้ เช่น มอนสเตอร่า, ไทรใบสัก..."
-              aria-label="ค้นหาพันธุ์ไม้"
+              placeholder={isEn ? "Search species (e.g. Monstera, Ficus)..." : "ค้นหาชื่อพันธุ์ไม้ เช่น มอนสเตอร่า, ไทรใบสัก..."}
+              aria-label={isEn ? "Search species" : "ค้นหาพันธุ์ไม้"}
               className="w-full pl-10 pr-24 py-3 text-sm rounded-xl border border-sand-300 dark:border-forest-700 bg-sand-50/80 dark:bg-forest-950/80 text-forest-950 dark:text-sand-100 placeholder:text-forest-600/50 dark:placeholder:text-sand-500 focus:outline-none focus:ring-2 focus:ring-forest-500/50 dark:focus:ring-emerald-500/50 focus:border-forest-500 transition shadow-inner"
             />
             <button
               type="submit"
               className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 text-xs font-semibold rounded-lg bg-forest-700 hover:bg-forest-800 dark:bg-forest-600 dark:hover:bg-forest-500 text-sand-50 shadow-sm transition active:scale-[0.98]"
             >
-              ค้นหา
+              {isEn ? "Search" : "ค้นหา"}
             </button>
           </form>
         </div>
@@ -92,7 +107,7 @@ export default function NotFound() {
         {/* Divider */}
         <div className="flex items-center gap-4 text-xs text-forest-600/60 dark:text-sand-400">
           <div className="flex-1 h-px bg-sand-200 dark:bg-forest-800" />
-          <span>หรือเลือกไปยังเมนูหลัก</span>
+          <span>{isEn ? "Or choose from main sections" : "หรือเลือกไปยังเมนูหลัก"}</span>
           <div className="flex-1 h-px bg-sand-200 dark:bg-forest-800" />
         </div>
 

@@ -164,7 +164,7 @@ export function GardenPdpaSection({ className = "", onReset }: GardenPdpaSection
 
   return (
     <section
-      aria-label="การจัดการข้อมูลส่วนบุคคล (PDPA)"
+      aria-label={locale === "th" ? "การจัดการข้อมูลส่วนบุคคล (PDPA)" : "Personal Data & User Rights"}
       className={`bg-white/80 dark:bg-forest-900/60 backdrop-blur-md border border-sand-200/80 dark:border-forest-800 rounded-2xl p-5 sm:p-6 shadow-sm transition-all duration-200 ${className}`}
     >
       {/* Header & Toggle Button */}
@@ -183,7 +183,7 @@ export function GardenPdpaSection({ className = "", onReset }: GardenPdpaSection
               <h3 className="font-serif font-bold text-base sm:text-lg text-forest-900 dark:text-sand-100">
                 {locale === "th"
                   ? "การจัดการข้อมูลส่วนบุคคล (PDPA) & สิทธิผู้ใช้งาน"
-                  : "Personal Data (PDPA) & Data Rights"}
+                  : "Personal Data & User Rights"}
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                 PDPA Compliant

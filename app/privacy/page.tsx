@@ -426,7 +426,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-sand-200 dark:border-forest-800/80">
             <div className="flex items-center gap-2.5">
               <span className="text-xs font-semibold uppercase tracking-wider text-forest-600 dark:text-sand-400">
-                {isEn ? "Language:" : "ภาษา / Language:"}
+                {isEn ? "Language:" : "ภาษา:"}
               </span>
               <div className="inline-flex items-center p-1 rounded-xl bg-sand-200/80 dark:bg-forest-900/90 border border-sand-300/80 dark:border-forest-800 shadow-inner">
                 <Link
@@ -439,7 +439,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
                   }`}
                   aria-current={activeLang === "th" ? "page" : undefined}
                 >
-                  ไทย (TH)
+                  ไทย
                 </Link>
                 <Link
                   href="/privacy?lang=en"
@@ -451,7 +451,7 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
                   }`}
                   aria-current={activeLang === "en" ? "page" : undefined}
                 >
-                  English (EN)
+                  English
                 </Link>
               </div>
             </div>
