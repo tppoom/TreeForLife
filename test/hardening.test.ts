@@ -119,6 +119,44 @@ describe("API Security & Ownership Hardening", () => {
     expect(json.error.code).toBe("VALIDATION_ERROR");
   });
 
+  it("Accepts a custom species plant sent with speciesId: null (wizard payload)", async () => {
+    const req = new Request("https://example.com/api/garden/plants", {
+      method: "POST",
+      headers: { "x-guest-token": guestTokenB, "content-type": "application/json" },
+      body: JSON.stringify({
+        speciesId: null,
+        customSpeciesName: "เฟิร์นใบมะขาม",
+        nickname: "เฟิร์นใบมะขาม",
+        potMaterial: "terracotta",
+        potSizeInch: 4,
+        placement: "balcony_shade",
+        acquiredAt: "2026-01-15",
+      }),
+    });
+    const res = await postPlant(req);
+    expect(res.status).toBe(201);
+    const json = await res.json();
+    expect(json.plant.speciesId).toBeNull();
+    expect(json.plant.customSpeciesName).toBe("เฟิร์นใบมะขาม");
+    expect(json.plant.acquiredAt).toBe("2026-01-15");
+  });
+
+  it("Rejects a malformed acquiredAt date", async () => {
+    const req = new Request("https://example.com/api/garden/plants", {
+      method: "POST",
+      headers: { "x-guest-token": guestTokenB, "content-type": "application/json" },
+      body: JSON.stringify({
+        nickname: "x",
+        potMaterial: "plastic",
+        potSizeInch: 6,
+        placement: "indoor_window",
+        acquiredAt: "yesterday",
+      }),
+    });
+    const res = await postPlant(req);
+    expect(res.status).toBe(400);
+  });
+
   it("Rate limits inquiry creation after 10 requests per minute", async () => {
     const ip = `198.51.100.${Date.now() % 250}`;
     const makeReq = () =>

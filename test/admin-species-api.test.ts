@@ -102,7 +102,7 @@ describe("Admin Species Catalog APIs", () => {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         difficulty: 2,
-        light: "bright_indirect",
+        light: "indoor_bright",
         shopNote: "ต้นนี้ชอบความชื้นสูงและแดดรำไร",
         careTemplate: {
           waterDaysHot: 2,
@@ -124,6 +124,16 @@ describe("Admin Species Catalog APIs", () => {
     const json = await res.json();
     expect(json.data.difficulty).toBe(2);
     expect(json.data.shopNote).toContain("ชอบความชื้นสูง");
+  });
+
+  it("rejects attribute values outside the species vocabulary", async () => {
+    const req = new Request(`https://example.com/api/admin/species/${createdId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ light: "bright_indirect", placement: ["indoor_window"] }),
+    });
+    const res = await updateSpecies(req, { params: Promise.resolve({ id: createdId }) });
+    expect(res.status).toBe(400);
   });
 
   it("gets full species details with care template, problems, and media", async () => {

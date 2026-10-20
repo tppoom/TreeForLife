@@ -43,7 +43,7 @@ export function ShowcaseHubView({ initialTab }: ShowcaseHubViewProps = {}) {
   const showPhase3 = activeTab === "all" || activeTab === "phase3";
 
   return (
-    <main className="min-h-screen bg-sand-50 dark:bg-forest-950 pb-24">
+    <div className="min-h-screen bg-sand-50 dark:bg-forest-950 pb-24">
       <ShowcaseHero activeTab={activeTab} onTabChange={setActiveTab} />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10">
@@ -110,6 +110,6 @@ export function ShowcaseHubView({ initialTab }: ShowcaseHubViewProps = {}) {
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }

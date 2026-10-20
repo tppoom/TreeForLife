@@ -89,7 +89,7 @@ export function SpeciesEditorClient({ initialSpecies }: SpeciesEditorClientProps
   const [difficulty, setDifficulty] = useState<number>(initialSpecies.difficulty || 1);
   const [light, setLight] = useState<string>(initialSpecies.light || "indoor_bright");
   const [waterNeed, setWaterNeed] = useState<string>(initialSpecies.waterNeed || "medium");
-  const [placement, setPlacement] = useState<string[]>(initialSpecies.placement || ["indoor_window"]);
+  const [placement, setPlacement] = useState<string[]>(initialSpecies.placement || ["indoor"]);
   const [matureSize, setMatureSize] = useState<string>(initialSpecies.matureSize || "md");
   const [matureHeightCm, setMatureHeightCm] = useState<number | string>(initialSpecies.matureHeightCm ?? "");
   const [petSafe, setPetSafe] = useState<string>(initialSpecies.petSafe || "unknown");
@@ -404,7 +404,7 @@ export function SpeciesEditorClient({ initialSpecies }: SpeciesEditorClientProps
       )}
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         {/* TAB 1: ข้อมูลทั่วไป (General Info) */}
         {activeTab === "info" && (
           <div className="space-y-6">
@@ -1013,7 +1013,7 @@ export function SpeciesEditorClient({ initialSpecies }: SpeciesEditorClientProps
             )}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { parseDateSafe, formatDate } from "@/lib/care/scheduler";
 import { AftercareCheckinBanner } from "@/components/care/AftercareCheckinBanner";
+import { apiErrorMessage } from "@/lib/http/api-error-message";
 
 export interface TodayCareTask {
   id: string;
@@ -133,7 +134,7 @@ export function TodayTasksClient({ initialTasks }: TodayTasksClientProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to complete task");
+        throw new Error(apiErrorMessage(data, "Failed to complete task"));
       }
 
       const nextDueText = data.nextDueDate
@@ -185,7 +186,7 @@ export function TodayTasksClient({ initialTasks }: TodayTasksClientProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to snooze task");
+        throw new Error(apiErrorMessage(data, "Failed to snooze task"));
       }
 
       const newDueText = data.newDueDate
@@ -227,7 +228,7 @@ export function TodayTasksClient({ initialTasks }: TodayTasksClientProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to skip task");
+        throw new Error(apiErrorMessage(data, "Failed to skip task"));
       }
 
       const nextDueText = data.nextDueDate
@@ -273,16 +274,28 @@ export function TodayTasksClient({ initialTasks }: TodayTasksClientProps) {
         }),
       });
 
-      if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const completed: number = typeof data.count === "number" ? data.count : 0;
+      if (!res.ok || completed === 0) {
         throw new Error("Failed to batch complete tasks");
       }
 
-      addToast(
-        locale === "th"
-          ? `รดน้ำและดูแลครบทุกต้นแล้ว (${urgentTasks.length} รายการ)! 🌿`
-          : `Marked all ${urgentTasks.length} tasks as complete! 🌿`,
-        "success"
-      );
+      const failedCount = Array.isArray(data.failed) ? data.failed.length : 0;
+      if (failedCount > 0) {
+        addToast(
+          locale === "th"
+            ? `บันทึกสำเร็จ ${completed} รายการ ไม่สำเร็จ ${failedCount} รายการ กรุณาลองใหม่`
+            : `Completed ${completed} tasks; ${failedCount} failed. Please try again.`,
+          "warning"
+        );
+      } else {
+        addToast(
+          locale === "th"
+            ? `รดน้ำและดูแลครบทุกต้นแล้ว (${completed} รายการ)! 🌿`
+            : `Marked all ${completed} tasks as complete! 🌿`,
+          "success"
+        );
+      }
 
       await fetchTasks();
     } catch (err) {

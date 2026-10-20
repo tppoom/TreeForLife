@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { apiErrorMessage } from "../lib/http/api-error-message";
 import { HttpError, toErrorResponse } from "../lib/http/errors";
 
 describe("Unified HTTP Errors", () => {
@@ -58,5 +59,19 @@ describe("Unified HTTP Errors", () => {
     const json = await res.json();
     expect(json.error.code).toBe("INTERNAL_ERROR");
     expect(json.error.message).toContain("เกิดข้อผิดพลาด");
+  });
+});
+
+describe("apiErrorMessage", () => {
+  it("reads the message from the standard { error: { code, message } } envelope", () => {
+    expect(apiErrorMessage({ error: { code: "NOT_FOUND", message: "ไม่พบต้นไม้ที่ระบุ" } }, "fallback")).toBe(
+      "ไม่พบต้นไม้ที่ระบุ"
+    );
+  });
+
+  it("accepts legacy string errors and falls back otherwise", () => {
+    expect(apiErrorMessage({ error: "Unauthorized" }, "fallback")).toBe("Unauthorized");
+    expect(apiErrorMessage({ error: {} }, "fallback")).toBe("fallback");
+    expect(apiErrorMessage(null, "fallback")).toBe("fallback");
   });
 });

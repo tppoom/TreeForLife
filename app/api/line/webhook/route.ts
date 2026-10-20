@@ -4,6 +4,7 @@ import { getDb } from "@/lib/db";
 import { users, lineEventsSeen, careTasks, userPlants } from "@/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { completeTask } from "@/lib/services/gardenService";
+import { formatDate } from "@/lib/care/scheduler";
 
 function verifyLineSignature(body: string, signature: string, secret: string): boolean {
   const hash = crypto.createHmac("sha256", secret).update(body).digest("base64");
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
       const dataStr = event.postback?.data || "";
       const params = new URLSearchParams(dataStr);
       const action = params.get("action");
-      const dateStr = params.get("d") || new Date().toISOString().slice(0, 10);
+      const dateStr = params.get("d") || formatDate(new Date());
 
       if (action === "done_all") {
         // Find user by lineUserId

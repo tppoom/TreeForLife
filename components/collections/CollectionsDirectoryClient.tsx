@@ -46,7 +46,7 @@ export function CollectionsDirectoryClient({ initialCollections }: CollectionsDi
   const isEn = locale === "en";
 
   return (
-    <main className="min-h-screen bg-sand-50 dark:bg-forest-950 text-forest-950 dark:text-sand-50 transition-colors pb-24">
+    <div className="min-h-screen bg-sand-50 dark:bg-forest-950 text-forest-950 dark:text-sand-50 transition-colors pb-24">
       {/* Top Breadcrumb */}
       <div className="border-b border-sand-200 dark:border-forest-800 bg-sand-100/50 dark:bg-forest-900/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -205,6 +205,6 @@ export function CollectionsDirectoryClient({ initialCollections }: CollectionsDi
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

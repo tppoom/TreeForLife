@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getActor } from "@/lib/auth/actor";
 import { mergeGuestData } from "@/lib/services/gardenService";
 import { z } from "zod";
+import { isDemoMode } from "@/lib/config/app-mode";
 
 const MergeSchema = z.object({
   guestToken: z.string().min(1, "guestToken is required"),
@@ -26,8 +27,11 @@ export async function POST(req: Request) {
     );
   }
 
+  // A body-supplied userId only exists for the demo role switcher. In production the
+  // target account must come from the signed session, or anyone holding a guest token
+  // could push that garden into an arbitrary account.
   const targetUserId =
-    actor.kind === "user" ? actor.userId : parsed.data.userId;
+    actor.kind === "user" ? actor.userId : isDemoMode() ? parsed.data.userId : undefined;
 
   if (!targetUserId) {
     return NextResponse.json(

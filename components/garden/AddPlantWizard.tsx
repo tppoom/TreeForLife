@@ -31,6 +31,7 @@ import {
   CheckCircle2,
   Info,
 } from "lucide-react";
+import { apiErrorMessage } from "@/lib/http/api-error-message";
 
 export interface AvailableSpeciesOption {
   id: string;
@@ -177,7 +178,7 @@ export function AddPlantWizard({ availableSpecies }: AddPlantWizardProps) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to add plant");
+        throw new Error(apiErrorMessage(data, "Failed to add plant"));
       }
 
       addToast(

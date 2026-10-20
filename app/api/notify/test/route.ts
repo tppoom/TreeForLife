@@ -5,6 +5,7 @@ import { pushSubscriptions, users, notificationsLog } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sendWebPushNotification } from "@/lib/notify/web-push";
 import { sendLineCareDigest } from "@/lib/notify/line-push";
+import { formatDate } from "@/lib/care/scheduler";
 
 export async function POST(req: NextRequest) {
   const actor = await getActor(req);
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
     if (user?.lineUserId) {
       const res = await sendLineCareDigest({
         toUserId: user.lineUserId,
-        dateStr: new Date().toISOString().slice(0, 10),
+        dateStr: formatDate(new Date()),
         tasks: [
           {
             type: "water",

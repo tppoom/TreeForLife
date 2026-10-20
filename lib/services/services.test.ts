@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
 import { getDb } from "@/lib/db";
 import {
   getAllSpecies,
@@ -554,7 +554,8 @@ describe("Domain Services & REST API Endpoints", () => {
       expect(data.success).toBe(true);
     });
 
-    it("POST /api/garden/merge merges guest plants into user", async () => {
+    it("POST /api/garden/merge merges guest plants into user (demo role switcher)", async () => {
+      vi.stubEnv("NEXT_PUBLIC_APP_MODE", "demo");
       const req = new Request("http://localhost/api/garden/merge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -565,6 +566,7 @@ describe("Domain Services & REST API Endpoints", () => {
       });
 
       const res = await mergeRoute(req);
+      vi.unstubAllEnvs();
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.success).toBe(true);

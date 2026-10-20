@@ -4,6 +4,7 @@ import { eq, inArray } from "drizzle-orm";
 import { getActor } from "@/lib/auth/actor";
 import { assertRateLimit } from "@/lib/http/rate-limit";
 import { HttpError, toErrorResponse } from "@/lib/http/errors";
+import { formatDate } from "@/lib/care/scheduler";
 
 export async function GET(req: Request) {
   try {
@@ -76,7 +77,7 @@ export async function GET(req: Request) {
 
     const inqList = await db.select().from(inquiries).where(inqCondition);
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    const todayStr = formatDate(new Date());
 
     const payload = {
       exportedAt: new Date().toISOString(),

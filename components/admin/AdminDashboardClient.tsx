@@ -27,6 +27,7 @@ import {
   Layers,
 } from "lucide-react";
 import { formatLineMessage, type InquiryIntent } from "@/lib/line/formatters";
+import { apiErrorMessage } from "@/lib/http/api-error-message";
 
 export interface AdminSpeciesItem {
   id: string;
@@ -221,7 +222,7 @@ export function AdminDashboardClient({
 
         if (!res.ok) {
           const errData = await res.json();
-          throw new Error(errData.error || "Failed to update stock");
+          throw new Error(apiErrorMessage(errData, "Failed to update stock"));
         }
 
         addToast(t("admin.action_update_success"), "success");

@@ -25,6 +25,7 @@ import {
   Placement,
 } from "@/lib/care/scheduler";
 import { GardenPdpaSection } from "./GardenPlantsClient";
+import { apiErrorMessage } from "@/lib/http/api-error-message";
 
 export interface UserPlantListItem {
   id: string;
@@ -115,7 +116,7 @@ export function GardenListClient() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Failed to record watering");
+        throw new Error(apiErrorMessage(data, "Failed to record watering"));
       }
 
       const successMsg =

@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import {
   ScrollText,
   ArrowLeft,
@@ -18,6 +19,12 @@ export const metadata: Metadata = {
   description:
     "ข้อกำหนดและเงื่อนไขการใช้งานแพลตฟอร์ม TreeForLife ข้อสงวนสิทธิ์ทางพฤกษศาสตร์ และคำแนะนำการดูแลต้นไม้ตาม 3 ฤดูกาลไทย",
 };
+
+/** `?lang=` wins; otherwise follow the language the visitor picked in the app. */
+async function resolveIsEn(lang?: string): Promise<boolean> {
+  if (lang === "en" || lang === "th") return lang === "en";
+  return (await cookies()).get("tfl_locale")?.value === "en";
+}
 
 interface MarkdownBlock {
   type: "h1" | "h2" | "h3" | "p" | "blockquote" | "ul" | "ol" | "table" | "hr";
@@ -365,8 +372,8 @@ export default async function TermsPage({
   searchParams?: Promise<{ lang?: string }>;
 }) {
   const resolvedParams = searchParams ? await searchParams : {};
-  const activeLang = resolvedParams.lang === "en" ? "en" : "th";
-  const isEn = activeLang === "en";
+  const isEn = await resolveIsEn(resolvedParams.lang);
+  const activeLang = isEn ? "en" : "th";
 
   const termsFile = isEn ? "terms.en.md" : "terms.th.md";
   const termsPath = path.join(process.cwd(), "content", termsFile);

@@ -80,6 +80,7 @@
 | `DATABASE_URL` | ✅ prod | server | Supabase **Transaction pooler** (port `6543`) — ดู §3 |
 | `DB_POOL_MAX` | แนะนำ | server | ตั้ง `3` บน Vercel (serverless หลาย instance × pool เล็ก) |
 | `ADMIN_PASSWORD` | ✅ prod | middleware | รหัสเข้า `/admin` (username อะไรก็ได้) · **ไม่ตั้ง = หลังบ้านถูกปิดใน production** |
+| `SESSION_SECRET` | ✅ prod | auth, middleware | กุญแจเซ็น session cookie (HS256) ยาว **≥ 32 ตัวอักษร** สุ่มด้วย `openssl rand -base64 48` · **ไม่ตั้งใน production = ปฏิเสธทุก session (login LINE ใช้ไม่ได้)** เพราะค่า default ใน repo เป็นสาธารณะ |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | sitemap, robots, OG | เช่น `https://tree-for-life.vercel.app` หรือโดเมนจริง |
 | `NEXT_PUBLIC_LINE_OA_ID` | ✅ | ปุ่มถามร้าน | ID ของ LINE OA **ไม่ต้องมี `@`** (โค้ดเติมให้ในลิงก์) |
 | `NEXT_PUBLIC_APP_MODE` | เสริม | client/server | `production` (default สะอาดจริง) หรือ `demo` (เปิด Showcase Hub ที่ `/demo`) — ดู §0.1 |

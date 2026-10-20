@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import {
   ShieldCheck,
   ArrowLeft,
@@ -15,6 +16,12 @@ import {
   ExternalLink,
 } from "lucide-react";
 
+/** `?lang=` wins; otherwise follow the language the visitor picked in the app. */
+async function resolveIsEn(lang?: string): Promise<boolean> {
+  if (lang === "en" || lang === "th") return lang === "en";
+  return (await cookies()).get("tfl_locale")?.value === "en";
+}
+
 interface PrivacyPageProps {
   searchParams?: Promise<{ lang?: string }>;
 }
@@ -23,7 +30,7 @@ export async function generateMetadata({
   searchParams,
 }: PrivacyPageProps): Promise<Metadata> {
   const sp = await searchParams;
-  const isEn = sp?.lang === "en";
+  const isEn = await resolveIsEn(sp?.lang);
 
   return {
     title: isEn
@@ -377,7 +384,7 @@ function LegalMarkdownRenderer({ markdown }: { markdown: string }) {
 
 export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
   const sp = await searchParams;
-  const isEn = sp?.lang === "en";
+  const isEn = await resolveIsEn(sp?.lang);
   const activeLang = isEn ? "en" : "th";
 
   // Read the markdown content files on the server

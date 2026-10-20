@@ -18,8 +18,8 @@ test.describe.serial('TreeForLife Complete User Journey & E2E Audit', () => {
     const heroInput = page.locator('input[type="text"]').first();
     await expect(heroInput).toBeVisible();
 
-    // Category shortcuts
-    const shortcuts = page.locator('a[href^="/search?"]');
+    // Curated collection shortcuts
+    const shortcuts = page.locator('main a[href^="/collections/"]');
     expect(await shortcuts.count()).toBeGreaterThanOrEqual(6);
 
     // In-stock species cards

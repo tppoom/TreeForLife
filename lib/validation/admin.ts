@@ -2,6 +2,15 @@ import { z } from "zod";
 
 const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+// Species attribute vocabularies. These map 1:1 to `filters.*` i18n keys, so an
+// unknown value would render as a raw translation key on the storefront.
+const LightSchema = z.enum(["full_sun", "partial", "shade", "indoor_bright", "low_light"]);
+const WaterNeedSchema = z.enum(["low", "medium", "high"]);
+const SpeciesPlacementSchema = z.enum(["indoor", "outdoor", "balcony", "bathroom"]);
+const PetSafeSchema = z.enum(["safe", "toxic", "unknown"]);
+const MatureSizeSchema = z.enum(["xs", "sm", "md", "lg", "xl"]);
+const GrowthRateSchema = z.enum(["slow", "medium", "fast"]);
+
 export const AdminCareUpdateSchema = z.object({
   waterDaysHot: z.coerce.number().int().positive("รอบรดน้ำฤดูร้อนต้องมากกว่า 0").optional(),
   waterDaysRainy: z.coerce.number().int().positive("รอบรดน้ำฤดูฝนต้องมากกว่า 0").optional(),
@@ -35,14 +44,14 @@ export const AdminSpeciesCreateSchema = z.object({
   nameSci: z.string().trim().optional(),
   family: z.string().trim().optional(),
   summary: z.string().trim().optional(),
-  light: z.string().trim().optional(),
-  waterNeed: z.string().trim().optional(),
-  placement: z.array(z.string().trim()).optional(),
+  light: LightSchema.optional(),
+  waterNeed: WaterNeedSchema.optional(),
+  placement: z.array(SpeciesPlacementSchema).optional(),
   difficulty: z.coerce.number().int().min(1).max(5).optional(),
-  petSafe: z.string().trim().optional(),
-  matureSize: z.string().trim().optional(),
+  petSafe: PetSafeSchema.optional(),
+  matureSize: MatureSizeSchema.optional(),
   matureHeightCm: z.coerce.number().int().positive().optional().nullable(),
-  growthRate: z.string().trim().optional(),
+  growthRate: GrowthRateSchema.optional(),
   soilMix: z.string().trim().optional(),
   fertilizerNote: z.string().trim().optional().nullable(),
   propagation: z.string().trim().optional().nullable(),
@@ -66,14 +75,14 @@ export const AdminSpeciesUpdateSchema = z.object({
   nameSci: z.string().trim().optional(),
   family: z.string().trim().optional(),
   summary: z.string().trim().optional(),
-  light: z.string().trim().optional(),
-  waterNeed: z.string().trim().optional(),
-  placement: z.array(z.string().trim()).optional(),
+  light: LightSchema.optional(),
+  waterNeed: WaterNeedSchema.optional(),
+  placement: z.array(SpeciesPlacementSchema).optional(),
   difficulty: z.coerce.number().int().min(1).max(5).optional(),
-  petSafe: z.string().trim().optional(),
-  matureSize: z.string().trim().optional(),
+  petSafe: PetSafeSchema.optional(),
+  matureSize: MatureSizeSchema.optional(),
   matureHeightCm: z.coerce.number().int().positive().optional().nullable(),
-  growthRate: z.string().trim().optional(),
+  growthRate: GrowthRateSchema.optional(),
   soilMix: z.string().trim().optional(),
   fertilizerNote: z.string().trim().optional().nullable(),
   propagation: z.string().trim().optional().nullable(),

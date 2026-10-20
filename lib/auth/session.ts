@@ -1,9 +1,23 @@
 import { SignJWT, jwtVerify } from "jose";
 
 const DEFAULT_SECRET = "treeforlife_dev_session_secret_32bytes_minimum_length_key!";
-const SESSION_SECRET = new TextEncoder().encode(
-  process.env.SESSION_SECRET || DEFAULT_SECRET
-);
+
+/**
+ * Resolves the HS256 key. The dev default is public (it lives in this repo), so in
+ * production a missing or short SESSION_SECRET fails closed: nothing is signed and
+ * every cookie is rejected, instead of accepting tokens anyone could forge.
+ */
+function getSessionSecret(): Uint8Array | null {
+  const configured = process.env.SESSION_SECRET;
+  if (configured && configured.length >= 32) {
+    return new TextEncoder().encode(configured);
+  }
+  const isProd = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
+  if (isProd) {
+    return null;
+  }
+  return new TextEncoder().encode(DEFAULT_SECRET);
+}
 
 export interface SessionPayload {
   sub: string;
@@ -12,6 +26,10 @@ export interface SessionPayload {
 }
 
 export async function signSession(payload: SessionPayload): Promise<string> {
+  const secret = getSessionSecret();
+  if (!secret) {
+    throw new Error("SESSION_SECRET (>= 32 chars) must be set in production");
+  }
   return await new SignJWT({
     role: payload.role,
     sv: payload.sv,
@@ -20,12 +38,14 @@ export async function signSession(payload: SessionPayload): Promise<string> {
     .setSubject(payload.sub)
     .setIssuedAt()
     .setExpirationTime("90d")
-    .sign(SESSION_SECRET);
+    .sign(secret);
 }
 
 export async function verifySession(token: string): Promise<SessionPayload | null> {
+  const secret = getSessionSecret();
+  if (!secret) return null;
   try {
-    const { payload } = await jwtVerify(token, SESSION_SECRET);
+    const { payload } = await jwtVerify(token, secret);
     if (!payload.sub || typeof payload.sub !== "string") {
       return null;
     }

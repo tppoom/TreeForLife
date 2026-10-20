@@ -3,8 +3,8 @@ import { getUserPlants, addUserPlant } from "@/lib/services/gardenService";
 import { getActor } from "@/lib/auth/actor";
 import { assertRateLimit } from "@/lib/http/rate-limit";
 import { HttpError, toErrorResponse } from "@/lib/http/errors";
-import { AddPlantSchema } from "@/lib/validation/garden";
-import { z } from "zod";
+import { CreatePlantSchema } from "@/lib/validation/garden";
+import { formatDate } from "@/lib/care/scheduler";
 
 export async function GET(req: Request) {
   try {
@@ -60,14 +60,7 @@ export async function POST(req: Request) {
         : actor.guestToken;
     await assertRateLimit({ key: "plant:write:" + actorKey, limit: 30 });
 
-    const schema =
-      rawBody.speciesId !== undefined
-        ? AddPlantSchema
-        : AddPlantSchema.extend({
-            speciesId: z.string().uuid("รหัสพันธุ์ไม้ไม่ถูกต้อง").optional().nullable(),
-          });
-
-    const parsed = schema.safeParse(rawBody);
+    const parsed = CreatePlantSchema.safeParse(rawBody);
     if (!parsed.success) {
       throw new HttpError(400, "VALIDATION_ERROR", "ข้อมูลต้นไม้ไม่ถูกต้อง", parsed.error.flatten());
     }
@@ -77,10 +70,10 @@ export async function POST(req: Request) {
       userId: actor.kind === "user" ? actor.userId : undefined,
       guestToken: actor.kind === "guest" ? actor.guestToken : undefined,
       speciesId: input.speciesId || undefined,
-      customSpeciesName: rawBody.customSpeciesName,
+      customSpeciesName: input.customSpeciesName || undefined,
       nickname: input.nickname,
-      acquiredAt: rawBody.acquiredAt || new Date().toISOString().split("T")[0],
-      acquiredFrom: rawBody.acquiredFrom || "shop",
+      acquiredAt: input.acquiredAt || formatDate(new Date()),
+      acquiredFrom: input.acquiredFrom || "shop",
       potSizeInch: input.potSizeInch,
       potMaterial: input.potMaterial,
       placement: input.placement,

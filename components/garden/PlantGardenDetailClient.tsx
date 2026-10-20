@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { SuppliesNudgeCard } from "@/components/care/SuppliesNudgeCard";
 import type { getUserPlantById } from "@/lib/services/gardenService";
+import { apiErrorMessage } from "@/lib/http/api-error-message";
 
 export type PlantDetailData = NonNullable<Awaited<ReturnType<typeof getUserPlantById>>>;
 
@@ -152,7 +153,7 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to record task");
+      if (!res.ok) throw new Error(apiErrorMessage(data, "Failed to record task"));
 
       addToast(
         locale === "th"
@@ -204,7 +205,7 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to update settings");
+      if (!res.ok) throw new Error(apiErrorMessage(data, "Failed to update settings"));
 
       if (data.plant) {
         setPlant((prev) => ({
@@ -251,7 +252,7 @@ export function PlantGardenDetailClient({ initialPlant }: PlantGardenDetailProps
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to archive plant");
+        throw new Error(apiErrorMessage(data, "Failed to archive plant"));
       }
 
       addToast(

@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Lets a second dev server (production-mode E2E) run beside the main one
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   serverExternalPackages: ["@electric-sql/pglite", "pg"],
   output: process.env.OUTPUT_STANDALONE === "true" ? "standalone" : undefined,
   eslint: {

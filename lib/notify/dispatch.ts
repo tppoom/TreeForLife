@@ -10,6 +10,7 @@ import {
 import { eq, and, lte, isNull, sql } from "drizzle-orm";
 import { sendWebPushNotification } from "@/lib/notify/web-push";
 import { sendLineCareDigest, type LinePushTaskItem } from "@/lib/notify/line-push";
+import { formatDate } from "@/lib/care/scheduler";
 
 export interface DispatchRemindersResult {
   recipientsCount: number;
@@ -24,7 +25,7 @@ export async function dispatchDailyReminders(opts?: {
   limitRecipients?: number;
 }): Promise<DispatchRemindersResult> {
   const db = await getDb();
-  const todayStr = opts?.targetDate || new Date().toISOString().slice(0, 10);
+  const todayStr = opts?.targetDate || formatDate(new Date());
   const lineMonthlyCap = parseInt(process.env.LINE_MONTHLY_PUSH_CAP || "450", 10);
 
   // Check current month LINE push count to respect quota

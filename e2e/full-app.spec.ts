@@ -198,11 +198,10 @@ test.describe("Home /", () => {
       expect(stockLabels.some((l) => cardText.includes(l))).toBeTruthy();
     }
 
-    // Six category shortcuts, each leading to a non-empty result page
-    const shortcutHrefs = await page
-      .locator('main a[href^="/search?"]')
-      .evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
-    const shortcuts = shortcutHrefs.filter((h) => h !== "/search?stock=in_stock");
+    // Six curated collection shortcuts, each leading to a non-empty collection page
+    const shortcuts = await page
+      .locator('main a[href^="/collections/"]')
+      .evaluateAll((els) => [...new Set(els.map((e) => e.getAttribute("href")!))]);
     expect(shortcuts).toHaveLength(6);
     for (const href of shortcuts) {
       await page.goto(href);
@@ -657,7 +656,7 @@ test.describe("Garden /garden and /garden/add", () => {
     await primeStorage(page, { guestToken });
     await page.goto("/garden");
 
-    const headings = page.locator("main h3");
+    const headings = page.locator("main h3").filter({ hasText: /^QA / });
     await expect(headings).toHaveText(["QA Soon", "QA Later"]);
 
     const soonCard = page.locator("div.rounded-2xl", { has: page.getByRole("heading", { name: "QA Soon" }) }).first();

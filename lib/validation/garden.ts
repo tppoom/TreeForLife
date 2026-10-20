@@ -14,6 +14,22 @@ export const AddPlantSchema = z.object({
   notes: z.string().max(500, "บันทึกยาวเกิน 500 ตัวอักษร").optional().nullable(),
 });
 
+/**
+ * POST /api/garden/plants body. A plant is either linked to a catalog species or
+ * carries a free-text custom species name (wizard "species not listed"), in which
+ * case `speciesId` is null and the default care template applies.
+ */
+export const CreatePlantSchema = AddPlantSchema.extend({
+  speciesId: z.string().uuid("รหัสพันธุ์ไม้ไม่ถูกต้อง").optional().nullable(),
+  customSpeciesName: z.string().trim().max(80, "ชื่อพันธุ์ยาวเกิน 80 ตัวอักษร").optional().nullable(),
+  acquiredAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "วันที่ได้ต้นไม้มาไม่ถูกต้อง")
+    .optional()
+    .nullable(),
+  acquiredFrom: z.enum(["shop", "elsewhere", "gift", "propagated"]).optional().nullable(),
+});
+
 export const UpdatePlantSchema = AddPlantSchema.partial().extend({
   isActive: z.boolean().optional(),
 });
@@ -27,5 +43,6 @@ export const TaskActionSchema = z.object({
 });
 
 export type AddPlantInput = z.infer<typeof AddPlantSchema>;
+export type CreatePlantInput = z.infer<typeof CreatePlantSchema>;
 export type UpdatePlantInput = z.infer<typeof UpdatePlantSchema>;
 export type TaskActionInput = z.infer<typeof TaskActionSchema>;

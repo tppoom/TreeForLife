@@ -23,8 +23,9 @@ TreeForLife is a bilingual (Thai/English) boutique plant shop + plant-care web a
 A comprehensive `Makefile` is available. You can run `make` or `make help` to inspect all targets.
 
 - `make dev` (or `npm run dev`) — starts Next.js dev server (self-bootstraps embedded PGlite on port 3000)
-- `make test` (or `npm run test`) — runs full Vitest suite (all 162 tests)
+- `make test` (or `npm run test`) — runs full Vitest suite (all 299 tests)
 - `make test-watch` (or `npm run test:watch`) — runs Vitest in watch mode
+- `make test-e2e` (or `npm run test:e2e`) — runs Playwright: the main suite against a demo-mode dev server and `e2e/production-mode.spec.ts` against a second production-mode server on port+1 (own `.next-e2e-prod` build dir and `.data/pglite-e2e-prod` database)
 - `make build` (or `npm run build`) — runs Next.js production build (compiles all 12 routes, checks TS validity)
 - `make typecheck` (or `npx tsc --noEmit`) — fast static TypeScript verification
 - `make db-status` — inspects embedded PGlite table counts
@@ -82,13 +83,14 @@ TreeForLife has **two schema sources that must stay strictly in sync**:
 - Persistent `guestToken` is stored in browser `localStorage('tfl_guest_token')`.
 - Roles: `'guest' | 'customer' | 'staff' | 'admin'`.
 - Switching from guest to customer automatically calls `POST /api/garden/merge` to migrate plants.
-- Admin dashboard (`/admin`) is gated to `staff` and `admin` in the UI, but the client role is a demo switch — the real server-side gate is `middleware.ts` (HTTP Basic Auth via `ADMIN_PASSWORD`) until LINE Login lands (F02).
+- `AppContext` hydrates the signed-in LINE user from `/api/auth/me`; that session role always wins. The demo role switcher (and `tfl_demo_role`) only applies when `NEXT_PUBLIC_APP_MODE=demo`. The guest token is mirrored into the `tfl_guest` cookie so plain same-origin `fetch` calls resolve the guest actor server-side.
+- The real back-office gate is `middleware.ts`: a **verified** `tfl_session` JWT with role `staff`/`admin`, or HTTP Basic Auth via `ADMIN_PASSWORD`. In production a missing/short `SESSION_SECRET` fails closed (no session is accepted).
 
 ---
 
 ## 7. Quality & Verification Protocol
 
 Always verify the following before finishing any work:
-1. `npm run test` passes 100% (all 162 tests green).
+1. `npm run test` passes 100% (all 299 tests green).
 2. `npm run build` compiles cleanly with zero TypeScript errors.
 3. No untracked schema discrepancies between `db/schema.ts` and `lib/db/schema-ddl.ts`.

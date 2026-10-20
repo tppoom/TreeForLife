@@ -59,8 +59,12 @@ export async function getDb(): Promise<DbClient> {
           client.release();
         }
       } else {
-        const dataDir = path.join(process.cwd(), ".data", "pglite");
-        if (!fs.existsSync(dataDir)) {
+        // Vitest gets a throwaway in-memory database so test fixtures never
+        // leak into the developer's local catalog under .data/pglite.
+        const dataDir = process.env.VITEST
+          ? "memory://"
+          : process.env.PGLITE_DATA_DIR || path.join(process.cwd(), ".data", "pglite");
+        if (dataDir !== "memory://" && !fs.existsSync(dataDir)) {
           fs.mkdirSync(dataDir, { recursive: true });
         }
 

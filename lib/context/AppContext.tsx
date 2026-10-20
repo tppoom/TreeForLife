@@ -14,6 +14,7 @@ import {
   type TranslationDictionary,
   getTranslation,
 } from "@/lib/i18n/translations";
+import { isDemoMode } from "@/lib/config/app-mode";
 
 export type Theme = "light" | "dark";
 export type UserRole = "guest" | "customer" | "staff" | "admin";
@@ -139,10 +140,15 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   const [guestToken, setGuestToken] = useState<string>("");
 
   // 4. Role & User state
-  const [role, setRoleState] = useState<UserRole>("guest");
+  // `demoRole` drives the demo role switcher; `sessionUser` is the real LINE Login
+  // session from /api/auth/me and always wins when present.
+  const [demoRole, setRoleState] = useState<UserRole>("guest");
+  const [sessionUser, setSessionUser] = useState<DemoUser | null>(null);
+  const role: UserRole = sessionUser?.role ?? demoRole;
   const user = useMemo<DemoUser>(() => {
+    if (sessionUser) return sessionUser;
     return DEMO_USERS_BY_LOCALE[locale]?.[role] || DEMO_USERS_BY_LOCALE.th[role] || DEMO_USERS.guest;
-  }, [locale, role]);
+  }, [locale, role, sessionUser]);
 
   // 5. Toasts state
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -154,6 +160,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
       const savedLocale = localStorage.getItem("tfl_locale") as Locale | null;
       if (savedLocale === "en" || savedLocale === "th") {
         setLocaleState(savedLocale);
+        document.cookie = `tfl_locale=${savedLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
         if (typeof document !== "undefined") {
           document.documentElement.lang = savedLocale;
         }
@@ -180,15 +187,43 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("tfl_guest_token", token);
       }
       setGuestToken(token);
+      // Mirror the token into the `tfl_guest` cookie so every same-origin API call
+      // (task done/snooze/skip, plant edits, LINE login merge) resolves the guest
+      // actor server-side without each caller attaching an x-guest-token header.
+      document.cookie = `tfl_guest=${encodeURIComponent(token)}; Path=/; Max-Age=31536000; SameSite=Lax`;
 
-      // Restore Demo Role
+      // Restore Demo Role (demo deployments only; production roles come from the session)
       const savedRole = localStorage.getItem("tfl_demo_role") as UserRole | null;
-      if (savedRole && DEMO_USERS[savedRole]) {
+      if (isDemoMode() && savedRole && DEMO_USERS[savedRole]) {
         setRoleState(savedRole);
       }
     } catch {
       // Safe fallback if localStorage is blocked (private browsing/iframes)
     }
+  }, []);
+
+  // Hydrate the signed-in LINE user, if any
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        const u = data?.user;
+        if (cancelled || !u?.id) return;
+        setSessionUser({
+          id: u.id,
+          displayName: u.displayName,
+          role: u.role === "staff" || u.role === "admin" ? u.role : "customer",
+          email: u.email ?? null,
+          avatarUrl: u.avatarUrl ?? null,
+        });
+      })
+      .catch(() => {
+        // Offline or API unavailable: stay a guest
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Update locale helper
@@ -199,6 +234,8 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
     }
     try {
       localStorage.setItem("tfl_locale", newLocale);
+      // Server-rendered pages (privacy, terms) read the locale from this cookie
+      document.cookie = `tfl_locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     } catch {}
   }, []);
 
@@ -247,7 +284,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
   // Role switching
   const setRole = useCallback(
     (newRole: UserRole) => {
-      const previousRole = role;
+      const previousRole = demoRole;
       setRoleState(newRole);
       const targetUser = DEMO_USERS_BY_LOCALE[locale]?.[newRole] || DEMO_USERS[newRole] || DEMO_USERS.guest;
 
@@ -281,7 +318,7 @@ export function AppContextProvider({ children }: { children: ReactNode }) {
           });
       }
     },
-    [role, guestToken, locale, addToast]
+    [demoRole, guestToken, locale, addToast]
   );
 
   const loginAsDemoUser = useCallback(

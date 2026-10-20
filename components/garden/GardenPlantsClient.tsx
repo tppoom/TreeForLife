@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/lib/context/AppContext";
+import { formatDate } from "@/lib/care/scheduler";
 import {
   ShieldCheck,
   Download,
@@ -59,7 +60,7 @@ export function GardenPdpaSection({ className = "", onReset }: GardenPdpaSection
 
       const blob = await res.blob();
       const contentDisposition = res.headers.get("content-disposition");
-      let filename = `treeforlife-data-${new Date().toISOString().split("T")[0]}.json`;
+      let filename = `treeforlife-data-${formatDate(new Date())}.json`;
       if (contentDisposition) {
         const match = contentDisposition.match(/filename="?([^";]+)"?/);
         if (match && match[1]) {
