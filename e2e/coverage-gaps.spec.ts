@@ -6,8 +6,9 @@
 import { test as base, expect, type Page } from "@playwright/test";
 
 const RAW_KEY_RE =
-  /\b(?:nav|roles|search|filters|care|garden|today|inquiry|admin|toasts|footer|auth|aftercare|supplies)\.[a-z][a-z0-9_]*\b/;
-const THAI_RE = /[฀-๿]+/;
+  /\b(?:nav|roles|search|filters|care|garden|today|inquiry|admin|toasts|footer|auth|aftercare|supplies|cms)\.[a-z][a-z0-9_]*\b/;
+// Thai script, excluding ฿ (U+0E3F), which is the currency symbol in both languages
+const THAI_RE = /[\u0E01-\u0E3A\u0E40-\u0E5B]+/;
 
 const COLLECTIONS = [
   "air-con-plants",
@@ -59,16 +60,15 @@ async function settle(page: Page) {
   await page.waitForLoadState("networkidle");
 }
 
-// Known i18n gap: the demo-only Phase 2/3 prototypes and the Thai-staff species CMS
-// still hardcode Thai copy, so EN mode is checked for raw keys only on these paths.
-const THAI_ONLY_PATHS = [/^\/demo/, /^\/admin\/species/];
-
 async function expectClean(page: Page, locale: "th" | "en") {
   const body = await page.locator("body").innerText();
   expect(body.match(RAW_KEY_RE)?.[0] ?? null, `raw i18n key on ${page.url()}`).toBeNull();
   expect(body.match(/\{[a-z_]+\}/i)?.[0] ?? null, `un-interpolated template on ${page.url()}`).toBeNull();
-  if (locale === "en" && !THAI_ONLY_PATHS.some((re) => re.test(new URL(page.url()).pathname))) {
-    // Language switchers name Thai in its own script ("ไทย"), which is expected
+  if (locale === "en") {
+    // Content explicitly marked lang="th" (e.g. a species' Thai name) is data, not UI copy,
+    // so hide it before reading the rendered text. Language switchers also name Thai in its
+    // own script ("ไทย"), which is expected.
+    await page.addStyleTag({ content: '[lang="th"] { display: none !important; }' });
     const main = (await page.locator("main").innerText()).replaceAll("ไทย", "");
     expect(main.match(THAI_RE)?.[0] ?? null, `Thai text in EN mode on ${page.url()}`).toBeNull();
   }
@@ -113,10 +113,19 @@ for (const locale of ["th", "en"] as const) {
 
     test("admin species CMS pages render cleanly", async ({ page }) => {
       await prime(page, { locale, role: "admin" });
-      for (const path of ["/admin/species", "/admin/species/new"]) {
+      const list = await (await page.request.get("/api/admin/species")).json();
+      const firstId = list.data[0].id as string;
+      for (const path of ["/admin/species", "/admin/species/new", `/admin/species/${firstId}`]) {
         const res = await page.goto(path);
         expect(res?.status(), path).toBe(200);
         await settle(page);
+        await expectClean(page, locale);
+      }
+      // The editor renders one tab at a time: check photos, care and problems too
+      const tabs = page.getByRole("tab");
+      for (let i = 1; i < (await tabs.count()); i++) {
+        await tabs.nth(i).click();
+        await expect(tabs.nth(i)).toHaveAttribute("aria-selected", "true");
         await expectClean(page, locale);
       }
     });

@@ -6,6 +6,9 @@ import { SpeciesCareEditor } from "../components/admin/SpeciesCareEditor";
 import { SpeciesMediaManager } from "../components/admin/SpeciesMediaManager";
 import { AdminSpeciesListClient } from "../components/admin/AdminSpeciesListClient";
 import { NewSpeciesWizardClient } from "../components/admin/NewSpeciesWizardClient";
+import { AppContextProvider } from "../lib/context/AppContext";
+
+const render = (el: React.ReactElement) => renderToString(<AppContextProvider>{el}</AppContextProvider>);
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
@@ -70,7 +73,7 @@ describe("Admin Species UI Components", () => {
   };
 
   it("renders SpeciesEditorClient with 4 tabs and sticky header", () => {
-    const html = renderToString(<SpeciesEditorClient initialSpecies={mockSpecies as any} />);
+    const html = render(<SpeciesEditorClient initialSpecies={mockSpecies as any} />);
     expect(html).toContain("ข้อมูลทั่วไป");
     expect(html).toContain("รูปภาพ");
     expect(html).toContain("สูตรดูแล 3 ฤดู");
@@ -81,7 +84,7 @@ describe("Admin Species UI Components", () => {
   });
 
   it("renders SpeciesCareEditor with 3 seasons and live calculation preview table", () => {
-    const html = renderToString(
+    const html = render(
       <SpeciesCareEditor
         careTemplate={mockSpecies.careTemplate as any}
         onChange={() => {}}
@@ -96,7 +99,7 @@ describe("Admin Species UI Components", () => {
   });
 
   it("renders SpeciesMediaManager with uploaded photos and add button", () => {
-    const html = renderToString(
+    const html = render(
       <SpeciesMediaManager
         speciesId={mockSpecies.id}
         media={mockSpecies.media as any}
@@ -109,7 +112,7 @@ describe("Admin Species UI Components", () => {
   });
 
   it("renders AdminSpeciesListClient catalog list with add button and badges", () => {
-    const html = renderToString(
+    const html = render(
       <AdminSpeciesListClient
         initialSpecies={[
           {
@@ -143,7 +146,7 @@ describe("Admin Species UI Components", () => {
   });
 
   it("renders NewSpeciesWizardClient creation wizard with copyFromId dropdown", () => {
-    const html = renderToString(
+    const html = render(
       <NewSpeciesWizardClient
         existingSpecies={[
           {

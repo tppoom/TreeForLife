@@ -1,3 +1,5 @@
+import { cmsTh, cmsEn, type CmsDictionary } from "./cms";
+
 export type Locale = "th" | "en";
 
 export interface TranslationDictionary {
@@ -319,6 +321,7 @@ export interface TranslationDictionary {
     fertilizer_cta: string;
     dismiss: string;
   };
+  cms: CmsDictionary;
 }
 
 export const translations: Record<Locale, TranslationDictionary> = {
@@ -641,6 +644,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       fertilizer_cta: "ถามร้านเรื่องปุ๋ยสูตรนี้",
       dismiss: "รับทราบแล้ว ปิดการแจ้งเตือน",
     },
+    cms: cmsTh,
   },
   en: {
     nav: {
@@ -961,6 +965,7 @@ export const translations: Record<Locale, TranslationDictionary> = {
       fertilizer_cta: "Ask Shop for Fertilizer",
       dismiss: "Dismiss",
     },
+    cms: cmsEn,
   },
 };
 

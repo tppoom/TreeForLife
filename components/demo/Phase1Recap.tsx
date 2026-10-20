@@ -12,72 +12,17 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { InquiryModal } from "@/components/ui/InquiryModal";
+import { useDemoCopy } from "@/lib/i18n/demo";
 
 export function Phase1Recap() {
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
 
+  const c = useDemoCopy().phase1;
   const cards = [
-    {
-      id: "catalog",
-      badge: "30 พันธุ์ไม้คัดสรร",
-      title: "🌿 คลัง 30 พันธุ์ไม้พร้อมตัวกรอง",
-      description:
-        "ค้นหาและคัดกรองพันธุ์ไม้ตามระดับแสงแดด ความต้องการน้ำ ความปลอดภัยต่อสัตว์เลี้ยง พร้อมข้อมูลเชิงลึกและการดูแล",
-      features: [
-        "30 สายพันธุ์ข้อมูลสมบูรณ์",
-        "ฟิลเตอร์แสง / น้ำ / สัตว์เลี้ยง",
-        "บันทึกลงสวนได้ทันที",
-      ],
-      linkText: "สำรวจคลังต้นไม้",
-      href: "/search",
-      icon: Compass,
-    },
-    {
-      id: "garden",
-      badge: "สูตร ML 3 ฤดูกาล",
-      title: "🏡 สวนของฉันและตารางรดน้ำ 3 ฤดู",
-      description:
-        "จัดการคอลเลกชันต้นไม้ในบ้าน คำนวณปริมาณน้ำและรอบการรดตามฤดูร้อน ฝน และหนาวของสภาพอากาศไทยอย่างแม่นยำ",
-      features: [
-        "คำนวณปริมาณน้ำตามฤดูกาล",
-        "ประเมินสุขภาพต้นไม้เรียลไทม์",
-        "แจ้งเตือนเมื่อถึงรอบดูแล",
-      ],
-      linkText: "ไปที่สวนของฉัน",
-      href: "/garden",
-      icon: Droplets,
-    },
-    {
-      id: "today",
-      badge: "Checklist ประจำวัน",
-      title: "📅 งานดูแลประจำวันพร้อมบันทึก",
-      description:
-        "เช็คลิสต์งานดูแลต้นไม้ในแต่ละวัน รดน้ำ พรวนดิน ใส่ปุ๋ย พร้อมปุ่มบันทึก 1-Click และระบบสะสม Streak เพื่อความต่อเนื่อง",
-      features: [
-        "Today's Task Checklist",
-        "บันทึกการรดน้ำ 1-Click",
-        "ระบบนับความต่อเนื่อง (Streak)",
-      ],
-      linkText: "ตรวจเช็คงานวันนี้",
-      href: "/today",
-      icon: CalendarCheck2,
-    },
-    {
-      id: "inquiry",
-      badge: "ติดต่อร้านค้าทันที",
-      title: "💬 สอบถามและขอใบเสนอราคาผ่าน LINE OA",
-      description:
-        "เชื่อมต่อทีมงานผู้เชี่ยวชาญโดยตรง ส่งต่อความต้องการ สร้าง Reference Code อัตโนมัติ เพื่อติดตามสถานะอย่างมืออาชีพ",
-      features: [
-        "สร้าง Ref Code ติดตามอัตโนมัติ",
-        "ส่งต่อข้อมูลต้นไม้ในคลิกเดียว",
-        "เปิดช่องทางคุยผ่าน LINE OA",
-      ],
-      linkText: "เปิดแบบฟอร์มสอบถาม",
-      isInquiryModal: true,
-      href: "/search",
-      icon: MessageCircle,
-    },
+    { id: "catalog", ...c.cards.catalog, isInquiryModal: false, href: "/search", icon: Compass },
+    { id: "garden", ...c.cards.garden, isInquiryModal: false, href: "/garden", icon: Droplets },
+    { id: "today", ...c.cards.today, isInquiryModal: false, href: "/today", icon: CalendarCheck2 },
+    { id: "inquiry", ...c.cards.inquiry, isInquiryModal: true, href: "/search", icon: MessageCircle },
   ];
 
   return (
@@ -88,18 +33,18 @@ export function Phase1Recap() {
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Phase 1: ระบบหลักที่พร้อมใช้งานจริง (Live on Production)</span>
+              <span>{c.live_badge}</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-serif font-bold text-forest-900 dark:text-sand-50">
-              ระบบหลักที่เปิดให้บริการแล้วในปัจจุบัน
+              {c.title}
             </h2>
             <p className="text-sm sm:text-base text-sand-700 dark:text-sand-300 max-w-3xl">
-              ฟังก์ชันการทำงานพื้นฐานที่สมบูรณ์แบบ 100% พร้อมใช้งานจริงบนระบบ TreeForLife ทั้งการสืบค้นพันธุ์ไม้ วางแผนดูแลตามฤดูกาลไทย บันทึกภารกิจรายวัน และระบบเชื่อมต่อหน้าร้าน
+              {c.desc}
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-center px-3 py-1.5 rounded-2xl bg-white dark:bg-forest-800 border border-sand-200 dark:border-forest-700 text-xs text-forest-700 dark:text-sand-300">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-medium">Live on Production</span>
+            <span className="font-medium">{c.live}</span>
           </div>
         </div>
 

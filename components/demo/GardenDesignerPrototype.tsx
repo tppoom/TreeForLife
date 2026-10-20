@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+import { useDemoCopy, fill } from "@/lib/i18n/demo";
 
 export interface SpaceOption {
   id: "living-room" | "balcony";
@@ -38,104 +39,25 @@ export interface DesignAssessment {
   isHighCompatibility: boolean;
 }
 
-export const SPACES: SpaceOption[] = [
-  {
-    id: "living-room",
-    title: "มุมห้องนั่งเล่นข้างโซฟา",
-    subtitle: "พื้นที่ในร่ม แสงรำไรผ่านม่านโปร่ง",
-    lightingDetail: "แสงสว่างทางอ้อม 3-4 ชม./วัน (เลี่ยงแดดตรง)",
-    airflowDetail: "อากาศหมุนเวียนปานกลาง มีเครื่องปรับอากาศบางช่วง",
-    dimension: "พื้นที่ว่าง 1.2 x 0.8 เมตร",
-  },
-  {
-    id: "balcony",
-    title: "ระเบียงรับแดดบ่าย",
-    subtitle: "พื้นที่กึ่งภายนอก ทิศตะวันตก/ใต้",
-    lightingDetail: "แดดส่องตรงช่วงบ่าย 4-6 ชม./วัน (ความเข้มสูง)",
-    airflowDetail: "ลมธรรมชาติพัดผ่านถ่ายเทสะดวก",
-    dimension: "พื้นที่ระเบียง 2.0 x 1.0 เมตร",
-  },
+const SPACE_IDS: SpaceOption["id"][] = ["living-room", "balcony"];
+
+const SPECIES_META: Array<Pick<SpeciesOption, "id" | "nameEn" | "styleTag">> = [
+  { id: "monstera-albo", nameEn: "Monstera Albo Variegata", styleTag: "Tropical Luxury" },
+  { id: "ficus-lyrata", nameEn: "Ficus Lyrata", styleTag: "Scandinavian Elegance" },
+  { id: "sansevieria", nameEn: "Sansevieria Trifasciata", styleTag: "Modern Minimalist" },
 ];
 
-export const SPECIES: SpeciesOption[] = [
-  {
-    id: "monstera-albo",
-    nameTh: "มอนสเตอร่าด่าง",
-    nameEn: "Monstera Albo Variegata",
-    styleTag: "Tropical Luxury",
-  },
-  {
-    id: "ficus-lyrata",
-    nameTh: "ไทรใบสัก",
-    nameEn: "Ficus Lyrata",
-    styleTag: "Scandinavian Elegance",
-  },
-  {
-    id: "sansevieria",
-    nameTh: "ลิ้นมังกร",
-    nameEn: "Sansevieria Trifasciata",
-    styleTag: "Modern Minimalist",
-  },
-];
-
-const COMPATIBILITY_MAP: Record<string, Record<string, DesignAssessment>> = {
+// Scores are language-independent; the copy for each pairing lives in lib/i18n/demo/designer.ts
+const LIGHT_MATCH: Record<string, Record<string, { lightMatchPercent: number; isHighCompatibility: boolean }>> = {
   "living-room": {
-    "monstera-albo": {
-      lightMatchPercent: 92,
-      lightStatusLabel: "เหมาะสมดีเยี่ยม (แสงรำไรถนอมรอยด่าง)",
-      potSizeRecommended: "10 - 12 นิ้ว",
-      potTypeRecommended: "กระถางเซรามิกสีทราย หรือ ดินเผาเคลือบด้าน",
-      advice:
-        "ตำแหน่งข้างโซฟาได้รับแสงสว่างทางอ้อมที่ดี รอยด่างสีขาวจะไม่ไหม้เกรียม ควรหมุนกระถาง 90° ทุก 2 สัปดาห์เพื่อให้พุ่มใบสมดุล",
-      isHighCompatibility: true,
-    },
-    "ficus-lyrata": {
-      lightMatchPercent: 72,
-      lightStatusLabel: "เหมาะสมปานกลาง (ต้องการแสงสว่างเพิ่ม)",
-      potSizeRecommended: "12 - 14 นิ้ว",
-      potTypeRecommended: "กระถางดินเผาปากกว้างทรงกระบอก",
-      advice:
-        "ควรขยับให้ชิดขอบหน้าต่างหรือเปิดม่านรับแสงธรรมชาติให้มากที่สุด เพื่อป้องกันอาการใบล่างเหลืองร่วงจากแสงไม่พอ",
-      isHighCompatibility: false,
-    },
-    sansevieria: {
-      lightMatchPercent: 98,
-      lightStatusLabel: "สมบูรณ์แบบ (ทนทานต่อแสงน้อยและแอร์)",
-      potSizeRecommended: "8 - 10 นิ้ว",
-      potTypeRecommended: "กระถางไฟเบอร์ซีเมนต์ หรือ เซรามิกทรงมินิมอล",
-      advice:
-        "ทนทานต่อสภาพอากาศแห้งจากเครื่องปรับอากาศได้ดีเยี่ยม ช่วยฟอกอากาศและปล่อยออกซิเจนขณะพักผ่อน รดน้ำ 10-14 วันครั้ง",
-      isHighCompatibility: true,
-    },
+    "monstera-albo": { lightMatchPercent: 92, isHighCompatibility: true },
+    "ficus-lyrata": { lightMatchPercent: 72, isHighCompatibility: false },
+    sansevieria: { lightMatchPercent: 98, isHighCompatibility: true },
   },
   balcony: {
-    "monstera-albo": {
-      lightMatchPercent: 45,
-      lightStatusLabel: "ต้องระวัง (แดดบ่ายแรงเกินไป)",
-      potSizeRecommended: "12 - 14 นิ้ว",
-      potTypeRecommended: "กระถางพลาสติกหนา พร้อมจานรองน้ำ",
-      advice:
-        "แสงแดดบ่ายตรงๆ จะทำให้เนื้อเยื่อใบส่วนสีขาวด่างไหม้แห้งกรอบได้ แนะนำให้ขยับเข้าใต้ชายคาหรือขึงสแลนกรองแสง 50%",
-      isHighCompatibility: false,
-    },
-    "ficus-lyrata": {
-      lightMatchPercent: 96,
-      lightStatusLabel: "เหมาะสมดีเยี่ยม (ชอบแดดและลมโกรก)",
-      potSizeRecommended: "14 - 16 นิ้ว",
-      potTypeRecommended: "กระถางดินเผาหนา ทรงสูงระบายน้ำดี",
-      advice:
-        "ระเบียงที่มีลมโกรกและแดดส่องช่วยให้ลำต้นแข็งแรง ใบไม่บวมน้ำหรือเป็นจุดดำ ดินแห้งเร็วลดความเสี่ยงรากเน่าได้ดีเยี่ยม",
-      isHighCompatibility: true,
-    },
-    sansevieria: {
-      lightMatchPercent: 90,
-      lightStatusLabel: "ดีมาก (ทนแดดทนฝน)",
-      potSizeRecommended: "8 - 10 นิ้ว",
-      potTypeRecommended: "กระถางดินเผาธรรมชาติมีรูระบาย",
-      advice:
-        "ปรับตัวรับแดดระเบียงได้ดีมาก ลำต้นจะแน่นหนา แข็งแรง ในฤดูฝนควรระวังไม่ให้น้ำขังในจานรองเกิน 24 ชม.",
-      isHighCompatibility: true,
-    },
+    "monstera-albo": { lightMatchPercent: 45, isHighCompatibility: false },
+    "ficus-lyrata": { lightMatchPercent: 96, isHighCompatibility: true },
+    sansevieria: { lightMatchPercent: 90, isHighCompatibility: true },
   },
 };
 
@@ -154,15 +76,15 @@ export function GardenDesignerPrototype({
   >(initialSpecies);
   const [sliderPosition, setSliderPosition] = useState<number>(50);
 
+  const c = useDemoCopy().designer;
+  const SPACES: SpaceOption[] = SPACE_IDS.map((id) => ({ id, ...c.spaces[id] }));
+  const SPECIES: SpeciesOption[] = SPECIES_META.map((sp) => ({ ...sp, nameTh: c.species[sp.id] }));
+
   const selectedSpace = SPACES.find((s) => s.id === selectedSpaceId) || SPACES[0];
   const selectedSpecies = SPECIES.find((sp) => sp.id === selectedSpeciesId) || SPECIES[0];
-  const assessment = COMPATIBILITY_MAP[selectedSpaceId]?.[selectedSpeciesId] || {
-    lightMatchPercent: 80,
-    lightStatusLabel: "เหมาะสม",
-    potSizeRecommended: "10-12 นิ้ว",
-    potTypeRecommended: "กระถางดินเผา",
-    advice: "จัดวางในตำแหน่งที่ได้รับแสงสว่างทางอ้อม",
-    isHighCompatibility: true,
+  const assessment: DesignAssessment = {
+    ...(c.assessments[selectedSpaceId]?.[selectedSpeciesId] || c.fallback),
+    ...(LIGHT_MATCH[selectedSpaceId]?.[selectedSpeciesId] || { lightMatchPercent: 80, isHighCompatibility: true }),
   };
 
   return (
@@ -174,16 +96,16 @@ export function GardenDesignerPrototype({
           <span>Phase 2 AI Prototype</span>
         </div>
         <h3 className="text-xl font-bold font-serif text-forest-900 dark:text-sand-100">
-          🏡 ออกแบบมุมสวน AI (AI Garden Corner Designer)
+          {c.title}
         </h3>
         <p className="text-xs sm:text-sm text-sand-700 dark:text-sand-300">
-          ระบบจำลองการจัดวางพันธุ์ไม้และประเมินความเหมาะสมของสภาพแวดล้อมเสมือนจริง
+          {c.subtitle}
         </p>
 
         {/* Space Selector */}
         <div className="mt-4 space-y-2">
           <label className="block text-xs font-semibold text-sand-700 dark:text-sand-300">
-            1. เลือกพื้นที่จำลอง (Select Space):
+            {c.step_space}
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {SPACES.map((space) => {
@@ -211,7 +133,7 @@ export function GardenDesignerPrototype({
         {/* Species Selector */}
         <div className="mt-4 space-y-2">
           <label className="block text-xs font-semibold text-sand-700 dark:text-sand-300">
-            2. เลือกพันธุ์ไม้ที่ต้องการจัดวาง (Select Plant Species):
+            {c.step_species}
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {SPECIES.map((sp) => {
@@ -244,10 +166,10 @@ export function GardenDesignerPrototype({
           <div className="flex items-center justify-between text-xs text-sand-700 dark:text-sand-300">
             <span className="font-semibold flex items-center gap-1.5">
               <Layers className="w-3.5 h-3.5 text-forest-700 dark:text-emerald-400" />
-              <span>ภาพจำลอง Before / After เปรียบเทียบมุมจัดวาง:</span>
+              <span>{c.compare_label}</span>
             </span>
             <span className="text-[11px] font-mono bg-sand-100 dark:bg-forest-800 px-2 py-0.5 rounded text-forest-800 dark:text-sand-200">
-              แสดงมุมมอง After: {sliderPosition}%
+              {fill(c.after_percent, { percent: sliderPosition })}
             </span>
           </div>
 
@@ -259,7 +181,7 @@ export function GardenDesignerPrototype({
                 <Maximize2 className="w-8 h-8" />
               </div>
               <span className="text-xs font-bold uppercase tracking-wider text-sand-600 dark:text-forest-400">
-                Before: พื้นที่ว่างเปล่าก่อนจัด
+                {c.before_badge}
               </span>
               <p className="text-sm font-semibold text-forest-900 dark:text-sand-200 mt-1">
                 {selectedSpace.title}
@@ -282,13 +204,13 @@ export function GardenDesignerPrototype({
                 <Sparkles className="w-8 h-8 text-emerald-400" />
               </div>
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                After: AI จัดวางต้นไม้และกระถางเข้ามุม
+                {c.after_badge}
               </span>
               <p className="text-sm font-bold text-sand-100 mt-1">
                 {selectedSpecies.nameTh} ({selectedSpecies.nameEn})
               </p>
               <p className="text-xs text-sand-300 mt-0.5">
-                จับคู่กระถาง {assessment.potSizeRecommended} · สไตล์ {selectedSpecies.styleTag}
+                {fill(c.after_detail, { pot: assessment.potSizeRecommended, style: selectedSpecies.styleTag })}
               </p>
             </div>
 
@@ -308,7 +230,7 @@ export function GardenDesignerPrototype({
             <input
               type="range"
               role="slider"
-              aria-label="Before After comparison slider"
+              aria-label={c.slider_label}
               min="0"
               max="100"
               value={sliderPosition}
@@ -320,19 +242,19 @@ export function GardenDesignerPrototype({
                 onClick={() => setSliderPosition(0)}
                 className="hover:text-forest-900 dark:hover:text-sand-100 transition"
               >
-                ← ดู Before 100%
+                {c.view_before}
               </button>
               <button
                 onClick={() => setSliderPosition(50)}
                 className="font-medium hover:text-forest-900 dark:hover:text-sand-100 transition"
               >
-                เปรียบเทียบกึ่งกลาง (50 / 50)
+                {c.view_half}
               </button>
               <button
                 onClick={() => setSliderPosition(100)}
                 className="hover:text-forest-900 dark:hover:text-sand-100 transition"
               >
-                ดู After สมบูรณ์ 100% →
+                {c.view_after}
               </button>
             </div>
           </div>
@@ -343,7 +265,7 @@ export function GardenDesignerPrototype({
           <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-sand-200 dark:border-forest-800">
             <h4 className="text-sm font-bold text-forest-900 dark:text-sand-100 flex items-center gap-2">
               <Compass className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>การประเมินความเหมาะสมของสภาพแวดล้อม (Environmental Suitability)</span>
+              <span>{c.suitability}</span>
             </h4>
             <div
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${
@@ -357,7 +279,7 @@ export function GardenDesignerPrototype({
               ) : (
                 <AlertTriangle className="w-3.5 h-3.5" />
               )}
-              <span>ความเหมาะสมของแสง: {assessment.lightMatchPercent}%</span>
+              <span>{fill(c.light_match, { percent: assessment.lightMatchPercent })}</span>
             </div>
           </div>
 
@@ -366,12 +288,12 @@ export function GardenDesignerPrototype({
               <div className="text-sand-600 dark:text-sand-400 flex items-center gap-1.5">
                 <Sun className="w-3.5 h-3.5 text-gold-500" />
                 <span className="font-semibold text-forest-900 dark:text-sand-200">
-                  ระดับแสงในพื้นที่:
+                  {c.light_level}
                 </span>
               </div>
               <p className="text-forest-800 dark:text-sand-300">{selectedSpace.lightingDetail}</p>
               <div className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 pt-1">
-                ผลประเมิน: {assessment.lightStatusLabel}
+                {fill(c.verdict, { label: assessment.lightStatusLabel })}
               </div>
             </div>
 
@@ -379,21 +301,21 @@ export function GardenDesignerPrototype({
               <div className="text-sand-600 dark:text-sand-400 flex items-center gap-1.5">
                 <Droplet className="w-3.5 h-3.5 text-blue-500" />
                 <span className="font-semibold text-forest-900 dark:text-sand-200">
-                  ขนาดกระถางแนะนำ:
+                  {c.pot_size}
                 </span>
               </div>
               <p className="text-forest-800 dark:text-sand-300 font-semibold">
                 {assessment.potSizeRecommended}
               </p>
               <div className="text-[11px] text-sand-600 dark:text-sand-400 pt-1">
-                วัสดุกระถาง: {assessment.potTypeRecommended}
+                {fill(c.pot_material, { material: assessment.potTypeRecommended })}
               </div>
             </div>
           </div>
 
           <div className="p-3 rounded-lg bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 text-xs text-forest-900 dark:text-sand-200">
             <strong className="text-emerald-900 dark:text-emerald-300">
-              💡 คำแนะนำการจัดวางโดย AI:{" "}
+              {c.advice}
             </strong>
             {assessment.advice}
           </div>

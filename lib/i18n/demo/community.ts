@@ -1,0 +1,113 @@
+import type { Copy } from "./types";
+
+export const communityTh = {
+  title: "🌱 ชุมชนคนรักต้นไม้ & บันทึกการเติบโต",
+  subtitle:
+    "พื้นที่แลกเปลี่ยนประสบการณ์ของเหล่านักปลูก แบ่งปันไดอารี่บันทึกพัฒนาการต้นไม้ ภาพเปรียบเทียบก่อน-หลัง และเทคนิคการดูแลจากสวนจริง",
+  members: "สมาชิก 12,450 คน",
+  growth: "🌱 พัฒนาการเติบโต (Growth Progress)",
+  timeline: "⏱️ บันทึกไทม์ไลน์",
+  start: "จุดเริ่มต้น:",
+  owner_tip: "เคล็ดลับจากเจ้าของต้นไม้:",
+  like: "กดไลก์ ({count})",
+  comment_count: "{count} ความคิดเห็น",
+  latest_comments: "ความคิดเห็นล่าสุด ({count})",
+  comment_placeholder: "เขียนความคิดเห็นหรือแลกเปลี่ยนประสบการณ์...",
+  comment_send: "ส่งความคิดเห็น",
+  you: "คุณ (สมาชิก Green Club)",
+  just_now: "เมื่อสักครู่",
+  posts: [
+    {
+      id: "post-1",
+      authorName: "คุณนลินดา สุขุมวิท",
+      authorBadge: "Green Club Gold",
+      authorLocation: "กรุงเทพฯ",
+      title: "มอนสเตอร่าไจแอนท์ 6 เดือน จากใบเดี่ยวสู่ใบฉลุ 8 แฉก! 🌿",
+      plantSpecies: "มอนสเตอร่าไจแอนท์ (Monstera Deliciosa)",
+      timeline: "ระยะเวลา 180 วัน (6 เดือน)",
+      growthStats: "สูงขึ้น +45 ซม. • แตกใบใหม่ 5 ใบ • ลายฉลุลึกสมบูรณ์",
+      beforeStory: "วันแรกที่ซื้อมาจาก TreeForLife เป็นต้นกระถาง 6 นิ้ว มีใบเรียบเพียง 2 ใบ",
+      afterStory: "ปัจจุบันย้ายลงกระถางดินเผา 12 นิ้ว วางริมหน้าต่างกรองแสงบ่าย ใบเริ่มฉลุสวยงามสมบูรณ์แบบมาก",
+      careTip:
+        "เคล็ดลับสำคัญคือผสมหินภูเขาไฟและกาบมะพร้าวสับ 40% รดน้ำสัปดาห์ละ 2 ครั้ง และเช็ดใบด้วยน้ำมันสะเดาทุกวันอาทิตย์",
+      tags: ["#มอนสเตอร่า", "#บันทึกการเติบโต", "#GreenClub"],
+      comments: [
+        { id: "c-1", author: "คุณธนพล", content: "ใบเงาสวยมากครับ ใช้ปุ๋ยสูตรไหนเป็นพิเศษไหมครับ?", createdAt: "2 ชม. ที่แล้ว" },
+        { id: "c-2", author: "ป้านิด สวนในบ้าน", content: "ยินดีด้วยจ้า ลายฉลุฉ่ำมาก แดดรำไรกำลังพอดีเลย", createdAt: "1 ชม. ที่แล้ว" },
+      ],
+    },
+    {
+      id: "post-2",
+      authorName: "คุณกิตติศักดิ์ พืชงาม",
+      authorBadge: "Plant Specialist",
+      authorLocation: "เชียงใหม่",
+      title: "กุหลาบอังกฤษ Clair Austin ดอกชุดที่ 3 บานสะพรั่งกลางสายฝน 🌹",
+      plantSpecies: "กุหลาบอังกฤษ (English Rose Clair Austin)",
+      timeline: "ระยะเวลา 90 วัน",
+      growthStats: "ออกดอกรวม 18 ดอก • กลิ่นหอมฟุ้งวนิลา • กิ่งก้านแข็งแรง",
+      beforeStory: "ช่วงแรกยอดกิ่งโดนเพลี้ยไฟรบกวนจนใบร่วง",
+      afterStory: "หลังใช้สูตรน้ำหมักสะเดาผสมเชื้อไตรโคเดอร์มาของหมอพืช ยอดใหม่แทงดอกตูมแน่นทุกข้อ",
+      careTip: "ตัดแต่งกิ่งแขนง 45 องศาหลังดอกโรยทุกครั้ง ใส่ปุ๋ยอินทรีย์อัดเม็ดทุก 14 วันเพื่อสะสมตาดอกใหม่",
+      tags: ["#กุหลาบอังกฤษ", "#บำรุงดอก", "#กุหลาบสายหวาน"],
+      comments: [
+        { id: "c-3", author: "คุณพิมพ์ใจ", content: "หอมมากแน่นอนพันธุ์นี้ อยากปลูกที่ระเบียงคอนโดบ้างจัง", createdAt: "30 นาทีที่แล้ว" },
+      ],
+    },
+  ],
+};
+
+export const communityEn: Copy<typeof communityTh> = {
+  title: "🌱 Plant Lovers Community & Growth Journals",
+  subtitle:
+    "A place for growers to swap experiences, share growth diaries with before/after photos, and pass on care techniques from real gardens",
+  members: "12,450 members",
+  growth: "🌱 Growth Progress",
+  timeline: "⏱️ Timeline",
+  start: "Starting point:",
+  owner_tip: "Tip from the owner:",
+  like: "Like ({count})",
+  comment_count: "{count} comments",
+  latest_comments: "Latest comments ({count})",
+  comment_placeholder: "Write a comment or share your experience...",
+  comment_send: "Post comment",
+  you: "You (Green Club member)",
+  just_now: "just now",
+  posts: [
+    {
+      id: "post-1",
+      authorName: "Nalinda S.",
+      authorBadge: "Green Club Gold",
+      authorLocation: "Bangkok",
+      title: "Giant Monstera after 6 months: from solid leaves to 8-way splits! 🌿",
+      plantSpecies: "Giant Monstera (Monstera Deliciosa)",
+      timeline: "180 days (6 months)",
+      growthStats: "+45 cm taller • 5 new leaves • deep, complete fenestration",
+      beforeStory: "Bought from TreeForLife in a 6-inch pot with just 2 solid leaves",
+      afterStory: "Now in a 12-inch terracotta pot by a window that filters the afternoon sun, and the leaves are splitting beautifully",
+      careTip:
+        "The key is a mix with 40% pumice and coco chips, watering twice a week, and wiping the leaves with neem oil every Sunday",
+      tags: ["#Monstera", "#GrowthJournal", "#GreenClub"],
+      comments: [
+        { id: "c-1", author: "Thanapol", content: "Such glossy leaves! Do you use a special fertilizer?", createdAt: "2 h ago" },
+        { id: "c-2", author: "Auntie Nid's Home Garden", content: "Congrats! Gorgeous splits — that filtered light is just right", createdAt: "1 h ago" },
+      ],
+    },
+    {
+      id: "post-2",
+      authorName: "Kittisak P.",
+      authorBadge: "Plant Specialist",
+      authorLocation: "Chiang Mai",
+      title: "Claire Austin English rose: third flush blooming in the rain 🌹",
+      plantSpecies: "English Rose (Claire Austin)",
+      timeline: "90 days",
+      growthStats: "18 blooms in total • vanilla fragrance • strong canes",
+      beforeStory: "At first thrips attacked the shoot tips until the leaves dropped",
+      afterStory: "After the plant doctor's neem and Trichoderma brew, every node pushed out tight new buds",
+      careTip: "Prune side shoots at 45° after each flush fades, and feed organic pellets every 14 days to build new flower buds",
+      tags: ["#EnglishRose", "#BloomBoost", "#SweetRoses"],
+      comments: [
+        { id: "c-3", author: "Pimjai", content: "This variety must smell amazing. I want one for my condo balcony!", createdAt: "30 min ago" },
+      ],
+    },
+  ],
+};

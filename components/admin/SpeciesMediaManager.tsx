@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { Star, Trash2, UploadCloud, Link as LinkIcon, Image as ImageIcon, Loader2, Check } from "lucide-react";
+import { useApp } from "@/lib/context/AppContext";
 
 export interface SpeciesMediaItem {
   id: string;
@@ -24,6 +25,7 @@ export function SpeciesMediaManager({
   media = [],
   onMediaChange,
 }: SpeciesMediaManagerProps) {
+  const { t } = useApp();
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [directUrl, setDirectUrl] = useState("");
@@ -54,7 +56,7 @@ export function SpeciesMediaManager({
       });
 
       if (!resSign.ok) {
-        throw new Error("ขอสิทธิ์อัปโหลดรูปภาพไม่สำเร็จ");
+        throw new Error(t("cms.media.error_upload_url"));
       }
 
       const signJson = await resSign.json();
@@ -70,7 +72,7 @@ export function SpeciesMediaManager({
       });
 
       if (!resPut.ok) {
-        throw new Error("อัปโหลดไฟล์ไปยัง Storage ไม่สำเร็จ");
+        throw new Error(t("cms.media.error_storage"));
       }
 
       // 3. Register media in DB
@@ -88,7 +90,7 @@ export function SpeciesMediaManager({
       });
 
       if (!resCreate.ok) {
-        throw new Error("บันทึกข้อมูลรูปภาพไม่สำเร็จ");
+        throw new Error(t("cms.media.error_save"));
       }
 
       const createJson = await resCreate.json();
@@ -99,7 +101,7 @@ export function SpeciesMediaManager({
       onMediaChange(updated);
     } catch (err: any) {
       console.error("Upload error:", err);
-      setUploadError(err.message || "เกิดข้อผิดพลาดในการอัปโหลด");
+      setUploadError(err.message || t("cms.media.error_upload"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -129,7 +131,7 @@ export function SpeciesMediaManager({
       });
 
       if (!resCreate.ok) {
-        throw new Error("เพิ่มรูปภาพไม่สำเร็จ");
+        throw new Error(t("cms.media.error_add"));
       }
 
       const createJson = await resCreate.json();
@@ -138,7 +140,7 @@ export function SpeciesMediaManager({
       setDirectAlt("");
       setShowUrlInput(false);
     } catch (err: any) {
-      setUploadError(err.message || "เกิดข้อผิดพลาด");
+      setUploadError(err.message || t("cms.media.error_add"));
     } finally {
       setUploading(false);
     }
@@ -187,7 +189,7 @@ export function SpeciesMediaManager({
 
   // 5. Delete Photo
   const handleDelete = async (id: string) => {
-    if (!window.confirm("คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้?")) return;
+    if (!window.confirm(t("cms.media.delete_confirm"))) return;
     setActiveActionId(id);
 
     try {
@@ -218,10 +220,10 @@ export function SpeciesMediaManager({
           <div>
             <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              คลังรูปภาพต้นไม้ ({media.length} รูป)
+              {t("cms.media.title", { count: media.length })}
             </h2>
             <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              อัปโหลดภาพถ่ายจริงจากหน้าร้าน กำหนดภาพหน้าปก ⭐ และระบุคำบรรยายภาพ (Alt Text)
+              {t("cms.media.subtitle")}
             </p>
           </div>
 
@@ -245,12 +247,12 @@ export function SpeciesMediaManager({
               {uploading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>กำลังอัปโหลด...</span>
+                  <span>{t("cms.media.uploading")}</span>
                 </>
               ) : (
                 <>
                   <UploadCloud className="w-4 h-4" />
-                  <span>เพิ่มรูปภาพ / ถ่ายภาพ</span>
+                  <span>{t("cms.media.add_photo")}</span>
                 </>
               )}
             </button>
@@ -262,7 +264,7 @@ export function SpeciesMediaManager({
               className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 font-medium text-xs transition min-h-[44px]"
             >
               <LinkIcon className="w-3.5 h-3.5" />
-              <span>ใส่ URL</span>
+              <span>{t("cms.media.add_url")}</span>
             </button>
           </div>
         </div>
@@ -291,13 +293,13 @@ export function SpeciesMediaManager({
               </div>
               <div>
                 <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                  คำบรรยายภาพ (Alt Text)
+                  {t("cms.media.alt_label")}
                 </label>
                 <input
                   type="text"
                   value={directAlt}
                   onChange={(e) => setDirectAlt(e.target.value)}
-                  placeholder="เช่น มอนสเตอร่าในกระถางดินเผา 8 นิ้ว"
+                  placeholder={t("cms.media.alt_placeholder")}
                   className="w-full px-3 py-2 text-sm rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 min-h-[44px]"
                 />
               </div>
@@ -308,7 +310,7 @@ export function SpeciesMediaManager({
                 onClick={() => setShowUrlInput(false)}
                 className="px-3 py-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900"
               >
-                ยกเลิก
+                {t("cms.cancel")}
               </button>
               <button
                 type="button"
@@ -316,7 +318,7 @@ export function SpeciesMediaManager({
                 disabled={uploading || !directUrl.trim()}
                 className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-medium text-xs hover:bg-emerald-700 disabled:opacity-50 min-h-[44px]"
               >
-                บันทึกรูปภาพ
+                {t("cms.media.save_photo")}
               </button>
             </div>
           </div>
@@ -327,9 +329,9 @@ export function SpeciesMediaManager({
       {media.length === 0 ? (
         <div className="p-12 text-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/30 text-zinc-500 space-y-3">
           <ImageIcon className="w-10 h-10 mx-auto text-zinc-400" />
-          <p className="text-sm font-medium">ยังไม่มีรูปภาพสำหรับพันธุ์ไม้นี้</p>
+          <p className="text-sm font-medium">{t("cms.media.empty")}</p>
           <p className="text-xs text-zinc-400">
-            แตะปุ่ม "เพิ่มรูปภาพ / ถ่ายภาพ" ด้านบนเพื่ออัปโหลดภาพจริงจากหน้าร้าน
+            {t("cms.media.empty_hint")}
           </p>
         </div>
       ) : (
@@ -350,7 +352,7 @@ export function SpeciesMediaManager({
                 <div className="relative aspect-square bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
                   <img
                     src={item.blobUrl}
-                    alt={item.altTh || "ต้นไม้"}
+                    alt={item.altTh || t("cms.media.default_alt")}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src =
@@ -362,7 +364,7 @@ export function SpeciesMediaManager({
                   {item.isPrimary ? (
                     <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-emerald-600 text-white text-xs font-bold flex items-center gap-1 shadow-md">
                       <Star className="w-3.5 h-3.5 fill-current" />
-                      <span>ภาพหน้าปก</span>
+                      <span>{t("cms.media.cover")}</span>
                     </div>
                   ) : (
                     <button
@@ -372,7 +374,7 @@ export function SpeciesMediaManager({
                       className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/60 hover:bg-black/80 text-white text-xs font-medium flex items-center gap-1 backdrop-blur-sm transition min-h-[36px]"
                     >
                       <Star className="w-3.5 h-3.5" />
-                      <span>ตั้งเป็นหน้าปก</span>
+                      <span>{t("cms.media.set_cover")}</span>
                     </button>
                   )}
 
@@ -381,7 +383,7 @@ export function SpeciesMediaManager({
                     type="button"
                     disabled={isActing}
                     onClick={() => handleDelete(item.id)}
-                    aria-label="ลบรูปภาพ"
+                    aria-label={t("cms.media.delete")}
                     className="absolute top-2.5 right-2.5 p-2 rounded-full bg-rose-600/80 hover:bg-rose-600 text-white backdrop-blur-sm transition shadow-md min-h-[40px] min-w-[40px] flex items-center justify-center"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -401,7 +403,7 @@ export function SpeciesMediaManager({
                         handleUpdateAlt(item.id, e.target.value);
                       }
                     }}
-                    placeholder="คำบรรยายภาพเพื่อ SEO และการเข้าถึง"
+                    placeholder={t("cms.media.caption_placeholder")}
                     className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500 min-h-[36px]"
                   />
                 </div>

@@ -23,7 +23,7 @@ TreeForLife is a bilingual (Thai/English) boutique plant shop + plant-care web a
 A comprehensive `Makefile` is available. You can run `make` or `make help` to inspect all targets.
 
 - `make dev` (or `npm run dev`) — starts Next.js dev server (self-bootstraps embedded PGlite on port 3000)
-- `make test` (or `npm run test`) — runs full Vitest suite (all 299 tests)
+- `make test` (or `npm run test`) — runs full Vitest suite (all 301 tests)
 - `make test-watch` (or `npm run test:watch`) — runs Vitest in watch mode
 - `make test-e2e` (or `npm run test:e2e`) — runs Playwright: the main suite against a demo-mode dev server and `e2e/production-mode.spec.ts` against a second production-mode server on port+1 (own `.next-e2e-prod` build dir and `.data/pglite-e2e-prod` database)
 - `make build` (or `npm run build`) — runs Next.js production build (compiles all 12 routes, checks TS validity)
@@ -71,6 +71,8 @@ TreeForLife has **two schema sources that must stay strictly in sync**:
 ## 5. UI, i18n & Theming Conventions
 
 - **Bilingual Dictionary:** All UI text must live in `lib/i18n/translations.ts` (`th` and `en`). Do not hardcode strings in components. Consume with `const { t } = useApp()`.
+  - The species CMS copy lives in `lib/i18n/cms.ts` (merged as `cms.*`). The `/demo` showcase keeps structured mock content (posts, chat scripts, bundles) in `lib/i18n/demo/*.ts`, read with `useDemoCopy()`. Each EN object is typed from its TH object, so a missing key fails `tsc`.
+  - Thai content that is data rather than UI copy (e.g. a species' Thai name shown in EN mode) gets `lang="th"`; the e2e EN sweep ignores those elements.
 - **Dark Mode:** Class-based dark mode (`darkMode: "class"`). Every card, modal, and text element must include `dark:` variant classes.
 - **Accessibility:** Minimum touch target size is `44px × 44px` for buttons. Status tags must pair color with icon and text (e.g. Overdue = `!` + red, Due Today = `●` + amber, Upcoming = `○` + sage).
 - **Next.js 15 App Router:** Server Component page `params` and `searchParams` are Promises and must be awaited: `const { slug } = await params;`.
@@ -91,6 +93,6 @@ TreeForLife has **two schema sources that must stay strictly in sync**:
 ## 7. Quality & Verification Protocol
 
 Always verify the following before finishing any work:
-1. `npm run test` passes 100% (all 299 tests green).
+1. `npm run test` passes 100% (all 301 tests green).
 2. `npm run build` compiles cleanly with zero TypeScript errors.
 3. No untracked schema discrepancies between `db/schema.ts` and `lib/db/schema-ddl.ts`.

@@ -18,7 +18,13 @@ let currentProps: any = null;
 let currentHtml = "";
 let currentTree: any = null;
 
+// useApp() only needs the locale here; tests switch it to check both languages
+let mockLocale: "th" | "en" = "th";
+
 const mockDispatcher = {
+  useContext() {
+    return { locale: mockLocale };
+  },
   useState(initial: any) {
     const idx = hookIndex++;
     if (stateStore[idx] === undefined) {
@@ -155,6 +161,7 @@ describe("Phase 2 AI Prototypes", () => {
   beforeEach(() => {
     stateStore = [];
     hookIndex = 0;
+    mockLocale = "th";
     prevDispatcher = internals.H;
     internals.H = mockDispatcher;
   });
@@ -217,5 +224,15 @@ describe("Phase 2 AI Prototypes", () => {
     // Clicking prompt populates answer
     fireEvent.click(chip);
     expect(screen.getByText(/ลิ้นมังกร|Sansevieria/i)).toBeDefined();
+  });
+  it("renders every prototype in English with no Thai copy", () => {
+    mockLocale = "en";
+    for (const Component of [PlantDoctorPrototype, BudgetRecommenderPrototype, GardenDesignerPrototype, AssistantChatPrototype]) {
+      stateStore = [];
+      const { html } = render(<Component />);
+      // ฿ (U+0E3F) is the currency symbol, not Thai copy
+      const thai = html.replace(/&quot;/g, '"').match(/[\u0E01-\u0E3A\u0E40-\u0E5B]+/);
+      expect(thai?.[0] ?? null, Component.name).toBeNull();
+    }
   });
 });

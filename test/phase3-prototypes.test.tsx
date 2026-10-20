@@ -18,7 +18,13 @@ let currentProps: any = null;
 let currentHtml = "";
 let currentTree: any = null;
 
+// useApp() only needs the locale here; tests switch it to check both languages
+let mockLocale: "th" | "en" = "th";
+
 const mockDispatcher = {
+  useContext() {
+    return { locale: mockLocale };
+  },
   useState(initial: any) {
     const idx = hookIndex++;
     if (stateStore[idx] === undefined) {
@@ -145,6 +151,7 @@ describe("Phase 3 Platform Prototypes", () => {
   beforeEach(() => {
     stateStore = [];
     hookIndex = 0;
+    mockLocale = "th";
     prevDispatcher = internals.H;
     internals.H = mockDispatcher;
   });
@@ -224,5 +231,15 @@ describe("Phase 3 Platform Prototypes", () => {
     expect(screen.getByText(/คำค้นหายอดนิยมที่ยังไม่มีในสต็อก/i)).toBeDefined();
     expect(screen.getByText(/หน้าวัวใบเงิน/i)).toBeDefined();
     expect(screen.getByText(/มอนสเตอร่าอัลโบด่าง/i)).toBeDefined();
+  });
+  it("renders every prototype in English with no Thai copy", () => {
+    mockLocale = "en";
+    for (const Component of [QuoteRequestPrototype, CommunityBoardPrototype, MemberPointsPrototype, ShopAnalyticsPrototype]) {
+      stateStore = [];
+      const { html } = render(<Component />);
+      // ฿ (U+0E3F) is the currency symbol, not Thai copy
+      const thai = html.replace(/&quot;/g, '"').match(/[\u0E01-\u0E3A\u0E40-\u0E5B]+/);
+      expect(thai?.[0] ?? null, Component.name).toBeNull();
+    }
   });
 });

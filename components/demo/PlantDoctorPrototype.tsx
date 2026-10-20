@@ -12,6 +12,8 @@ import {
   ShieldAlert,
   Info,
 } from "lucide-react";
+import { useDemoCopy, fill } from "@/lib/i18n/demo";
+import { doctorTh } from "@/lib/i18n/demo/doctor";
 
 export interface DiagnosticPreset {
   id: string;
@@ -33,77 +35,7 @@ export interface DiagnosticPreset {
   };
 }
 
-export const DIAGNOSTIC_PRESETS: DiagnosticPreset[] = [
-  {
-    id: "monstera",
-    name: "มอนสเตอร่า — ใบเหลืองและก้านนิ่ม",
-    speciesNameTh: "มอนสเตอร่า (Monstera Deliciosa)",
-    speciesNameEn: "Monstera Deliciosa",
-    symptomTitle: "ใบเหลืองและก้านนิ่ม ดินแฉะสะสม",
-    symptomSummary: "ใบเริ่มเหลืองจากส่วนโคนต้น ก้านใบมีสัมผัสนิ่มยวบ ดินในกระถางยังชุ่มแฉะแม้รดน้ำผ่านมา 4 วัน",
-    environmentInfo: "วางในห้องนั่งเล่น แสงรำไร รดน้ำทุก 2 วัน จานรองมีน้ำขัง",
-    diagnosis: {
-      diseaseNameTh: "อาการรากเน่าจากน้ำขัง",
-      diseaseNameEn: "Overwatering Root Rot & Lack of Aeration",
-      severity: "medium",
-      severityLabel: "ปานกลาง (รักษาทันภายใน 7 วัน)",
-      cause: "ดินแน่นระบายน้ำไม่ทัน ประกอบกับรดน้ำถี่เกินไปจนรากขาดออกซิเจนและเกิดการติดเชื้อรากลุ่มรากเน่า",
-      actionPlan: [
-        "1. งดรดน้ำทันที และยกกระถางออกจากจานรองเพื่อให้น้ำที่ขังระบายออกหมด",
-        "2. ยกต้นออกจากกระถาง ล้างดินเดิมออก ตัดแต่งรากที่เน่าสีดำ/นิ่มด้วยกรรไกรฆ่าเชื้อแอลกอฮอล์",
-        "3. เปลี่ยนใช้วัสดุปลูกสูตรโปร่งพิเศษ (กาบมะพร้าวสับ + เพอร์ไลต์ + หินภูเขาไฟ) งดปุ๋ยเคมี 2 สัปดาห์",
-      ],
-      organicRemedy: "ราดเชื้อราไตรโคเดอร์มา (Trichoderma harzianum) ผสมน้ำเจือจาง เพื่อยับยั้งสปอร์เชื้อราก่อโรคและฟื้นฟูรากใหม่",
-      preventativeTips: "ใช้ไม้จิ้มฟันหรือนิ้วมือตรวจความชื้นลึก 2 นิ้วก่อนรดน้ำเสมอ และเทน้ำที่ขังในจานรองทิ้งทุกครั้ง",
-    },
-  },
-  {
-    id: "rubber",
-    name: "ยางอินเดีย — ขอบใบไหม้สีน้ำตาล",
-    speciesNameTh: "ยางอินเดีย (Ficus Elastica Burgundy)",
-    speciesNameEn: "Ficus Elastica",
-    symptomTitle: "ขอบใบไหม้แห้งกรอบ ปลายใบม้วน",
-    symptomSummary: "ขอบใบด้านนอกมีรอยไหม้สีน้ำตาลแห้งกรอบ ปลายใบเริ่มม้วนตัวเข้าด้านใน วางใกล้หน้าต่างกระจกทิศตะวันตก",
-    environmentInfo: "ห้องทำงานติดกระจกบานใหญ่ โดนแดดบ่ายตรง 4 ชม. เปิดแอร์ตลอดวัน",
-    diagnosis: {
-      diseaseNameTh: "ใบไหม้จากแดดตรงและความชื้นสัมพัทธ์ต่ำ",
-      diseaseNameEn: "Sunburn & Low Humidity Stress",
-      severity: "low",
-      severityLabel: "ระดับเบา (ฟื้นฟูได้ง่าย)",
-      cause: "ได้รับรังสีความร้อนและแสงแดดส่องกระทบใบโดยตรงช่วงบ่ายแรงเกินไป ผสานกับอากาศแห้งจากเครื่องปรับอากาศ ทำให้สูญเสียน้ำเร็วกว่าที่รากส่งขึ้นมาเลี้ยง",
-      actionPlan: [
-        "1. ย้ายตำแหน่งต้นไม้ถอยห่างจากขอบหน้าต่าง 1-1.5 เมตร หรือติดม่านโปร่งเพื่อกรองแสงบ่าย",
-        "2. ตัดแต่งเฉพาะส่วนขอบใบที่ไหม้แห้งกรอบออก โดยเว้นขอบเขียวไว้เล็กน้อยเพื่อไม่ให้แผลลาม",
-        "3. เพิ่มความชื้นสัมพัทธ์รอบต้นด้วยการวางถาดหินชุบน้ำหรือฉีดละอองน้ำช่วงเช้า",
-      ],
-      organicRemedy: "สเปรย์น้ำหมักสาหร่ายทะเลเข้มข้น (Seaweed Extract) ทางใบ เพื่อกระตุ้นการสร้างเซลล์ใหม่และลดความเครียดของเซลล์ใบ",
-      preventativeTips: "เช็ดทำความสะอาดใบด้วยผ้าชุบน้ำสะอาดสัปดาห์ละครั้ง เพื่อเปิดปากใบรับแสงอย่างมีประสิทธิภาพ",
-    },
-  },
-  {
-    id: "fiddle",
-    name: "ไทรใบสัก — จุดดำกระจายทั่วใบ",
-    speciesNameTh: "ไทรใบสัก (Ficus Lyrata)",
-    speciesNameEn: "Ficus Lyrata",
-    symptomTitle: "จุดดำกระจายบนใบใหม่ เซลล์บวมน้ำ",
-    symptomSummary: "ใบใหม่ที่เพิ่งผลิมีจุดสีน้ำตาลเข้มและจุดดำกระจายตัวทั่วแผ่นใบ ขอบใบหยักไม่สม่ำเสมอ รดน้ำตามรอบ 3 วันครั้ง",
-    environmentInfo: "มุมห้องรับแขก อากาศนิ่ง แสงรำไร ดินชั้นบนแห้งแต่ก้นกระถางยังชื้น",
-    diagnosis: {
-      diseaseNameTh: "อาการบวมน้ำและเชื้อราใบจุด",
-      diseaseNameEn: "Edema & Bacterial/Fungal Spot",
-      severity: "high",
-      severityLabel: "เฝ้าระวังสูง (ต้องคุมความชื้นด่วน)",
-      cause: "ความชื้นในดินไม่สม่ำเสมอ รากดูดน้ำเร็วกว่าอัตราการคายน้ำของใบเมื่ออยู่ในที่อากาศนิ่ง ทำให้ผนังเซลล์แตกและติดเชื้อราแทรกซ้อน",
-      actionPlan: [
-        "1. ปรับตารางการรดน้ำ โดยตรวจความชื้นดินลึก 2 นิ้วก่อนรดน้ำทุกครั้ง รดเมื่อดินแห้งหมาดเท่านั้น",
-        "2. ขยับกระถางไปวางในจุดที่มีอากาศถ่ายเทหมุนเวียนได้ดี ไม่อับลม เพื่อเพิ่มอัตราการคายน้ำ",
-        "3. เด็ดใบที่มีจุดดำรุนแรงเกิน 50% ทิ้งเพื่อป้องกันการแพร่กระจายของสปอร์เชื้อรา",
-      ],
-      organicRemedy: "พ่นน้ำส้มควันไม้เจือจาง (Wood Vinegar 1:500) หรือสเปรย์ชีวภัณฑ์บาซิลลัส ซับทิลิส (BS) สัปดาห์ละครั้งยามเช้า",
-      preventativeTips: "รักษาความสม่ำเสมอของรอบรดน้ำ หลีกเลี่ยงการปล่อยให้ดินแห้งสนิทแล้วตามด้วยการรดจนแฉะโชก",
-    },
-  },
-];
+export const DIAGNOSTIC_PRESETS: DiagnosticPreset[] = doctorTh.presets;
 
 export interface PlantDoctorPrototypeProps {
   initialPresetId?: string;
@@ -116,11 +48,13 @@ export function PlantDoctorPrototype({
   initialState = "idle",
   scanDurationMs = 500,
 }: PlantDoctorPrototypeProps) {
+  const c = useDemoCopy().doctor;
+  const presets: DiagnosticPreset[] = c.presets;
   const [selectedPresetId, setSelectedPresetId] = useState(initialPresetId);
   const [status, setStatus] = useState<"idle" | "analyzing" | "diagnosed">(initialState);
 
   const selectedPreset =
-    DIAGNOSTIC_PRESETS.find((p) => p.id === selectedPresetId) || DIAGNOSTIC_PRESETS[0];
+    presets.find((p) => p.id === selectedPresetId) || presets[0];
 
   const handleStartAnalysis = () => {
     if (scanDurationMs === 0) {
@@ -159,10 +93,10 @@ export function PlantDoctorPrototype({
               <span>Phase 2 AI Prototype</span>
             </div>
             <h3 className="text-xl font-bold font-serif text-forest-900 dark:text-sand-100">
-              🩺 หมอต้นไม้ AI (AI Plant Doctor)
+              {c.title}
             </h3>
             <p className="text-xs sm:text-sm text-sand-700 dark:text-sand-300">
-              จำลองการตรวจวินิจฉัยโรคและปัญหาใบไม้ด้วยระบบ Computer Vision & Botanical AI
+              {c.subtitle}
             </p>
           </div>
           {status === "diagnosed" && (
@@ -171,7 +105,7 @@ export function PlantDoctorPrototype({
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-sand-100 dark:bg-forest-800 text-forest-850 dark:text-sand-200 hover:bg-sand-200 dark:hover:bg-forest-700 transition"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>ตรวจเคสอื่น</span>
+              <span>{c.reset}</span>
             </button>
           )}
         </div>
@@ -179,10 +113,10 @@ export function PlantDoctorPrototype({
         {/* Preset Selector */}
         <div className="mt-4">
           <label className="block text-xs font-semibold text-sand-700 dark:text-sand-300 mb-2">
-            เลือกเคสอาการตัวอย่างเพื่อทดสอบ:
+            {c.pick_case}
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {DIAGNOSTIC_PRESETS.map((preset) => {
+            {presets.map((preset) => {
               const isSelected = preset.id === selectedPreset.id;
               return (
                 <button
@@ -218,25 +152,25 @@ export function PlantDoctorPrototype({
                 <div className="w-full h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-lg shadow-emerald-400/50" />
                 <div className="mt-3 inline-flex items-center gap-2 bg-forest-900/80 text-sand-50 px-3 py-1 rounded-full text-xs font-medium">
                   <Activity className="w-3.5 h-3.5 animate-spin text-emerald-400" />
-                  <span>กำลังวิเคราะห์โครงสร้างเซลล์ใบด้วย AI...</span>
+                  <span>{c.scanning}</span>
                 </div>
               </div>
             )}
             <div className="flex items-center gap-2 text-forest-800 dark:text-sand-200 font-semibold text-sm mb-2">
               <Leaf className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <span>ภาพและอาการที่ตรวจพบ</span>
+              <span>{c.observed}</span>
             </div>
             <div className="space-y-1.5 text-xs text-sand-800 dark:text-sand-200">
               <p>
-                <strong className="text-forest-900 dark:text-sand-100">พันธุ์ไม้:</strong>{" "}
+                <strong className="text-forest-900 dark:text-sand-100">{c.species}</strong>{" "}
                 {selectedPreset.speciesNameTh} ({selectedPreset.speciesNameEn})
               </p>
               <p>
-                <strong className="text-forest-900 dark:text-sand-100">ลักษณะอาการ:</strong>{" "}
+                <strong className="text-forest-900 dark:text-sand-100">{c.symptoms}</strong>{" "}
                 {selectedPreset.symptomSummary}
               </p>
               <p>
-                <strong className="text-forest-900 dark:text-sand-100">สภาพแวดล้อม:</strong>{" "}
+                <strong className="text-forest-900 dark:text-sand-100">{c.environment}</strong>{" "}
                 {selectedPreset.environmentInfo}
               </p>
             </div>
@@ -250,10 +184,10 @@ export function PlantDoctorPrototype({
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-semibold text-sm text-forest-900 dark:text-sand-100">
-                    พร้อมสำหรับการประมวลผล
+                    {c.ready_title}
                   </h4>
                   <p className="text-xs text-sand-600 dark:text-sand-400 max-w-xs">
-                    กดปุ่มด้านล่างเพื่อเริ่มการตรวจวินิจฉัยโรคและประเมินวิธีแก้ไขด้วยระบบ AI
+                    {c.ready_desc}
                   </p>
                 </div>
                 <button
@@ -262,7 +196,7 @@ export function PlantDoctorPrototype({
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-forest-800 hover:bg-forest-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-sand-50 text-xs sm:text-sm font-semibold shadow-soft transition"
                 >
                   <Activity className="w-4 h-4" />
-                  <span>วิเคราะห์อาการด้วย AI</span>
+                  <span>{c.analyze}</span>
                 </button>
               </div>
             )}
@@ -274,10 +208,10 @@ export function PlantDoctorPrototype({
                 </div>
                 <div className="space-y-1">
                   <h4 className="font-semibold text-sm text-forest-900 dark:text-sand-100">
-                    ระบบ AI กำลังประมวลผลข้อมูล...
+                    {c.processing_title}
                   </h4>
                   <p className="text-xs text-sand-600 dark:text-sand-400">
-                    เปรียบเทียบอาการกับฐานข้อมูลโรคพืช 12,000+ ตัวอย่าง
+                    {c.processing_desc}
                   </p>
                 </div>
               </div>
@@ -289,10 +223,10 @@ export function PlantDoctorPrototype({
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <h4 className="font-semibold text-sm text-forest-900 dark:text-sand-100">
-                  การวิเคราะห์เสร็จสมบูรณ์
+                  {c.done_title}
                 </h4>
                 <p className="text-xs text-sand-600 dark:text-sand-400">
-                  ตรวจพบปัญหาหลักและเตรียมแนวทางแก้ไข 3 ขั้นตอนให้เรียบร้อยแล้ว
+                  {c.done_desc}
                 </p>
               </div>
             )}
@@ -306,7 +240,7 @@ export function PlantDoctorPrototype({
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <h4 className="text-base font-bold text-forest-950 dark:text-sand-50">
-                  ผลการวินิจฉัย (AI Diagnostic Result)
+                  {c.result_title}
                 </h4>
               </div>
               <div
@@ -315,7 +249,7 @@ export function PlantDoctorPrototype({
                 )}`}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
-                <span>ระดับความรุนแรง: {selectedPreset.diagnosis.severityLabel}</span>
+                <span>{fill(c.severity, { label: selectedPreset.diagnosis.severityLabel })}</span>
               </div>
             </div>
 
@@ -323,7 +257,7 @@ export function PlantDoctorPrototype({
             <div className="space-y-2">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-forest-800 dark:text-emerald-400">
-                  โรคและปัญหาที่พบ:
+                  {c.disease}
                 </span>
                 <h5 className="text-lg font-bold text-forest-900 dark:text-sand-100">
                   {selectedPreset.diagnosis.diseaseNameTh}{" "}
@@ -333,7 +267,7 @@ export function PlantDoctorPrototype({
                 </h5>
               </div>
               <div className="text-xs sm:text-sm text-sand-800 dark:text-sand-200 bg-white/70 dark:bg-forest-900/60 p-3 rounded-lg border border-emerald-100 dark:border-forest-800">
-                <strong className="text-forest-950 dark:text-sand-100">สาเหตุหลัก: </strong>
+                <strong className="text-forest-950 dark:text-sand-100">{c.cause}</strong>
                 {selectedPreset.diagnosis.cause}
               </div>
             </div>
@@ -342,7 +276,7 @@ export function PlantDoctorPrototype({
             <div className="space-y-2">
               <h5 className="text-xs sm:text-sm font-bold text-forest-900 dark:text-sand-100 flex items-center gap-1.5">
                 <ShieldAlert className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>แนวทางแก้ไข 3 ขั้นตอน (Action Plan)</span>
+                <span>{c.action_plan}</span>
               </h5>
               <div className="grid grid-cols-1 gap-2">
                 {selectedPreset.diagnosis.actionPlan.map((step, index) => (
@@ -362,7 +296,7 @@ export function PlantDoctorPrototype({
                 <Leaf className="w-4 h-4 text-emerald-700 dark:text-emerald-300 shrink-0 mt-0.5" />
                 <div>
                   <strong className="text-emerald-900 dark:text-emerald-200">
-                    สูตรธรรมชาติ / ยาอินทรีย์แนะนำ:{" "}
+                    {c.organic}
                   </strong>
                   <span className="text-forest-900 dark:text-sand-100">
                     {selectedPreset.diagnosis.organicRemedy}
@@ -374,7 +308,7 @@ export function PlantDoctorPrototype({
             {/* Prevention tips */}
             <div className="text-xs text-sand-600 dark:text-sand-400 flex items-center gap-1.5">
               <Info className="w-3.5 h-3.5 shrink-0" />
-              <span>คำแนะนำการป้องกัน: {selectedPreset.diagnosis.preventativeTips}</span>
+              <span>{fill(c.prevention, { tips: selectedPreset.diagnosis.preventativeTips })}</span>
             </div>
           </div>
         )}

@@ -16,6 +16,7 @@ import {
   Eye,
   ShoppingBag,
 } from "lucide-react";
+import { useDemoCopy } from "@/lib/i18n/demo";
 
 export interface TrendingPlant {
   id: string;
@@ -32,112 +33,41 @@ export interface SearchMiss {
   id: string;
   keyword: string;
   searchFrequency: number;
-  demandLevel: "ความต้องการสูงมาก" | "ความต้องการสูง" | "ความต้องการปานกลาง";
+  demandLevel: "very_high" | "high" | "medium";
   recommendation: string;
-  status: "รอจัดซื้อ" | "สั่งซื้อแล้ว" | "เปิดพรีออเดอร์";
 }
 
+// Metrics are language-independent; labels live in lib/i18n/demo/analytics.ts
+const TRENDING_META = [
+  { id: "tp-1", nameEn: "Monstera Deliciosa", viewCount: 1420, conversionRate: 8.4, revenueEst: 42600, trendPct: 24 },
+  { id: "tp-2", nameEn: "Ficus Elastica Variegata", viewCount: 1180, conversionRate: 7.2, revenueEst: 35400, trendPct: 18 },
+  { id: "tp-3", nameEn: "Sansevieria Golden Hahnii", viewCount: 960, conversionRate: 11.5, revenueEst: 28800, trendPct: 32 },
+  { id: "tp-4", nameEn: "Philodendron Florida", viewCount: 840, conversionRate: 6.8, revenueEst: 25200, trendPct: 12 },
+  { id: "tp-5", nameEn: "Zamioculcas Raven Variegata", viewCount: 720, conversionRate: 9.1, revenueEst: 21600, trendPct: 40 },
+];
+
+const MISS_META: Array<Pick<SearchMiss, "id" | "searchFrequency" | "demandLevel">> = [
+  { id: "sm-1", searchFrequency: 342, demandLevel: "very_high" },
+  { id: "sm-2", searchFrequency: 289, demandLevel: "high" },
+  { id: "sm-3", searchFrequency: 215, demandLevel: "medium" },
+  { id: "sm-4", searchFrequency: 184, demandLevel: "medium" },
+  { id: "sm-5", searchFrequency: 126, demandLevel: "medium" },
+];
+
 export function ShopAnalyticsPrototype() {
+  const c = useDemoCopy().analytics;
   const [timeframe, setTimeframe] = useState<"30d" | "7d" | "90d">("30d");
   const [addedToPO, setAddedToPO] = useState<Record<string, boolean>>({});
 
-  const trendingPlants: TrendingPlant[] = [
-    {
-      id: "tp-1",
-      nameTh: "มอนสเตอร่าไจแอนท์",
-      nameEn: "Monstera Deliciosa",
-      viewCount: 1420,
-      conversionRate: 8.4,
-      stockStatus: "พร้อมส่ง (18 ต้น)",
-      revenueEst: 42600,
-      trendPct: 24,
-    },
-    {
-      id: "tp-2",
-      nameTh: "ยางอินเดียด่าง",
-      nameEn: "Ficus Elastica Variegata",
-      viewCount: 1180,
-      conversionRate: 7.2,
-      stockStatus: "เหลือน้อย (4 ต้น)",
-      revenueEst: 35400,
-      trendPct: 18,
-    },
-    {
-      id: "tp-3",
-      nameTh: "ลิ้นมังกรขอบทอง",
-      nameEn: "Sansevieria Golden Hahnii",
-      viewCount: 960,
-      conversionRate: 11.5,
-      stockStatus: "พร้อมส่ง (42 ต้น)",
-      revenueEst: 28800,
-      trendPct: 32,
-    },
-    {
-      id: "tp-4",
-      nameTh: "ฟิโลเดนดรอนก้ามกุ้ง",
-      nameEn: "Philodendron Florida",
-      viewCount: 840,
-      conversionRate: 6.8,
-      stockStatus: "พร้อมส่ง (12 ต้น)",
-      revenueEst: 25200,
-      trendPct: 12,
-    },
-    {
-      id: "tp-5",
-      nameTh: "กวักมรกตดำด่าง",
-      nameEn: "Zamioculcas Raven Variegata",
-      viewCount: 720,
-      conversionRate: 9.1,
-      stockStatus: "เหลือน้อย (2 ต้น)",
-      revenueEst: 21600,
-      trendPct: 40,
-    },
-  ];
+  const trendingPlants: TrendingPlant[] = TRENDING_META.map((meta) => ({
+    ...meta,
+    nameTh: c.plants[meta.id].name,
+    stockStatus: c.plants[meta.id].stockStatus,
+  }));
 
   const maxViews = Math.max(...trendingPlants.map((p) => p.viewCount));
 
-  const initialSearchMisses: SearchMiss[] = [
-    {
-      id: "sm-1",
-      keyword: "หน้าวัวใบเงิน (Anthurium Clarinervium)",
-      searchFrequency: 342,
-      demandLevel: "ความต้องการสูงมาก",
-      recommendation: "แนะนำจัดซื้อด่วนจากสวนราชบุรี ขนาด 6-8 นิ้ว",
-      status: "รอจัดซื้อ",
-    },
-    {
-      id: "sm-2",
-      keyword: "มอนสเตอร่าอัลโบด่าง (Monstera Albo)",
-      searchFrequency: 289,
-      demandLevel: "ความต้องการสูง",
-      recommendation: "แนะนำเปิดพรีออเดอร์ตัดข้อรากแน่น",
-      status: "รอจัดซื้อ",
-    },
-    {
-      id: "sm-3",
-      keyword: "ต้นสนบลูไอซ์ (Cupressus Arizonica)",
-      searchFrequency: 215,
-      demandLevel: "ความต้องการปานกลาง",
-      recommendation: "เหมาะกับช่วงปลายฝนต้นหนาว รอประสานสวนเชียงใหม่",
-      status: "รอจัดซื้อ",
-    },
-    {
-      id: "sm-4",
-      keyword: "บอนสีราชินีใบไม้ (Caladium Bicolor Rare)",
-      searchFrequency: 184,
-      demandLevel: "ความต้องการปานกลาง",
-      recommendation: "สายสะสมตามหา แนะนำคัดฟอร์มกอดอก 5-10 กระถาง",
-      status: "รอจัดซื้อ",
-    },
-    {
-      id: "sm-5",
-      keyword: "เฟิร์นข้าหลวงสายพันธุ์ออสเตรเลีย",
-      searchFrequency: 126,
-      demandLevel: "ความต้องการปานกลาง",
-      recommendation: "ลูกค้างานจัดสวนถามหาบ่อย",
-      status: "รอจัดซื้อ",
-    },
-  ];
+  const initialSearchMisses: SearchMiss[] = MISS_META.map((meta) => ({ ...meta, ...c.misses[meta.id] }));
 
   const handleTogglePO = (id: string) => {
     setAddedToPO((prev) => ({
@@ -157,10 +87,10 @@ export function ShopAnalyticsPrototype() {
               <span>Phase 3 Platform Feature</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-serif font-bold text-white flex items-center gap-2">
-              <span>📊 สถิติร้านค้า & สินค้าที่ลูกค้าค้นหา</span>
+              <span>{c.title}</span>
             </h3>
             <p className="text-xs sm:text-sm text-sand-200 max-w-2xl">
-              แดชบอร์ดข้อมูลเชิงลึกสำหรับผู้ดูแลร้านค้า วิเคราะห์สินค้าขายดี อัตราคอนเวอร์ชัน และคำค้นหายอดนิยมที่ยังไม่มีสต็อกเพื่อวางแผนจัดซื้อสินค้าอย่างแม่นยำ
+              {c.subtitle}
             </p>
           </div>
 
@@ -176,7 +106,7 @@ export function ShopAnalyticsPrototype() {
                     : "bg-forest-800/80 text-sand-300 hover:bg-forest-700 border border-forest-700"
                 }`}
               >
-                {tf === "7d" ? "7 วัน" : tf === "30d" ? "30 วันล่าสุด" : "ไตรมาสนี้"}
+                {c.timeframes[tf]}
               </button>
             ))}
           </div>
@@ -190,20 +120,20 @@ export function ShopAnalyticsPrototype() {
             <div>
               <h4 className="text-base sm:text-lg font-serif font-bold text-forest-900 dark:text-sand-100 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>Top 5 พันธุ์ไม้ยอดนิยมประจำเดือน (Trending Species)</span>
+                <span>{c.trending_title}</span>
               </h4>
               <p className="text-xs text-sand-600 dark:text-sand-400">
-                สถิติจำนวนครั้งที่เปิดดู (Page Views) เทียบกับอัตราการกดสั่งซื้อสำเร็จ (Conversion Rate)
+                {c.trending_subtitle}
               </p>
             </div>
             <div className="flex items-center gap-4 text-xs">
               <span className="flex items-center gap-1.5 text-sand-600 dark:text-sand-400">
                 <span className="w-3 h-3 rounded-sm bg-forest-700 dark:bg-emerald-500 inline-block" />
-                <span>ยอดเข้าชม (Views)</span>
+                <span>{c.legend_views}</span>
               </span>
               <span className="flex items-center gap-1.5 text-sand-600 dark:text-sand-400">
                 <span className="w-3 h-3 rounded-sm bg-gold-400 inline-block" />
-                <span>Conversion Rate (%)</span>
+                <span>{c.legend_cvr}</span>
               </span>
             </div>
           </div>
@@ -229,7 +159,7 @@ export function ShopAnalyticsPrototype() {
                     <div className="flex items-center gap-4 text-xs font-mono">
                       <span className="text-forest-800 dark:text-sand-200 flex items-center gap-1">
                         <Eye className="w-3.5 h-3.5 text-forest-600 dark:text-emerald-400" />
-                        <strong>{plant.viewCount.toLocaleString()}</strong> วิว
+                        <strong>{plant.viewCount.toLocaleString()}</strong> {c.views}
                       </span>
                       <span className="px-2 py-0.5 rounded bg-gold-100 dark:bg-gold-950/80 text-gold-900 dark:text-gold-300 font-bold border border-gold-300/40">
                         {plant.conversionRate}% CVR
@@ -259,15 +189,15 @@ export function ShopAnalyticsPrototype() {
             <div>
               <h4 className="text-base sm:text-lg font-serif font-bold text-forest-900 dark:text-sand-100 flex items-center gap-2">
                 <Search className="w-4 h-4 text-forest-700 dark:text-emerald-400" />
-                <span>คำค้นหายอดนิยมที่ยังไม่มีในสต็อก (Search Misses & Demand)</span>
+                <span>{c.misses_title}</span>
               </h4>
               <p className="text-xs text-sand-600 dark:text-sand-400">
-                ข้อมูลคำค้นที่ลูกค้าค้นหาในระบบแต่ยังไม่พบสินค้า เพื่อเป็นแนวทางเติมสต็อกและจัดซื้อต้นไม้ใหม่
+                {c.misses_subtitle}
               </p>
             </div>
             <div className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 px-3 py-1 rounded-lg border border-amber-200 dark:border-amber-800">
               <AlertCircle className="w-3.5 h-3.5" />
-              <span>โอกาสสูญเสียรายได้โดยประมาณ: ฿85,000 / เดือน</span>
+              <span>{c.lost_revenue}</span>
             </div>
           </div>
 
@@ -275,11 +205,11 @@ export function ShopAnalyticsPrototype() {
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-sand-100/80 dark:bg-forest-800/70 text-forest-900 dark:text-sand-200 border-b border-sand-200 dark:border-forest-700 font-semibold">
-                  <th className="p-3 sm:p-4">คำค้นหา / สายพันธุ์</th>
-                  <th className="p-3 sm:p-4">ความถี่การค้นหา</th>
-                  <th className="p-3 sm:p-4">ระดับความต้องการ</th>
-                  <th className="p-3 sm:p-4 hidden md:table-cell">ข้อเสนอแนะจัดซื้อ</th>
-                  <th className="p-3 sm:p-4 text-center">การดำเนินการ</th>
+                  <th className="p-3 sm:p-4">{c.col_keyword}</th>
+                  <th className="p-3 sm:p-4">{c.col_frequency}</th>
+                  <th className="p-3 sm:p-4">{c.col_demand}</th>
+                  <th className="p-3 sm:p-4 hidden md:table-cell">{c.col_recommendation}</th>
+                  <th className="p-3 sm:p-4 text-center">{c.col_action}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-sand-200 dark:divide-forest-800 bg-white dark:bg-forest-900">
@@ -297,19 +227,19 @@ export function ShopAnalyticsPrototype() {
                         <span className="font-bold text-forest-800 dark:text-emerald-400">
                           {miss.searchFrequency}
                         </span>{" "}
-                        <span className="text-sand-500 text-[11px]">ครั้ง/เดือน</span>
+                        <span className="text-sand-500 text-[11px]">{c.per_month}</span>
                       </td>
                       <td className="p-3 sm:p-4">
                         <span
                           className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-                            miss.demandLevel === "ความต้องการสูงมาก"
+                            miss.demandLevel === "very_high"
                               ? "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800"
-                              : miss.demandLevel === "ความต้องการสูง"
+                              : miss.demandLevel === "high"
                               ? "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
                               : "bg-sand-100 text-sand-800 border-sand-300 dark:bg-forest-800 dark:text-sand-300 dark:border-forest-700"
                           }`}
                         >
-                          {miss.demandLevel}
+                          {c.demand[miss.demandLevel]}
                         </span>
                       </td>
                       <td className="p-3 sm:p-4 text-sand-600 dark:text-sand-400 hidden md:table-cell">
@@ -328,12 +258,12 @@ export function ShopAnalyticsPrototype() {
                           {isAdded ? (
                             <>
                               <CheckCircle2 className="w-3 h-3" />
-                              <span>เพิ่มใน PO แล้ว</span>
+                              <span>{c.added_to_po}</span>
                             </>
                           ) : (
                             <>
                               <PackagePlus className="w-3 h-3" />
-                              <span>เพิ่มในรายการจัดซื้อ</span>
+                              <span>{c.add_to_po}</span>
                             </>
                           )}
                         </button>

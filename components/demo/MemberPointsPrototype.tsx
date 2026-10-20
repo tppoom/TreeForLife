@@ -16,6 +16,7 @@ import {
   Coins,
   Package,
 } from "lucide-react";
+import { useDemoCopy, fill } from "@/lib/i18n/demo";
 
 export interface RewardItem {
   id: string;
@@ -27,59 +28,33 @@ export interface RewardItem {
   badge?: string;
 }
 
+// Costs and stock are language-independent; names and descriptions live in lib/i18n/demo/points.ts
+const REWARD_META: Array<{ id: string; cost: number; stockLeft: number }> = [
+  { id: "reward-pot", cost: 150, stockLeft: 8 },
+  { id: "reward-fert", cost: 200, stockLeft: 15 },
+  { id: "reward-discount", cost: 300, stockLeft: 20 },
+  { id: "reward-shears", cost: 450, stockLeft: 5 },
+];
+
 export function MemberPointsPrototype() {
+  const c = useDemoCopy().points;
   const [points, setPoints] = useState<number>(350);
   const [streakDays, setStreakDays] = useState<number>(14);
-  const [redeemedReward, setRedeemedReward] = useState<{
-    name: string;
+  const [redeemed, setRedeemed] = useState<{
+    rewardId: string;
     code: string;
     cost: number;
   } | null>(null);
 
-  const rewards: RewardItem[] = [
-    {
-      id: "reward-pot",
-      name: "กระถางดินเผาแฮนด์เมด 6 นิ้ว",
-      category: "อุปกรณ์ปลูก",
-      cost: 150,
-      description: "ดินเผาระบายอากาศทรงโมเดิร์น พร้อมจานรองดินเผาเคลือบด้าน",
-      stockLeft: 8,
-      badge: "ยอดนิยม",
-    },
-    {
-      id: "reward-fert",
-      name: "ชุดปุ๋ยออร์แกนิคบำรุงใบ",
-      category: "บำรุงรักษา",
-      cost: 200,
-      description: "ปุ๋ยมูลไส้เดือนสกัดเย็นและธาตุอาหารรอง สูตรใบเขียวเงางาม",
-      stockLeft: 15,
-      badge: "ออร์แกนิค 100%",
-    },
-    {
-      id: "reward-discount",
-      name: "คูปองส่วนลด 15%",
-      category: "ส่วนลดพิเศษ",
-      cost: 300,
-      description: "ใช้เป็นส่วนลดสำหรับการสั่งซื้อต้นไม้หรือบริการจัดสวน (ไม่มีขั้นต่ำ)",
-      stockLeft: 20,
-      badge: "คุ้มค่าที่สุด",
-    },
-    {
-      id: "reward-shears",
-      name: "กรรไกรตัดแต่งกิ่งสแตนเลสสตีล",
-      category: "เครื่องมือทำสวน",
-      cost: 450,
-      description: "ใบมีดสแตนเลสเกรดพรีเมียม ด้ามจับไม้สักแท้ สัมผัสหรูหรา",
-      stockLeft: 5,
-    },
-  ];
+  const rewards: RewardItem[] = REWARD_META.map((meta) => ({ ...meta, ...c.rewards[meta.id] }));
+  const redeemedReward = redeemed && { ...redeemed, name: c.rewards[redeemed.rewardId].name };
 
   const handleRedeem = (reward: RewardItem) => {
     if (points >= reward.cost) {
       const code = `TFL-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
       setPoints((prev) => prev - reward.cost);
-      setRedeemedReward({
-        name: reward.name,
+      setRedeemed({
+        rewardId: reward.id,
         code,
         cost: reward.cost,
       });
@@ -97,16 +72,16 @@ export function MemberPointsPrototype() {
               <span>Phase 3 Platform Feature</span>
             </div>
             <h3 className="text-xl sm:text-2xl font-serif font-bold text-white flex items-center gap-2">
-              <span>💎 บัตรสมาชิก & แต้มสะสม Green Club</span>
+              <span>{c.title}</span>
             </h3>
             <p className="text-xs sm:text-sm text-sand-200 max-w-2xl">
-              ระบบสมาชิกพรีเมียม สะสมคะแนนจากการดูแลต้นไม้ประจำวัน เช็คอินรดน้ำต่อเนื่อง และแลกรับของรางวัลพิเศษสำหรับชาว Green Club
+              {c.subtitle}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <span className="px-3 py-1.5 bg-forest-700/80 rounded-lg text-xs font-medium text-emerald-300 flex items-center gap-1.5 border border-forest-600">
               <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-              <span>Emerald Tier Member</span>
+              <span>{c.tier_badge}</span>
             </span>
           </div>
         </div>
@@ -133,7 +108,7 @@ export function MemberPointsPrototype() {
               </div>
               <div className="flex items-center gap-2 bg-forest-800/80 px-3 py-1 rounded-full border border-gold-500/40 text-xs text-gold-300">
                 <ShieldCheck className="w-4 h-4 text-gold-400" />
-                <span>ระดับ Emerald</span>
+                <span>{c.tier}</span>
               </div>
             </div>
 
@@ -142,30 +117,30 @@ export function MemberPointsPrototype() {
               <div className="bg-forest-950/50 p-4 rounded-xl border border-forest-700/60 backdrop-blur-sm">
                 <span className="text-xs text-sand-300 flex items-center gap-1.5 mb-1">
                   <Coins className="w-3.5 h-3.5 text-gold-400" />
-                  <span>แต้มสะสมปัจจุบัน</span>
+                  <span>{c.points_label}</span>
                 </span>
                 <div className="text-3xl sm:text-4xl font-bold font-mono text-gold-300">
-                  {`${points} แต้ม`}
+                  {fill(c.points, { count: points })}
                 </div>
                 <div className="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
                   <Sparkles className="w-3 h-3" />
-                  <span>+15 แต้มจากการบันทึกรดน้ำสัปดาห์นี้</span>
+                  <span>{c.weekly_bonus}</span>
                 </div>
               </div>
 
               <div className="bg-forest-950/50 p-4 rounded-xl border border-forest-700/60 backdrop-blur-sm">
                 <span className="text-xs text-sand-300 flex items-center gap-1.5 mb-1">
                   <Flame className="w-3.5 h-3.5 text-amber-400" />
-                  <span>สถิติเช็คอินดูแลต้นไม้</span>
+                  <span>{c.streak_label}</span>
                 </span>
                 <div className="text-2xl sm:text-3xl font-bold font-mono text-sand-100 flex items-center gap-2">
-                  <span>{`${streakDays} วัน`}</span>
+                  <span>{fill(c.streak, { count: streakDays })}</span>
                   <span className="text-xs font-normal text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded-full border border-amber-500/30">
-                    🔥 ติดต่อกัน
+                    {c.streak_badge}
                   </span>
                 </div>
                 <div className="text-[11px] text-sand-400 mt-1">
-                  รดน้ำและบันทึกครบอีก 1 วัน เพื่อรับโบนัส +50 แต้ม
+                  {c.streak_hint}
                 </div>
               </div>
             </div>
@@ -176,7 +151,7 @@ export function MemberPointsPrototype() {
                 ID: TFL-MEMBER-8829-TH
               </div>
               <div className="flex items-center gap-2 text-[11px]">
-                <span>รหัสบาร์โค้ดสมาชิกร้าน: พร้อมสแกน</span>
+                <span>{c.barcode}</span>
                 <QrCode className="w-4 h-4 text-sand-200" />
               </div>
             </div>
@@ -192,19 +167,19 @@ export function MemberPointsPrototype() {
               </div>
               <div>
                 <h5 className="text-sm font-bold text-emerald-900 dark:text-emerald-200">
-                  แลกรับสำเร็จ! คุณได้รับสิทธิ์ &quot;{redeemedReward.name}&quot;
+                  {fill(c.redeemed_title, { name: redeemedReward.name })}
                 </h5>
                 <p className="text-xs text-emerald-800 dark:text-emerald-300">
-                  รหัสคูปอง: <span className="font-mono font-bold bg-white dark:bg-forest-900 px-2 py-0.5 rounded border border-emerald-400">{redeemedReward.code}</span> (หักคะแนน {redeemedReward.cost} แต้มเรียบร้อย)
+                  {c.coupon_code} <span className="font-mono font-bold bg-white dark:bg-forest-900 px-2 py-0.5 rounded border border-emerald-400">{redeemedReward.code}</span> {fill(c.deducted, { count: redeemedReward.cost })}
                 </p>
               </div>
             </div>
             <button
               type="button"
-              onClick={() => setRedeemedReward(null)}
+              onClick={() => setRedeemed(null)}
               className="px-3 py-1.5 text-xs text-emerald-800 dark:text-emerald-300 hover:bg-emerald-200/50 rounded-lg transition"
             >
-              ปิดการแจ้งเตือน
+              {c.dismiss}
             </button>
           </div>
         )}
@@ -215,14 +190,14 @@ export function MemberPointsPrototype() {
             <div>
               <h4 className="text-base sm:text-lg font-serif font-bold text-forest-900 dark:text-sand-100 flex items-center gap-2">
                 <Gift className="w-4 h-4 text-forest-700 dark:text-emerald-400" />
-                <span>ของรางวัลที่แลกได้ (Redeemable Rewards)</span>
+                <span>{c.rewards_title}</span>
               </h4>
               <p className="text-xs text-sand-600 dark:text-sand-400">
-                ใช้แต้มสะสม Green Club เพื่อแลกรับสิทธิประโยชน์และสินค้าพฤกษศาสตร์พิเศษ
+                {c.rewards_subtitle}
               </p>
             </div>
             <span className="text-xs text-sand-500 dark:text-sand-400">
-              แต้มคงเหลือ: <strong className="text-forest-900 dark:text-emerald-400 font-mono">{`${points} แต้ม`}</strong>
+              {c.balance} <strong className="text-forest-900 dark:text-emerald-400 font-mono">{fill(c.points, { count: points })}</strong>
             </span>
           </div>
 
@@ -262,10 +237,10 @@ export function MemberPointsPrototype() {
                   <div className="pt-4 mt-2 border-t border-sand-200/60 dark:border-forest-800/80 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-base font-bold font-mono text-forest-900 dark:text-emerald-400">
-                        {`${reward.cost} แต้ม`}
+                        {fill(c.points, { count: reward.cost })}
                       </span>
                       <span className="text-[11px] text-sand-500 dark:text-sand-400">
-                        เหลือ {reward.stockLeft} ชิ้น
+                        {fill(c.stock_left, { count: reward.stockLeft })}
                       </span>
                     </div>
 
@@ -281,7 +256,7 @@ export function MemberPointsPrototype() {
                       }`}
                     >
                       <Gift className="w-3.5 h-3.5" />
-                      <span>{canAfford ? "แลกรับรางวัล" : "แต้มไม่เพียงพอ"}</span>
+                      <span>{canAfford ? c.redeem : c.not_enough}</span>
                     </button>
                   </div>
                 </div>

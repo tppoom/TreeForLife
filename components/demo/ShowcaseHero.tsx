@@ -1,5 +1,6 @@
 import React from "react";
 import { Sparkles } from "lucide-react";
+import { useDemoCopy } from "@/lib/i18n/demo";
 
 export interface ShowcaseHeroProps {
   activeTab: "all" | "phase1" | "phase2" | "phase3";
@@ -7,11 +8,12 @@ export interface ShowcaseHeroProps {
 }
 
 export function ShowcaseHero({ activeTab, onTabChange }: ShowcaseHeroProps) {
+  const c = useDemoCopy().hub;
   const tabs = [
-    { id: "all", label: "ทั้งหมด (All Phases)" },
-    { id: "phase1", label: "Phase 1: ระบบหลัก" },
-    { id: "phase2", label: "Phase 2: AI อัจฉริยะ" },
-    { id: "phase3", label: "Phase 3: ชุมชน & เติบโต" },
+    { id: "all", label: c.tab_all },
+    { id: "phase1", label: c.tab_phase1 },
+    { id: "phase2", label: c.tab_phase2 },
+    { id: "phase3", label: c.tab_phase3 },
   ] as const;
 
   return (
@@ -19,13 +21,13 @@ export function ShowcaseHero({ activeTab, onTabChange }: ShowcaseHeroProps) {
       <div className="max-w-6xl mx-auto text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 text-xs font-semibold">
           <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-          <span>Interactive All-Phases Prototype</span>
+          <span>{c.badge}</span>
         </div>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-forest-900 dark:text-sand-50 tracking-tight">
           🌿 TreeForLife Experience Hub
         </h1>
         <p className="max-w-2xl mx-auto text-base sm:text-lg text-sand-700 dark:text-sand-300">
-          ภาพรวมโครงการครบทุกเฟสของร้านต้นไม้ ทดลองสัมผัสประสบการณ์ฟีเจอร์ AI และระบบการดูแลต้นไม้อัจฉริยะล่วงหน้าได้ในหน้าเดียว
+          {c.intro}
         </p>
 
         {/* Filter Tabs */}

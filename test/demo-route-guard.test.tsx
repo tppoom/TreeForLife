@@ -4,6 +4,7 @@ import { renderToString } from "react-dom/server";
 import { AppProvider } from "../lib/context/AppContext";
 import DemoPage from "../app/demo/page";
 import { ShowcaseHero } from "../components/demo/ShowcaseHero";
+import { AppContextProvider } from "../lib/context/AppContext";
 
 const mockReplace = vi.fn();
 const mockPush = vi.fn();
@@ -30,7 +31,7 @@ vi.mock("next/link", () => ({
 let currentHtml = "";
 
 function render(component: React.ReactElement) {
-  currentHtml = renderToString(component);
+  currentHtml = renderToString(<AppContextProvider>{component}</AppContextProvider>);
   return { html: currentHtml };
 }
 

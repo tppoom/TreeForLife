@@ -14,6 +14,7 @@ import { QuoteRequestPrototype } from "@/components/demo/QuoteRequestPrototype";
 import { CommunityBoardPrototype } from "@/components/demo/CommunityBoardPrototype";
 import { MemberPointsPrototype } from "@/components/demo/MemberPointsPrototype";
 import { ShopAnalyticsPrototype } from "@/components/demo/ShopAnalyticsPrototype";
+import { useDemoCopy } from "@/lib/i18n/demo";
 
 export interface ShowcaseHubViewProps {
   initialTab?: "all" | "phase1" | "phase2" | "phase3";
@@ -22,6 +23,7 @@ export interface ShowcaseHubViewProps {
 export function ShowcaseHubView({ initialTab }: ShowcaseHubViewProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const c = useDemoCopy().hub;
   const queryTab = searchParams?.get("tab") as ("all" | "phase1" | "phase2" | "phase3") | null;
   const [activeTab, setActiveTab] = useState<"all" | "phase1" | "phase2" | "phase3">(
     initialTab || (queryTab && ["all", "phase1", "phase2", "phase3"].includes(queryTab) ? queryTab : "all")
@@ -64,10 +66,10 @@ export function ShowcaseHubView({ initialTab }: ShowcaseHubViewProps = {}) {
                   <span>Phase 2 AI Suite</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold text-forest-900 dark:text-sand-50">
-                  Phase 2: ฟีเจอร์ AI อัจฉริยะ
+                  {c.phase2_title}
                 </h2>
                 <p className="text-sm sm:text-base text-sand-700 dark:text-sand-300 mt-1">
-                  สัมผัสประสบการณ์เทคโนโลยี AI สำหรับการดูแลต้นไม้ วินิจฉัยโรค ออกแบบสวน และจัดสรรงบประมาณ
+                  {c.phase2_desc}
                 </p>
               </div>
 
@@ -93,10 +95,10 @@ export function ShowcaseHubView({ initialTab }: ShowcaseHubViewProps = {}) {
                   <span>Phase 3 Platform & Community</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-serif font-bold text-forest-900 dark:text-sand-50">
-                  Phase 3: ชุมชนและการเติบโต
+                  {c.phase3_title}
                 </h2>
                 <p className="text-sm sm:text-base text-sand-700 dark:text-sand-300 mt-1">
-                  เครื่องมือสำหรับขยายธุรกิจ ขับเคลื่อนคอมมูนิตี้คนรักต้นไม้ ระบบสมาชิก และการวิเคราะห์หน้าร้าน
+                  {c.phase3_desc}
                 </p>
               </div>
 
