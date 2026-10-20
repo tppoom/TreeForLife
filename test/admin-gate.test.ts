@@ -40,7 +40,23 @@ describe("Back-office middleware gate (production)", () => {
     expect(res.headers.get("x-middleware-next")).toBe("1");
   });
 
+  it("asks for the admin password when LINE Login is not configured", async () => {
+    vi.stubEnv("ADMIN_PASSWORD", "s3cret-pass");
+    vi.stubEnv("LINE_LOGIN_CHANNEL_ID", "");
+    const res = await middleware(request("/admin"));
+    expect(res.status).toBe(401);
+    expect(res.headers.get("www-authenticate")).toMatch(/^Basic /);
+
+    const ok = await middleware(
+      new NextRequest("https://shop.example/admin", {
+        headers: { authorization: `Basic ${btoa("staff:s3cret-pass")}` },
+      })
+    );
+    expect(ok.headers.get("x-middleware-next")).toBe("1");
+  });
+
   it("redirects anonymous page requests to LINE Login", async () => {
+    vi.stubEnv("LINE_LOGIN_CHANNEL_ID", "1234567890");
     const res = await middleware(request("/admin"));
     expect(res.status).toBe(307);
     expect(res.headers.get("location")).toContain("/api/auth/line/login?next=%2Fadmin");

@@ -58,6 +58,14 @@ export async function middleware(req: NextRequest) {
         { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
+    // Without LINE Login configured, a redirect would land on LINE's error page and the
+    // browser would never offer the ADMIN_PASSWORD prompt; challenge with Basic Auth instead.
+    if (!process.env.LINE_LOGIN_CHANNEL_ID && password) {
+      return new NextResponse("Authentication required.", {
+        status: 401,
+        headers: { "WWW-Authenticate": 'Basic realm="TreeForLife Admin", charset="UTF-8"' },
+      });
+    }
     // Redirect page requests to login
     return NextResponse.redirect(
       new URL(`/api/auth/line/login?next=${encodeURIComponent(pathname)}`, req.nextUrl.origin)
