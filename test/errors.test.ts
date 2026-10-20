@@ -75,3 +75,12 @@ describe("apiErrorMessage", () => {
     expect(apiErrorMessage(null, "fallback")).toBe("fallback");
   });
 });
+
+describe("toErrorResponse with a malformed body", () => {
+  it("maps the SyntaxError from req.json() to 400 instead of 500", async () => {
+    const err = await new Request("https://example.com", { method: "POST", body: "{bad" }).json().catch((e) => e);
+    const res = toErrorResponse(err);
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe("VALIDATION_ERROR");
+  });
+});

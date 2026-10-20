@@ -23,7 +23,7 @@ TreeForLife is a bilingual (Thai/English) boutique plant shop + plant-care web a
 A comprehensive `Makefile` is available. You can run `make` or `make help` to inspect all targets.
 
 - `make dev` (or `npm run dev`) — starts Next.js dev server (self-bootstraps embedded PGlite on port 3000)
-- `make test` (or `npm run test`) — runs full Vitest suite (all 301 tests)
+- `make test` (or `npm run test`) — runs full Vitest suite (all 302 tests)
 - `make test-watch` (or `npm run test:watch`) — runs Vitest in watch mode
 - `make test-e2e` (or `npm run test:e2e`) — runs Playwright: the main suite against a demo-mode dev server and `e2e/production-mode.spec.ts` against a second production-mode server on port+1 (own `.next-e2e-prod` build dir and `.data/pglite-e2e-prod` database)
 - `make build` (or `npm run build`) — runs Next.js production build (compiles all 12 routes, checks TS validity)
@@ -93,6 +93,6 @@ TreeForLife has **two schema sources that must stay strictly in sync**:
 ## 7. Quality & Verification Protocol
 
 Always verify the following before finishing any work:
-1. `npm run test` passes 100% (all 301 tests green).
+1. `npm run test` passes 100% (all 302 tests green).
 2. `npm run build` compiles cleanly with zero TypeScript errors.
 3. No untracked schema discrepancies between `db/schema.ts` and `lib/db/schema-ddl.ts`.

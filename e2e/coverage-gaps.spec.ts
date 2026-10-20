@@ -185,7 +185,8 @@ test.describe("API robustness", () => {
     test(`${path} answers malformed JSON with 4xx, not 500`, async ({ request }) => {
       const res = await request.post(path, {
         headers: { "content-type": "application/json", "x-guest-token": uuid() },
-        data: "{not json",
+        // A Buffer is sent as-is; a plain string would be JSON-encoded into valid JSON
+        data: Buffer.from("{not json"),
       });
       expect(res.status(), path).toBeGreaterThanOrEqual(400);
       expect(res.status(), path).toBeLessThan(500);

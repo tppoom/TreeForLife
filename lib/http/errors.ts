@@ -32,6 +32,14 @@ export function toErrorResponse(error: unknown): Response {
     );
   }
 
+  // Malformed request body: req.json() throws SyntaxError. That is the client's fault, not ours.
+  if (error instanceof SyntaxError) {
+    return Response.json(
+      { error: { code: "VALIDATION_ERROR", message: "รูปแบบข้อมูล JSON ไม่ถูกต้อง" } },
+      { status: 400 }
+    );
+  }
+
   // Never leak raw DB error messages or stack traces in production
   console.error("[Internal Server Error]:", error);
   return Response.json(
