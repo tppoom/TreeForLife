@@ -11,11 +11,11 @@
 | Vercel project | `treeforlife-app` (team `tppooms-projects`, region `sin1`) — **ไม่ใช่** project `tree-for-life` ซึ่งเป็นโค้ดอีกชุด |
 | Supabase project | `treeforlife-app` (ref `bhjearzlvtydtopaqpmg`, Singapore) · RLS เปิดทุกตาราง (Data API อ่านไม่ได้) |
 | Credentials | อยู่ในเครื่องผู้ดูแลที่ `~/.treeforlife-prod-credentials` (ย้ายเข้า password manager) |
+| Demo (Showcase) | https://treeforlife-demo.vercel.app — project `treeforlife-demo` (`NEXT_PUBLIC_APP_MODE=demo`) · **เชื่อม GitHub แล้ว: push เข้า `main` = deploy production อัตโนมัติ** |
 
-> ⚠️ **Vercel Hobby บล็อก deployment (`TEAM_ACCESS_REQUIRED`) ถ้าอีเมลผู้ commit ไม่ใช่อีเมลที่ยืนยันในบัญชี Vercel** — แก้ถาวรโดยเพิ่มอีเมล git (`git config user.email`) ใน Vercel → Account Settings → Emails แล้วเชื่อม GitHub App กับ repo (Vercel → Project → Settings → Git) เพื่อให้ push แล้ว deploy อัตโนมัติ · ระหว่างนี้ deploy จากสำเนาที่ไม่มี `.git`:
-> ```bash
-> D=$(mktemp -d) && git archive HEAD | tar -x -C $D && cp -r .vercel $D/ && (cd $D && vercel deploy --prod --yes)
-> ```
+> ⚠️ **Vercel Hobby บล็อก deployment (`TEAM_ACCESS_REQUIRED`) ถ้าอีเมลผู้ commit ไม่ใช่อีเมลที่ยืนยันในบัญชี Vercel** — เพิ่มอีเมล git (`git config user.email`) ใน Vercel → Account Settings → Emails (ทำแล้วสำหรับ `tp.thanapoom@gmail.com`)
+>
+> `treeforlife-app` ยังไม่ได้เชื่อม GitHub — deploy ด้วย `vercel deploy --prod` จนกว่าจะเชื่อมใน Vercel → Project → Settings → Git
 
 ---
 
