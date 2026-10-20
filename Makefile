@@ -96,7 +96,7 @@ lint: ## Run linter
 # 4. TESTING SUITES (VITEST)
 # ------------------------------------------------------------------------------
 
-test: ## Run the complete Vitest test suite (all 303 tests)
+test: ## Run the complete Vitest test suite (all 307 tests)
 	@echo -e "$(CYAN)Running all test suites...$(RESET)"
 	@npm run test
 

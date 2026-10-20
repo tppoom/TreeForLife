@@ -4,6 +4,7 @@ import path from "path";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { LINE_OA_HANDLE, LINE_OA_URL } from "@/lib/line/formatters";
 import {
   ScrollText,
   ArrowLeft,
@@ -495,7 +496,7 @@ export default async function TermsPage({
 
         {/* Main Content Container in Botanical Luxury Card */}
         <div className="p-6 sm:p-10 rounded-3xl bg-white/90 dark:bg-forest-900/50 border border-sand-200 dark:border-forest-800/80 shadow-card backdrop-blur-sm">
-          <TermsMarkdownRenderer markdown={termsContent} />
+          <TermsMarkdownRenderer markdown={termsContent.replaceAll("{{LINE_OA}}", LINE_OA_HANDLE)} />
         </div>
 
         {/* Bottom Contact Footer */}
@@ -512,7 +513,7 @@ export default async function TermsPage({
           </div>
 
           <a
-            href="https://line.me/R/ti/p/@treeforlife"
+            href={LINE_OA_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] shadow-sm transition active:scale-95 min-h-[40px] shrink-0"

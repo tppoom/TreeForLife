@@ -82,7 +82,9 @@
 | `ADMIN_PASSWORD` | ✅ prod | middleware | รหัสเข้า `/admin` (username อะไรก็ได้) · ถ้ายังไม่ตั้ง `LINE_LOGIN_CHANNEL_ID` เบราว์เซอร์จะขึ้นช่องใส่รหัส (401 Basic) แทนการ redirect ไป LINE Login · **ไม่ตั้ง = หลังบ้านถูกปิดใน production** |
 | `SESSION_SECRET` | ✅ prod | auth, middleware | กุญแจเซ็น session cookie (HS256) ยาว **≥ 32 ตัวอักษร** สุ่มด้วย `openssl rand -base64 48` · **ไม่ตั้งใน production = ปฏิเสธทุก session (login LINE ใช้ไม่ได้)** เพราะค่า default ใน repo เป็นสาธารณะ |
 | `NEXT_PUBLIC_SITE_URL` | ✅ | sitemap, robots, OG | เช่น `https://tree-for-life.vercel.app` หรือโดเมนจริง |
-| `NEXT_PUBLIC_LINE_OA_ID` | ✅ | ปุ่มถามร้าน | ID ของ LINE OA **ไม่ต้องมี `@`** (โค้ดเติมให้ในลิงก์) |
+| `NEXT_PUBLIC_LINE_OA_ID` | ✅ | ปุ่มถามร้าน, footer, privacy/terms | Basic/Premium ID ของ LINE OA (มีหรือไม่มี `@` ก็ได้) — ทุกลิงก์และชื่อ OA ในเว็บอ่านจากค่านี้ (`lib/line/formatters.ts`, `{{LINE_OA}}` ใน `content/*.md`) |
+| `LINE_MESSAGING_CHANNEL_SECRET` / `_ACCESS_TOKEN` | สำหรับแจ้งเตือน LINE | `/api/line/webhook`, push | ไม่ตั้ง = webhook ตอบ 503 ใน production (ไม่รับ event ที่ไม่มีลายเซ็น) และไม่ส่งแจ้งเตือนทาง LINE |
+| `LINE_LOGIN_CHANNEL_ID` / `_SECRET` | สำหรับ LINE Login | `/api/auth/line/*` | callback: `https://<domain>/api/auth/line/callback` |
 | `NEXT_PUBLIC_APP_MODE` | เสริม | client/server | `production` (default สะอาดจริง) หรือ `demo` (เปิด Showcase Hub ที่ `/demo`) — ดู §0.1 |
 | `NEXT_PUBLIC_SUPABASE_URL` | แนะนำ (รูป CMS) | client/server | Supabase Project URL (`https://<project-ref>.supabase.co`) สำหรับดึงรูปภาพสาธารณะ |
 | `SUPABASE_SERVICE_ROLE_KEY` | ✅ prod (รูป CMS) | server | Service Role Key ใช้สร้าง Signed Upload URL และลบรูปใน bucket `species-media` (หากไม่ตั้งจะใช้ Mock Provider ใน dev อัตโนมัติ) |

@@ -20,11 +20,16 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get("x-line-signature");
   const channelSecret = process.env.LINE_MESSAGING_CHANNEL_SECRET || "";
 
-  // Verify signature if secret is configured and not in test bypass
-  if (channelSecret && process.env.NODE_ENV === "production") {
+  // Events can mark care tasks done, so an unsigned request must never be processed in
+  // production. Without a secret configured the webhook is closed there; local dev and
+  // tests may post unsigned events.
+  const isProd = process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production";
+  if (channelSecret) {
     if (!signature || !verifyLineSignature(rawBody, signature, channelSecret)) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
+  } else if (isProd) {
+    return NextResponse.json({ error: "LINE webhook is not configured" }, { status: 503 });
   }
 
   let body: any;

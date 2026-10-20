@@ -118,3 +118,58 @@ describe("Cron endpoint auth", () => {
     expect(verifyCronAuth(req("Bearer s3cret"))).toBe(true);
   });
 });
+
+describe("LINE webhook signature", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  const post = async (headers: Record<string, string> = {}) => {
+    const { POST } = await import("../app/api/line/webhook/route");
+    return POST(
+      new NextRequest("https://shop.example/api/line/webhook", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...headers },
+        body: JSON.stringify({ events: [] }),
+      })
+    );
+  };
+
+  it("is closed in production when no channel secret is configured", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    vi.stubEnv("LINE_MESSAGING_CHANNEL_SECRET", "");
+    expect((await post()).status).toBe(503);
+  });
+
+  it("rejects unsigned or wrongly signed events once a secret is set", async () => {
+    vi.stubEnv("LINE_MESSAGING_CHANNEL_SECRET", "channel-secret");
+    expect((await post()).status).toBe(401);
+    expect((await post({ "x-line-signature": "bogus" })).status).toBe(401);
+  });
+
+  it("accepts a correctly signed event", async () => {
+    vi.stubEnv("LINE_MESSAGING_CHANNEL_SECRET", "channel-secret");
+    const crypto = await import("crypto");
+    const body = JSON.stringify({ events: [] });
+    const signature = crypto.createHmac("sha256", "channel-secret").update(body).digest("base64");
+    expect((await post({ "x-line-signature": signature })).status).toBe(200);
+  });
+});
+
+describe("LINE OA links", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  it("build every link from NEXT_PUBLIC_LINE_OA_ID, with or without a leading @", async () => {
+    vi.stubEnv("NEXT_PUBLIC_LINE_OA_ID", "@123abcde");
+    vi.resetModules();
+    const f = await import("../lib/line/formatters");
+    expect(f.LINE_OA_HANDLE).toBe("@123abcde");
+    expect(f.LINE_OA_URL).toBe("https://line.me/R/ti/p/@123abcde");
+    expect(f.lineOaMessageUrl("สวัสดี")).toBe(
+      `https://line.me/R/oaMessage/@123abcde/?${encodeURIComponent("สวัสดี")}`
+    );
+  });
+});

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { Sprout, MessageCircle, Clock, MapPin, ExternalLink, Shield } from "lucide-react";
 import { useApp } from "@/lib/context/AppContext";
+import { LINE_OA_HANDLE, LINE_OA_URL } from "@/lib/line/formatters";
 
 export function Footer() {
   const { t, locale } = useApp();
@@ -130,7 +131,7 @@ export function Footer() {
               </p>
 
               <a
-                href="https://line.me/R/ti/p/@treeforlife"
+                href={LINE_OA_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] shadow-sm transition active:scale-[0.98] min-h-[44px]"
@@ -141,7 +142,7 @@ export function Footer() {
               </a>
 
               <div className="mt-2.5 text-center text-[11px] text-forest-600 dark:text-forest-400 font-medium">
-                {t("footer.line_id")}
+                {t("footer.line_id", { line_id: LINE_OA_HANDLE })}
               </div>
             </div>
           </div>

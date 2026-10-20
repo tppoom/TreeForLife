@@ -4,6 +4,7 @@ import path from "path";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import { LINE_OA_HANDLE, LINE_OA_URL } from "@/lib/line/formatters";
 import {
   ShieldCheck,
   ArrowLeft,
@@ -394,7 +395,8 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
   const thContent = fs.readFileSync(thPath, "utf-8");
   const enContent = fs.readFileSync(enPath, "utf-8");
 
-  const activeContent = isEn ? enContent : thContent;
+  // {{LINE_OA}} in the markdown follows NEXT_PUBLIC_LINE_OA_ID
+  const activeContent = (isEn ? enContent : thContent).replaceAll("{{LINE_OA}}", LINE_OA_HANDLE);
 
   return (
     <div className="w-full bg-sand-50 dark:bg-forest-950 min-h-screen py-12 transition-colors">
@@ -550,13 +552,13 @@ export default async function PrivacyPage({ searchParams }: PrivacyPageProps) {
 
           <div className="flex flex-wrap items-center gap-2.5">
             <a
-              href="https://line.me/R/ti/p/@treeforlife"
+              href={LINE_OA_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#06C755] hover:bg-[#05b34c] shadow-sm transition active:scale-95 min-h-[40px]"
             >
               <MessageCircle className="w-4 h-4 fill-white" />
-              <span>LINE: @treeforlife</span>
+              <span>LINE: {LINE_OA_HANDLE}</span>
               <ExternalLink className="w-3 h-3 opacity-80" />
             </a>
 

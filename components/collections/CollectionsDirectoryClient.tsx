@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useApp } from "@/lib/context/AppContext";
 import type { Collection } from "@/lib/collections";
+import { LINE_OA_URL } from "@/lib/line/formatters";
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   Wind,
@@ -194,7 +195,7 @@ export function CollectionsDirectoryClient({ initialCollections }: CollectionsDi
               </p>
             </div>
             <a
-              href="https://line.me/R/ti/p/@treeforlife"
+              href={LINE_OA_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white font-semibold text-sm shadow-soft transition shrink-0 min-h-[44px]"

@@ -15,7 +15,8 @@ import { useApp } from "@/lib/context/AppContext";
 
 export type InquiryIntent = "price" | "availability" | "care_help" | "design_quote";
 
-export const LINE_OA_ID = process.env.NEXT_PUBLIC_LINE_OA_ID || "treeforlife";
+export { LINE_OA_ID } from "@/lib/line/formatters";
+import { LINE_OA_ID, LINE_OA_HANDLE } from "@/lib/line/formatters";
 
 export interface InquiryModalSpecies {
   id: string;
@@ -425,7 +426,7 @@ export function InquiryModal({
               <div className="hidden md:flex flex-col items-center justify-center p-4 rounded-2xl bg-sand-50/80 dark:bg-forest-950/60 border border-sand-200 dark:border-forest-800 text-center">
                 <div className="flex items-center gap-2 text-xs font-semibold text-sand-700 dark:text-sand-300 mb-3">
                   <QrCode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                  <span>{t("inquiry.desktop_line_prompt")}</span>
+                  <span>{t("inquiry.desktop_line_prompt", { line_id: LINE_OA_HANDLE })}</span>
                 </div>
 
                 {/* QR Code Container */}

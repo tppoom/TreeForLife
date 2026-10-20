@@ -91,6 +91,6 @@ Under Thailand's Personal Data Protection Act B.E. 2562, you hold the following 
 If you have questions regarding this Privacy Policy or wish to exercise your data subject rights, please reach out to our nursery team:
 
 * **Organization:** TreeForLife Nursery & Care Team
-* **LINE Official Account:** `@treeforlife` (Available daily 09:00 - 18:00 ICT)
+* **LINE Official Account:** `{{LINE_OA}}` (Available daily 09:00 - 18:00 ICT)
 * **Email:** `privacy@treeforlife.shop` or `contact@treeforlife.shop`
 * **Location:** Bangkok, Thailand

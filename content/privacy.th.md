@@ -91,6 +91,6 @@ TreeForLife ใช้เฉพาะเทคโนโลยีการจั�
 หากท่านมีข้อสงสัย ข้อเสนอแนะ หรือต้องการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล สามารถติดต่อทีมงาน TreeForLife ได้ตามช่องทางดังนี้:
 
 * **หน่วยงาน:** TreeForLife Nursery & Care Team
-* **LINE Official Account:** `@treeforlife` (เปิดบริการทุกวัน 09:00 - 18:00 น.)
+* **LINE Official Account:** `{{LINE_OA}}` (เปิดบริการทุกวัน 09:00 - 18:00 น.)
 * **อีเมล:** `privacy@treeforlife.shop` หรือ `contact@treeforlife.shop`
 * **สถานที่ตั้ง:** กรุงเทพมหานคร ประเทศไทย

@@ -70,6 +70,6 @@ These Terms of Service are governed by and construed in accordance with the laws
 ## 8. Contact Our Nursery Team
 
 For inquiries regarding these terms or your plant collection, contact us directly:
-* **LINE Official Account:** `@treeforlife`
+* **LINE Official Account:** `{{LINE_OA}}`
 * **Email:** `care@treeforlife.shop`
 * **Nursery Hours:** Daily 09:00 – 19:00 (Bangkok Time, UTC+7)

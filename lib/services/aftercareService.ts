@@ -10,6 +10,7 @@ import {
 import { eq, and, sql, desc } from "drizzle-orm";
 import { formatDate } from "@/lib/care/scheduler";
 import { generateRefCode } from "@/lib/services/inquiryService";
+import { lineOaMessageUrl } from "@/lib/line/formatters";
 
 export interface CreateCheckinOptions {
   userPlantId: string;
@@ -189,7 +190,7 @@ export async function answerCheckin(opts: {
     // Form prefilled LINE inquiry text with context
     const symptomText = opts.symptoms && opts.symptoms.length > 0 ? opts.symptoms.join(", ") : "ต้องการคำแนะนำการดูแล";
     const lineMessage = `ต้น "${row.speciesNameTh || row.plantNickname}" ที่ซื้อจากร้านเมื่อ ${ageDays} วันก่อน ดูไม่ค่อยดีครับ/ค่ะ อาการ: ${symptomText} · ปลูกในกระถาง ${row.potSizeInch}" (${row.potMaterial}) [${refCode}]`;
-    lineUrl = `https://line.me/R/oaMessage/@treeforlife/?${encodeURIComponent(lineMessage)}`;
+    lineUrl = lineOaMessageUrl(lineMessage);
   }
 
   await db

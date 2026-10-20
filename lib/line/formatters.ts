@@ -1,6 +1,18 @@
 export type InquiryIntent = "price" | "availability" | "care_help" | "design_quote";
 
-export const LINE_OA_ID = process.env.NEXT_PUBLIC_LINE_OA_ID || "treeforlife";
+/** LINE OA basic/premium ID without the "@" (tolerates one in the env value). */
+export const LINE_OA_ID = (process.env.NEXT_PUBLIC_LINE_OA_ID || "treeforlife").replace(/^@/, "");
+
+/** The OA handle as shown to customers, e.g. "@treeforlife". */
+export const LINE_OA_HANDLE = `@${LINE_OA_ID}`;
+
+/** Add-friend / open-chat link for the shop's LINE OA. */
+export const LINE_OA_URL = `https://line.me/R/ti/p/${LINE_OA_HANDLE}`;
+
+/** Opens a chat with the OA with `message` prefilled. */
+export function lineOaMessageUrl(message: string): string {
+  return `https://line.me/R/oaMessage/${LINE_OA_HANDLE}/?${encodeURIComponent(message)}`;
+}
 
 /**
  * Generates a short, readable reference code like TFL-4K9P
